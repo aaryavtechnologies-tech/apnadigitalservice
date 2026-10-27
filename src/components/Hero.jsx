@@ -130,6 +130,39 @@ export default function Hero({ onOpenRequestModal }) {
           </p>
 
           {/* 
+            MOBILE-ONLY HERO SLIDE SHOWCASE
+            Clearly displays the 3-second animated slide graphics, holographic citizen ID card (Slide 2), 
+            and e-governance visuals prominently on all mobile devices!
+          */}
+          <div className="mobile-hero-slide-showcase">
+            <div className="mobile-slide-aspect-frame">
+              {HERO_SLIDES.map((slide, index) => (
+                <div 
+                  key={index}
+                  className={`mobile-slide-layer ${index === currentSlide ? 'active' : ''}`}
+                  style={{ backgroundImage: `url(${slide.url})` }}
+                />
+              ))}
+              <div className="mobile-slide-gradient-overlay" />
+              <div className="mobile-slide-top-badge">
+                <Sparkles size={12} style={{ color: '#F97316' }} />
+                <span>{HERO_SLIDES[currentSlide].tag}</span>
+              </div>
+              <div className="mobile-slide-dots-bar">
+                {HERO_SLIDES.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className={`mobile-dot ${idx === currentSlide ? 'active' : ''}`}
+                    onClick={() => setCurrentSlide(idx)}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 
             MOBILE-ONLY QUICK SERVICES CATCH GRID
             Visible on mobile screens so user immediately catches the 4 main services on first view!
           */}
@@ -219,10 +252,10 @@ export default function Hero({ onOpenRequestModal }) {
               className="hero-hub-card"
               style={{
                 borderRadius: '32px 64px 32px 64px',
-                background: 'rgba(255, 255, 255, 0.90)',
+                background: 'rgba(255, 255, 255, 0.78)',
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255, 255, 255, 0.95)',
+                border: '1px solid rgba(255, 255, 255, 0.90)',
                 boxShadow: '0 25px 60px -15px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(249, 115, 22, 0.15)',
                 padding: '28px 24px',
                 maxWidth: '480px',
@@ -352,19 +385,26 @@ export default function Hero({ onOpenRequestModal }) {
         </div>
       </div>
 
-      {/* 3-Second Slide Pagination Indicator Dots */}
+      {/* 3-Second Slide Pagination Indicator Dots with Tag Display */}
       <div className="hero-slide-indicators">
-        {HERO_SLIDES.map((slide, index) => (
-          <button
-            key={index}
-            type="button"
-            className={`hero-indicator-dot ${index === currentSlide ? 'active' : ''}`}
-            onClick={() => setCurrentSlide(index)}
-            title={`Slide ${index + 1}: ${slide.tag}`}
-          >
-            <span className="dot-progress-fill" />
-          </button>
-        ))}
+        <span className="hero-indicators-label">
+          <Sparkles size={13} style={{ color: '#F97316' }} />
+          <span>{HERO_SLIDES[currentSlide].tag}</span>
+        </span>
+        <div className="hero-indicators-divider" />
+        <div className="hero-indicators-dots-group">
+          {HERO_SLIDES.map((slide, index) => (
+            <button
+              key={index}
+              type="button"
+              className={`hero-indicator-dot ${index === currentSlide ? 'active' : ''}`}
+              onClick={() => setCurrentSlide(index)}
+              title={`Slide ${index + 1}: ${slide.tag}`}
+            >
+              <span className="dot-progress-fill" />
+            </button>
+          ))}
+        </div>
       </div>
     </section>
   );

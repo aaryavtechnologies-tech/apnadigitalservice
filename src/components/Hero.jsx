@@ -130,39 +130,6 @@ export default function Hero({ onOpenRequestModal }) {
           </p>
 
           {/* 
-            MOBILE-ONLY HERO SLIDE SHOWCASE
-            Clearly displays the 3-second animated slide graphics, holographic citizen ID card (Slide 2), 
-            and e-governance visuals prominently on all mobile devices!
-          */}
-          <div className="mobile-hero-slide-showcase">
-            <div className="mobile-slide-aspect-frame">
-              {HERO_SLIDES.map((slide, index) => (
-                <div 
-                  key={index}
-                  className={`mobile-slide-layer ${index === currentSlide ? 'active' : ''}`}
-                  style={{ backgroundImage: `url(${slide.url})` }}
-                />
-              ))}
-              <div className="mobile-slide-gradient-overlay" />
-              <div className="mobile-slide-top-badge">
-                <Sparkles size={12} style={{ color: '#F97316' }} />
-                <span>{HERO_SLIDES[currentSlide].tag}</span>
-              </div>
-              <div className="mobile-slide-dots-bar">
-                {HERO_SLIDES.map((_, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    className={`mobile-dot ${idx === currentSlide ? 'active' : ''}`}
-                    onClick={() => setCurrentSlide(idx)}
-                    aria-label={`Go to slide ${idx + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* 
             MOBILE-ONLY QUICK SERVICES CATCH GRID
             Visible on mobile screens so user immediately catches the 4 main services on first view!
           */}

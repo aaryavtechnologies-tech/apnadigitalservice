@@ -67,6 +67,9 @@
 html {
   scroll-behavior: smooth;
   font-size: 16px;
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 
 body {
@@ -77,6 +80,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 
 /* Clear default #root constraints so layout is full bleed & flexible */
@@ -84,6 +89,8 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* Typography Utility */
@@ -106,56 +113,97 @@ button {
   background: none;
 }
 
-/* Top Announcement Ribbon */
+/* Top Announcement Ribbon — Continuous Infinite Sliding Ticker Marquee */
 .top-announcement {
   background: linear-gradient(90deg, #ea580c 0%, #d97706 45%, #16a34a 100%);
   color: #ffffff;
-  padding: 7px 16px;
-  font-size: 0.82rem;
+  padding: 6px 0;
+  font-size: 0.80rem;
   font-weight: 600;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  position: relative;
+  width: 100%;
 }
 
-.top-announcement-inner {
-  max-width: 1360px;
-  margin: 0 auto;
+.top-announcement-ticker {
+  overflow: hidden;
+  width: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  text-align: center;
 }
 
-.top-announcement .badge-pill {
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: ticker-marquee 25s linear infinite;
+  will-change: transform;
+}
+
+.top-announcement-ticker:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+@keyframes ticker-marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  white-space: nowrap;
+}
+
+.ticker-badge {
   background: rgba(255, 255, 255, 0.22);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   padding: 2px 10px;
   border-radius: var(--radius-full);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   display: inline-flex;
   align-items: center;
   gap: 5px;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
-.announcement-text {
+.ticker-badge-green {
+  background: rgba(22, 163, 74, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.ticker-text {
+  color: #ffffff;
+  font-weight: 600;
   letter-spacing: 0.01em;
 }
 
-.announcement-link {
+.ticker-link {
   color: #ffffff;
   text-decoration: underline;
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-weight: 700;
-  transition: opacity var(--transition-fast);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 10px;
+  border-radius: 9999px;
+  transition: all var(--transition-fast);
 }
 
-.announcement-link:hover {
-  opacity: 0.88;
+.ticker-link:hover {
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0.95;
+}
+
+.ticker-sep {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.85rem;
 }
 
 /* Main Navigation */
@@ -634,6 +682,7 @@ button {
   transform: scale(1);
   transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 5s ease-out;
   will-change: opacity, transform;
+  filter: saturate(1.15) contrast(1.05);
 }
 
 .hero-slide-layer.active {
@@ -644,14 +693,9 @@ button {
 .hero-slider-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.90) 0%, rgba(255, 255, 255, 0.70) 45%, rgba(255, 255, 255, 0.25) 80%, rgba(255, 255, 255, 0.10) 100%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.76) 0%, rgba(255, 255, 255, 0.45) 45%, rgba(255, 255, 255, 0.10) 80%, rgba(255, 255, 255, 0.02) 100%);
   pointer-events: none;
   z-index: 1;
-}
-
-/* Mobile Hero Slide Showcase (hidden on desktop) */
-.mobile-hero-slide-showcase {
-  display: none;
 }
 
 .hero-slide-indicators {
@@ -2320,35 +2364,83 @@ button {
 @media (max-width: 768px) {
   /* Mobile-Catchable Hero Layout */
   .hero-section {
-    padding: 24px 16px 40px !important;
+  /* Mobile-Catchable Hero Layout - 100% full-width, zero horizontal overflow or clipping */
+  .hero-section {
+    padding: 24px 14px 44px !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
+
   .hero-container {
-    gap: 20px;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
   }
+
   .hero-content {
-    gap: 14px;
-    align-items: center;
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 16px !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
   }
+
   .hero-badge {
-    padding: 4px 12px;
-    font-size: 0.76rem;
+    padding: 5px 12px !important;
+    font-size: 0.74rem !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08) !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
+
   .hero-badge-desktop-text {
     display: none !important;
   }
+
   .hero-badge-mobile-text {
     display: inline !important;
   }
+
   .hero-title {
-    font-size: 1.95rem !important;
-    line-height: 1.2 !important;
-    letter-spacing: -0.02em;
-    margin-bottom: 4px;
+    font-size: 1.85rem !important;
+    line-height: 1.22 !important;
+    letter-spacing: -0.02em !important;
+    margin-bottom: 2px !important;
+    text-shadow: 0 1px 3px rgba(255, 255, 255, 0.95), 0 0 16px rgba(255, 255, 255, 0.85) !important;
+    width: 100% !important;
+    word-break: break-word !important;
   }
+
   .hero-description {
-    font-size: 0.9rem !important;
-    line-height: 1.5 !important;
-    max-width: 95%;
+    font-size: 0.88rem !important;
+    line-height: 1.55 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    color: #0f172a !important;
+    font-weight: 500 !important;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9) !important;
+    padding: 0 2px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Make background hero images vivid & punchy on mobile */
+  .hero-slide-layer {
+    background-position: center center !important;
+    filter: saturate(1.22) contrast(1.08) !important;
+  }
+
+  .hero-slider-overlay {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.22) 32%, rgba(255, 255, 255, 0.40) 80%, rgba(255, 255, 255, 0.65) 100%) !important;
   }
 
   /* Hide the duplicate heavy showcase card on mobile */
@@ -2356,240 +2448,192 @@ button {
     display: none !important;
   }
 
-  /* Mobile Hero Slider Showcase - Vivid, high-definition presentation of slide artwork */
-  .mobile-hero-slide-showcase {
-    display: block !important;
-    width: 100%;
-    margin: 8px 0 14px;
-    border-radius: 18px;
-    overflow: hidden;
-    border: 1px solid rgba(249, 115, 22, 0.3);
-    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8);
-  }
-
-  .mobile-slide-aspect-frame {
-    position: relative;
-    width: 100%;
-    height: 195px;
-    background: #0f172a;
-    overflow: hidden;
-    border-radius: 17px;
-  }
-
-  .mobile-slide-layer {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    opacity: 0;
-    transform: scale(1);
-    transition: opacity 0.8s ease-in-out, transform 4s ease-out;
-  }
-
-  .mobile-slide-layer.active {
-    opacity: 1;
-    transform: scale(1.04);
-  }
-
-  .mobile-slide-gradient-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(15, 23, 42, 0.35) 0%, transparent 40%, rgba(15, 23, 42, 0.65) 100%);
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  .mobile-slide-top-badge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: rgba(15, 23, 42, 0.82);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    padding: 4px 10px;
-    border-radius: 9999px;
-    font-size: 0.70rem;
-    font-weight: 700;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    z-index: 2;
-  }
-
-  .mobile-slide-dots-bar {
-    position: absolute;
-    bottom: 10px;
-    right: 12px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    z-index: 2;
-    background: rgba(15, 23, 42, 0.75);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    padding: 4px 8px;
-    border-radius: 9999px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-  }
-
-  .mobile-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 9999px;
-    background: rgba(255, 255, 255, 0.5);
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-
-  .mobile-dot.active {
-    width: 20px;
-    background: linear-gradient(90deg, #F97316 0%, #16A34A 100%);
-  }
-
-  /* Make sure hero background overlay on mobile doesn't wash out */
-  .hero-slider-overlay {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.65) 50%, rgba(255, 255, 255, 0.82) 100%) !important;
-  }
-
-  /* Hide the desktop bottom indicator on mobile to avoid overlapping */
+  /* Hide desktop indicators on mobile */
   .hero-slide-indicators {
     display: none !important;
   }
 
-  /* Display the Fast 2x2 Catch Grid directly in the primary mobile fold */
+  /* Mobile Quick Services Grid - perfectly fitting 2-column cards */
   .mobile-quick-services-grid {
     display: flex !important;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-    margin: 8px 0 16px;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin: 6px 0 14px !important;
+    box-sizing: border-box !important;
   }
 
   .mobile-quick-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 4px;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 0 2px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .quick-title {
-    font-size: 0.8rem;
-    font-weight: 800;
-    color: var(--navy-900);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    color: var(--navy-900) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
   }
 
   .quick-sub {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--green-700);
-    background: var(--green-100);
-    padding: 2px 8px;
-    border-radius: 9999px;
+    font-size: 0.70rem !important;
+    font-weight: 700 !important;
+    color: var(--green-700) !important;
+    background: var(--green-100) !important;
+    padding: 2px 7px !important;
+    border-radius: 9999px !important;
   }
 
   .mobile-services-cards {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    width: 100%;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .mobile-service-chip {
-    background: #ffffff;
-    border: 1.5px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    padding: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
-    text-align: left;
-    transition: transform var(--transition-fast), border-color var(--transition-fast);
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1.5px solid var(--border-subtle) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 9px 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    text-decoration: none !important;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05) !important;
+    text-align: left !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    transition: transform var(--transition-fast), border-color var(--transition-fast) !important;
   }
 
   .mobile-service-chip:active {
-    transform: scale(0.98);
-    border-color: var(--saffron-400);
+    transform: scale(0.98) !important;
+    border-color: var(--saffron-400) !important;
   }
 
   .chip-icon-box {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
   }
 
   .chip-info {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    flex-grow: 1;
+    display: flex !important;
+    flex-direction: column !important;
+    min-width: 0 !important;
+    flex-grow: 1 !important;
+    overflow: hidden !important;
   }
 
   .chip-name {
-    font-size: 0.8rem;
-    font-weight: 800;
-    color: var(--navy-900);
-    line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 0.76rem !important;
+    font-weight: 800 !important;
+    color: var(--navy-900) !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   .chip-badge {
-    font-size: 0.65rem;
-    font-weight: 600;
-    color: var(--saffron-700);
-    margin-top: 1px;
-    white-space: nowrap;
+    font-size: 0.63rem !important;
+    font-weight: 600 !important;
+    color: var(--saffron-700) !important;
+    margin-top: 1px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   .chip-arrow {
-    color: var(--slate-400);
-    margin-left: auto;
-    flex-shrink: 0;
+    color: var(--slate-400) !important;
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
   }
 
+  /* CTAs on Mobile - 100% width, never cut off! */
   .hero-cta-group {
+    display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
     gap: 10px !important;
+    box-sizing: border-box !important;
+    margin-top: 4px !important;
   }
 
   .hero-cta-group button,
   .hero-cta-group a {
     width: 100% !important;
+    max-width: 100% !important;
     justify-content: center !important;
-    padding: 12px 18px !important;
+    padding: 13px 18px !important;
+    box-sizing: border-box !important;
+    border-radius: var(--radius-md) !important;
   }
 
+  /* Trust Row on Mobile - 100% width, clean 2x2 grid */
   .hero-trust-row {
     display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    width: 100%;
-    padding-top: 14px;
-    margin-top: 4px;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    padding-top: 14px !important;
+    margin-top: 4px !important;
+    box-sizing: border-box !important;
   }
 
   .trust-item {
-    font-size: 0.76rem;
-    gap: 6px;
-    justify-content: center;
+    font-size: 0.74rem !important;
+    gap: 6px !important;
+    justify-content: center !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    padding: 5px 8px !important;
+    border-radius: 9999px !important;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.03) !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
   }
 
   /* Other mobile page adjustments */
+  .section-wrapper {
+    padding: 44px 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .section-title {
+    font-size: 1.75rem !important;
+  }
+  .section-subtitle {
+    font-size: 0.92rem !important;
+  }
+  .services-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .service-card {
+    padding: 20px 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
   .steps-grid {
     grid-template-columns: 1fr;
   }
@@ -2676,33 +2720,20 @@ button {
 
 /* Phones (Narrow screens <= 640px) */
 @media (max-width: 640px) {
-  /* Fix Topmost Announcement Ribbon: Single Sleek 32px Line */
+  /* Topmost Announcement Ribbon Ticker on Narrow Screens */
   .top-announcement {
-    padding: 5px 12px !important;
-    font-size: 0.74rem !important;
-    min-height: 32px;
-  }
-  .top-announcement-inner {
-    flex-wrap: nowrap !important;
-    justify-content: center !important;
-    gap: 6px !important;
-  }
-  .desktop-only-pill,
-  .desktop-only-text {
-    display: none !important;
-  }
-  .mobile-sparkle {
-    display: inline !important;
-  }
-  .announcement-text {
-    font-size: 0.74rem !important;
-    white-space: nowrap !important;
+    padding: 5px 0 !important;
+    font-size: 0.76rem !important;
+    min-height: 32px !important;
     overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    text-align: center !important;
+    width: 100% !important;
   }
-  .announcement-link {
-    flex-shrink: 0;
+  .ticker-track {
+    animation-duration: 22s !important;
+  }
+  .ticker-content {
+    gap: 10px !important;
+    padding: 0 12px !important;
   }
 
   /* Navbar Header on Phone: Never overflow, keep hamburger visible */

@@ -28,27 +28,39 @@ export default function Header({ onOpenAuth, onOpenTrack, currentUser, onSignOut
 
   return (
     <>
-      {/* Top Announcement Ribbon — Ultra Sleek & Compact */}
+      {/* Top Announcement Ribbon — Continuous Infinite Sliding Ticker Marquee */}
       <div className="top-announcement">
-        <div className="top-announcement-inner">
-          <span className="badge-pill desktop-only-pill">
-            <Sparkles size={11} />
-            <span>Assisted Portal</span>
-          </span>
-          <span className="announcement-text">
-            <span className="mobile-sparkle">⚡ </span>
-            PAN, Voter ID, DL & Vehicle RC PDF — Direct on WhatsApp Assistance
-          </span>
-          <a 
-            href="https://wa.me/919124494239" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="announcement-link"
-            title="Chat on WhatsApp Support"
-          >
-            <span className="desktop-only-text">WhatsApp Support</span>
-            <ExternalLink size={12} />
-          </a>
+        <div className="top-announcement-ticker">
+          <div className="ticker-track">
+            {[0, 1].map((copyIdx) => (
+              <div key={copyIdx} className="ticker-content" aria-hidden={copyIdx === 1}>
+                <span className="ticker-badge">
+                  <Sparkles size={12} />
+                  <span>Assisted Portal</span>
+                </span>
+                <span className="ticker-text">
+                  ⚡ PAN, Voter ID, DL & Vehicle RC PDF — Direct on WhatsApp Assistance
+                </span>
+                <a 
+                  href="https://wa.me/919124494239" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="ticker-link"
+                >
+                  <span>WhatsApp Support</span>
+                  <ExternalLink size={12} />
+                </a>
+                <span className="ticker-sep">•</span>
+                <span className="ticker-badge ticker-badge-green">
+                  <span>⏱️ 10-15 Min Delivery</span>
+                </span>
+                <span className="ticker-text">
+                  Direct PDF to your Dashboard & WhatsApp
+                </span>
+                <span className="ticker-sep">•</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

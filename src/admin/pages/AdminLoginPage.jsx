@@ -4,21 +4,18 @@ import {
   ShieldCheck, 
   Lock, 
   Mail, 
-  Crown, 
-  Eye, 
   ArrowLeft, 
   AlertCircle, 
   CheckCircle,
   Loader2,
   KeyRound,
-  Send,
-  Sparkles
+  Send
 } from 'lucide-react';
-import { useAdminAuth } from '../context/AdminAuthContext';
+import { useAdminAuth, SUPER_ADMIN_EMAIL } from '../context/AdminAuthContext';
 import '../admin.css';
 
 export default function AdminLoginPage() {
-  const { adminSignIn, sendAdminOtp, verifyAdminOtp, switchDemoRole } = useAdminAuth();
+  const { adminSignIn, sendAdminOtp, verifyAdminOtp, superAdminEmail } = useAdminAuth();
   const navigate = useNavigate();
 
   // Mode: 'password' | 'forgot_request' | 'forgot_verify'
@@ -31,6 +28,8 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  const activeSuperAdminEmail = superAdminEmail || SUPER_ADMIN_EMAIL;
 
   // Password Login
   const handlePasswordLogin = async (e) => {
@@ -98,11 +97,6 @@ export default function AdminLoginPage() {
     }
   };
 
-  const handleQuickDemo = (targetRole) => {
-    switchDemoRole(targetRole);
-    navigate('/admin');
-  };
-
   return (
     <div className="admin-login-shell">
       <div className="admin-login-box">
@@ -114,6 +108,28 @@ export default function AdminLoginPage() {
           </h2>
           <div style={{ fontSize: '0.85rem', color: '#64748B' }}>
             Unified Admin & Super Admin Portal
+          </div>
+        </div>
+
+        {/* Super Admin Notice Pill */}
+        <div 
+          style={{
+            background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+            border: '1px solid #FDE68A',
+            borderRadius: '10px',
+            padding: '10px 14px',
+            marginBottom: '16px',
+            fontSize: '0.80rem',
+            color: '#92400E',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
+          <ShieldCheck size={18} style={{ color: '#D97706', flexShrink: 0 }} />
+          <div>
+            <span>Super Admin Email: </span>
+            <strong style={{ color: '#78350F', wordBreak: 'break-all' }}>{activeSuperAdminEmail}</strong>
           </div>
         </div>
 
@@ -166,7 +182,7 @@ export default function AdminLoginPage() {
               <input 
                 id="admin-email"
                 type="email" 
-                placeholder="help.apnadigitalservice@gmail.com"
+                placeholder={activeSuperAdminEmail}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -234,7 +250,7 @@ export default function AdminLoginPage() {
               <input 
                 id="otp-email"
                 type="email" 
-                placeholder="help.apnadigitalservice@gmail.com"
+                placeholder={activeSuperAdminEmail}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -320,40 +336,8 @@ export default function AdminLoginPage() {
           </form>
         )}
 
-        {/* Fast QA Demo Role Switchers */}
-        <div className="admin-demo-box">
-          <div className="admin-demo-title">
-            1-Click Instant Test Switchers
-          </div>
-
-          <button 
-            type="button"
-            className="admin-btn"
-            style={{
-              width: '100%',
-              background: 'linear-gradient(90deg, #F59E0B 0%, #D97706 100%)',
-              color: '#FFFFFF',
-              fontWeight: 700
-            }}
-            onClick={() => handleQuickDemo('super_admin')}
-          >
-            <Crown size={16} />
-            <span>Enter as Super Admin (Full Control)</span>
-          </button>
-
-          <button 
-            type="button"
-            className="admin-btn admin-btn-secondary"
-            style={{ width: '100%' }}
-            onClick={() => handleQuickDemo('admin')}
-          >
-            <Eye size={16} />
-            <span>Enter as Admin (View-Only Mode)</span>
-          </button>
-        </div>
-
         {/* Back to site */}
-        <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        <div style={{ marginTop: '24px', textAlign: 'center' }}>
           <Link 
             to="/" 
             style={{ 

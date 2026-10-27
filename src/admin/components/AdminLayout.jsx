@@ -15,7 +15,7 @@ import { useAdminAuth } from '../context/AdminAuthContext';
 import '../admin.css';
 
 export default function AdminLayout({ children }) {
-  const { adminUser, role, isSuperAdmin, isViewOnly, adminSignOut, switchDemoRole } = useAdminAuth();
+  const { adminUser, role, isSuperAdmin, isViewOnly, adminSignOut } = useAdminAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -36,17 +36,6 @@ export default function AdminLayout({ children }) {
               <strong>Full Control Active:</strong> You have full write permissions to update status, upload verified documents to Cloudinary, edit operator notes, and manage applications.
             </span>
           </div>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.78rem', color: '#92400E', fontWeight: 600 }}>Testing Role Switch:</span>
-            <button 
-              className="admin-btn admin-btn-secondary" 
-              style={{ padding: '3px 10px', fontSize: '0.76rem', background: '#FFFFFF', borderColor: '#FDE68A', color: '#92400E' }}
-              onClick={() => switchDemoRole('admin')}
-              title="Switch role to Admin to test View-Only lockdown"
-            >
-              <Eye size={12} /> Test as View-Only Admin
-            </button>
-          </div>
         </div>
       ) : isViewOnly ? (
         <div className="admin-role-banner view-only">
@@ -57,17 +46,6 @@ export default function AdminLayout({ children }) {
             <span>
               <strong>View-Only Mode Enforced:</strong> All status updates, document uploads, and deletions are strictly disabled. To modify applications, log in with Super Admin credentials.
             </span>
-          </div>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.78rem', color: '#0369A1', fontWeight: 600 }}>Testing Role Switch:</span>
-            <button 
-              className="admin-btn admin-btn-secondary" 
-              style={{ padding: '3px 10px', fontSize: '0.76rem', background: '#FFFFFF', borderColor: '#BAE6FD', color: '#0369A1' }}
-              onClick={() => switchDemoRole('super_admin')}
-              title="Switch role to Super Admin to test full write access"
-            >
-              <Crown size={12} /> Test as Super Admin
-            </button>
           </div>
         </div>
       ) : null}

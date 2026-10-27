@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 
+export const SUPER_ADMIN_EMAIL = (import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'help.apnadigitalservice@gmail.com').toLowerCase().trim();
+
 const AdminAuthContext = createContext(null);
 
 export function AdminAuthProvider({ children }) {
@@ -8,28 +10,12 @@ export function AdminAuthProvider({ children }) {
   const [role, setRole] = useState(null); // 'super_admin' | 'admin' | 'customer' | null
   const [loading, setLoading] = useState(true);
 
-  // Check saved demo role or stored credentials on mount
+  // Check Supabase active session on mount
   useEffect(() => {
     async function initAuth() {
-      // 1. Check if demo test role is explicitly forced in local/sessionStorage
-      const demoRole = sessionStorage.getItem('apna_admin_demo_role');
-      if (demoRole === 'super_admin' || demoRole === 'admin') {
-        const demoEmail = demoRole === 'super_admin' 
-          ? 'help.apnadigitalservice@gmail.com' 
-          : 'operator@apnadigitalservice.com';
-        
-        setRole(demoRole);
-        setAdminUser({
-          id: 'demo-' + demoRole,
-          email: demoEmail,
-          fullName: demoRole === 'super_admin' ? 'Meher (Super Admin)' : 'Staff Admin (View Only)',
-          role: demoRole
-        });
-        setLoading(false);
-        return;
-      }
+      // Clear legacy demo session bypass
+      sessionStorage.removeItem('apna_admin_demo_role');
 
-      // 2. If Supabase is configured, check active session & query public.profiles
       if (isSupabaseConfigured && supabase) {
         try {
           const { data: { session } } = await supabase.auth.getSession();
@@ -53,9 +39,6 @@ export function AdminAuthProvider({ children }) {
     let subscription = null;
     if (isSupabaseConfigured && supabase) {
       const { data } = supabase.auth.onAuthStateChange(async (_event, session) => {
-        const demoRole = sessionStorage.getItem('apna_admin_demo_role');
-        if (demoRole) return;
-
         if (session?.user) {
           await resolveUserRole(session.user);
         } else {
@@ -72,13 +55,13 @@ export function AdminAuthProvider({ children }) {
   }, []);
 
   /**
-   * Helper to fetch role from public.profiles table
+   * Helper to fetch role from public.profiles table or match super admin email
    */
   async function resolveUserRole(authUser) {
     let resolvedRole = 'customer';
 
     // Auto-detect super admin email rule
-    if (authUser.email === 'help.apnadigitalservice@gmail.com') {
+    if (authUser.email?.toLowerCase().trim() === SUPER_ADMIN_EMAIL) {
       resolvedRole = 'super_admin';
     }
 
@@ -114,16 +97,14 @@ export function AdminAuthProvider({ children }) {
     sessionStorage.removeItem('apna_admin_demo_role');
     
     if (!isSupabaseConfigured || !supabase) {
-      // Local fallback for testing without Supabase
-      if (email.toLowerCase().includes('super') || email.toLowerCase() === 'help.apnadigitalservice@gmail.com') {
-        return switchDemoRole('super_admin');
-      } else {
-        return switchDemoRole('admin');
-      }
+      return { 
+        success: false, 
+        error: 'Supabase authentication is not configured in .env. Please connect your Supabase database.' 
+      };
     }
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+      email: email.trim(),
       password
     });
 
@@ -134,7 +115,7 @@ export function AdminAuthProvider({ children }) {
     if (data?.user) {
       // Strict role check: customer accounts are forbidden in the admin portal!
       let userRole = 'customer';
-      if (data.user.email === 'help.apnadigitalservice@gmail.com') {
+      if (data.user.email?.toLowerCase().trim() === SUPER_ADMIN_EMAIL) {
         userRole = 'super_admin';
       } else {
         const { data: prof } = await supabase
@@ -157,7 +138,7 @@ export function AdminAuthProvider({ children }) {
       return { success: true };
     }
 
-    return { success: false, error: 'Sign in failed' };
+    return { success: false, error: 'Sign in failed. Please verify your credentials.' };
   }
 
   /**
@@ -167,11 +148,14 @@ export function AdminAuthProvider({ children }) {
     if (!email) return { success: false, error: 'Please enter your registered email address.' };
 
     if (!isSupabaseConfigured || !supabase) {
-      return { success: true, isSimulation: true };
+      return { 
+        success: false, 
+        error: 'Supabase authentication is not configured in .env.' 
+      };
     }
 
     const { error } = await supabase.auth.signInWithOtp({
-      email,
+      email: email.trim(),
       options: {
         shouldCreateUser: false
       }
@@ -191,25 +175,23 @@ export function AdminAuthProvider({ children }) {
     if (!token) return { success: false, error: 'Please enter the 6-digit OTP.' };
 
     if (!isSupabaseConfigured || !supabase) {
-      if (email.toLowerCase() === 'help.apnadigitalservice@gmail.com') {
-        switchDemoRole('super_admin');
-      } else {
-        switchDemoRole('admin');
-      }
-      return { success: true };
+      return { 
+        success: false, 
+        error: 'Supabase authentication is not configured in .env.' 
+      };
     }
 
     const { data, error } = await supabase.auth.verifyOtp({
-      email,
-      token,
+      email: email.trim(),
+      token: token.trim(),
       type: 'email'
     });
 
     if (error) {
       // also attempt type: 'recovery' if user requested password reset token
       const retry = await supabase.auth.verifyOtp({
-        email,
-        token,
+        email: email.trim(),
+        token: token.trim(),
         type: 'recovery'
       });
       if (retry.error) {
@@ -238,36 +220,6 @@ export function AdminAuthProvider({ children }) {
     setRole(null);
   }
 
-  /**
-   * Fast Demo Role Switcher for instant QA testing
-   */
-  function switchDemoRole(targetRole) {
-    if (targetRole === 'super_admin') {
-      sessionStorage.setItem('apna_admin_demo_role', 'super_admin');
-      setRole('super_admin');
-      setAdminUser({
-        id: 'demo-super-admin',
-        email: 'help.apnadigitalservice@gmail.com',
-        fullName: 'Meher (Super Admin)',
-        role: 'super_admin'
-      });
-    } else if (targetRole === 'admin') {
-      sessionStorage.setItem('apna_admin_demo_role', 'admin');
-      setRole('admin');
-      setAdminUser({
-        id: 'demo-admin-staff',
-        email: 'operator@apnadigitalservice.com',
-        fullName: 'Staff Operator (Admin)',
-        role: 'admin'
-      });
-    } else {
-      sessionStorage.removeItem('apna_admin_demo_role');
-      setRole(null);
-      setAdminUser(null);
-    }
-    return { success: true };
-  }
-
   const isSuperAdmin = role === 'super_admin';
   const isAdmin = role === 'admin' || role === 'super_admin';
   const isViewOnly = role === 'admin';
@@ -285,7 +237,7 @@ export function AdminAuthProvider({ children }) {
         adminSignOut,
         sendAdminOtp,
         verifyAdminOtp,
-        switchDemoRole
+        superAdminEmail: SUPER_ADMIN_EMAIL
       }}
     >
       {children}

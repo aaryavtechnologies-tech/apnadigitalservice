@@ -2416,6 +2416,12 @@ button {
     width: 36px;
     height: 36px;
   }
+
+  /* Keep footer columns readable on narrow tablet and phone layouts. */
+  .footer-container {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -2965,6 +2971,53 @@ button {
 
 /* Phones (Narrow screens <= 640px) */
 @media (max-width: 640px) {
+  /* Let every page section and footer item shrink to the actual phone width. */
+  .apna-app-root,
+  .apna-app-root > main,
+  .main-footer,
+  .footer-container,
+  .footer-brand,
+  .footer-col,
+  .footer-bottom {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .main-footer {
+    padding: 36px 16px 24px;
+  }
+
+  .footer-container {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+    margin-bottom: 32px;
+  }
+
+  .footer-col,
+  .footer-brand {
+    overflow-wrap: anywhere;
+  }
+
+  .footer-links-list li {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .footer-links-list li > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .footer-bottom > div {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .footer-bottom a {
+    display: inline-block;
+    margin-left: 6px !important;
+  }
+
   /* Topmost Announcement Ribbon Ticker on Narrow Screens */
   .top-announcement {
     padding: 5px 0 !important;

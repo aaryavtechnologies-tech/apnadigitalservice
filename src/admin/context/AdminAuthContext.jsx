@@ -202,6 +202,27 @@ export function AdminAuthProvider({ children }) {
 
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
+      // Strict role check: customer accounts are forbidden in the admin portal!
+      let userRole = 'customer';
+      if (session.user.email?.toLowerCase().trim() === SUPER_ADMIN_EMAIL) {
+        userRole = 'super_admin';
+      } else {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        if (prof?.role) userRole = prof.role;
+      }
+
+      if (userRole !== 'super_admin' && userRole !== 'admin') {
+        await supabase.auth.signOut();
+        return {
+          success: false,
+          error: 'Access Denied: Only authorized Super Admin or Admin staff can access this portal.'
+        };
+      }
+
       await resolveUserRole(session.user);
       return { success: true };
     }

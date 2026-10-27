@@ -38,6 +38,30 @@ CREATE POLICY "Users can update their own profile"
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
+-- Prevent unauthorized users from elevating their own role via intercepted requests
+CREATE OR REPLACE FUNCTION public.protect_profile_role()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- If role is being changed:
+  IF NEW.role IS DISTINCT FROM OLD.role THEN
+    -- Check if the modifier is an existing super_admin
+    IF NOT EXISTS (
+      SELECT 1 FROM public.profiles 
+      WHERE id = auth.uid() AND role = 'super_admin'
+    ) THEN
+      RAISE EXCEPTION 'Access Denied: You cannot modify or elevate user roles.';
+    END IF;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_protect_profile_role ON public.profiles;
+CREATE TRIGGER trigger_protect_profile_role
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION public.protect_profile_role();
+
 CREATE POLICY "Admins and Super Admins can view all profiles"
   ON public.profiles FOR SELECT
   USING (

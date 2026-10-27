@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
-  ShieldCheck, 
   Lock, 
   Mail, 
   ArrowLeft, 
@@ -11,11 +10,11 @@ import {
   KeyRound,
   Send
 } from 'lucide-react';
-import { useAdminAuth, SUPER_ADMIN_EMAIL } from '../context/AdminAuthContext';
+import { useAdminAuth } from '../context/AdminAuthContext';
 import '../admin.css';
 
 export default function AdminLoginPage() {
-  const { adminSignIn, sendAdminOtp, verifyAdminOtp, superAdminEmail } = useAdminAuth();
+  const { adminSignIn, sendAdminOtp, verifyAdminOtp } = useAdminAuth();
   const navigate = useNavigate();
 
   // Mode: 'password' | 'forgot_request' | 'forgot_verify'
@@ -28,8 +27,6 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-
-  const activeSuperAdminEmail = superAdminEmail || SUPER_ADMIN_EMAIL;
 
   // Password Login
   const handlePasswordLogin = async (e) => {
@@ -111,28 +108,6 @@ export default function AdminLoginPage() {
           </div>
         </div>
 
-        {/* Super Admin Notice Pill */}
-        <div 
-          style={{
-            background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
-            border: '1px solid #FDE68A',
-            borderRadius: '10px',
-            padding: '10px 14px',
-            marginBottom: '16px',
-            fontSize: '0.80rem',
-            color: '#92400E',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          <ShieldCheck size={18} style={{ color: '#D97706', flexShrink: 0 }} />
-          <div>
-            <span>Super Admin Email: </span>
-            <strong style={{ color: '#78350F', wordBreak: 'break-all' }}>{activeSuperAdminEmail}</strong>
-          </div>
-        </div>
-
         {/* Status Alerts */}
         {errorMessage && (
           <div 
@@ -182,7 +157,7 @@ export default function AdminLoginPage() {
               <input 
                 id="admin-email"
                 type="email" 
-                placeholder={activeSuperAdminEmail}
+                placeholder="admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -250,7 +225,7 @@ export default function AdminLoginPage() {
               <input 
                 id="otp-email"
                 type="email" 
-                placeholder={activeSuperAdminEmail}
+                placeholder="admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

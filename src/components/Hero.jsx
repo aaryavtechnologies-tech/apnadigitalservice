@@ -120,14 +120,17 @@ export default function Hero({ onOpenRequestModal }) {
             <span className="hero-badge-mobile-text">Assisted Document Retrieval Platform</span>
           </div>
 
-          <h1 className="hero-title">
-            Digital Services, <br />
-            <span className="gradient-text">Made Simple.</span>
-          </h1>
+          {/* High-Contrast White Background Glass Capsule for Crystal-Clear Text Legibility */}
+          <div className="hero-text-capsule">
+            <h1 className="hero-title">
+              Digital Services, <br />
+              <span className="gradient-text">Made Simple.</span>
+            </h1>
 
-          <p className="hero-description">
-            Submit details online. Our specialized backend team assists you with <strong>PAN Card, Voter ID (without OTP), Driving Licence & Vehicle RC PDF</strong> documents — delivered to your <strong>Dashboard & WhatsApp</strong>!
-          </p>
+            <p className="hero-description">
+              Submit details online. Our specialized backend team assists you with <strong>PAN Card, Voter ID (without OTP), Driving Licence & Vehicle RC PDF</strong> documents — delivered to your <strong>Dashboard & WhatsApp</strong>!
+            </p>
+          </div>
 
           {/* 
             MOBILE-ONLY QUICK SERVICES CATCH GRID

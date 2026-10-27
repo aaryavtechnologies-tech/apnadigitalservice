@@ -157,7 +157,8 @@ export function AdminAuthProvider({ children }) {
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
       options: {
-        shouldCreateUser: false
+        shouldCreateUser: false,
+        emailRedirectTo: `${window.location.origin}/admin`
       }
     });
 

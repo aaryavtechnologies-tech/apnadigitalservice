@@ -14,7 +14,7 @@ import { useAdminAuth } from '../context/AdminAuthContext';
 import '../admin.css';
 
 export default function AdminLoginPage() {
-  const { adminSignIn, sendAdminOtp, verifyAdminOtp } = useAdminAuth();
+  const { adminUser, role, isAdmin, adminSignIn, sendAdminOtp, verifyAdminOtp } = useAdminAuth();
   const navigate = useNavigate();
 
   // Mode: 'password' | 'forgot_request' | 'forgot_verify'
@@ -27,6 +27,13 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // If user clicks the email magic link or is already signed in as admin, redirect to /admin
+  React.useEffect(() => {
+    if (isAdmin && adminUser) {
+      navigate('/admin');
+    }
+  }, [isAdmin, adminUser, navigate]);
 
   // Password Login
   const handlePasswordLogin = async (e) => {
@@ -66,7 +73,7 @@ export default function AdminLoginPage() {
     setLoading(false);
 
     if (res.success) {
-      setSuccessMessage(`A 6-digit OTP has been dispatched to ${email}. Check your inbox or spam folder.`);
+      setSuccessMessage(`A secure login link and 6-digit OTP code have been dispatched to ${email}. You can click the link in your email to log in directly, or enter the code below.`);
       setMode('forgot_verify');
     } else {
       setErrorMessage(res.error || 'Failed to send OTP. Make sure your email is registered in Supabase.');
@@ -261,10 +268,10 @@ export default function AdminLoginPage() {
           <form onSubmit={handleVerifyOtp}>
             <div style={{ textAlign: 'center', marginBottom: '16px' }}>
               <div style={{ fontWeight: 700, fontSize: '1rem', color: '#0F172A' }}>
-                Enter Verification OTP
+                Enter OTP or Click Email Link
               </div>
               <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '4px' }}>
-                Enter the 6-digit security code received on <strong style={{ color: '#0F172A' }}>{email}</strong>
+                Click the direct login link sent to <strong style={{ color: '#0F172A' }}>{email}</strong>, or enter the 6-digit code below.
               </div>
             </div>
 

@@ -42,7 +42,7 @@ export default function AboutPage() {
         </div>
 
         {/* Mission & Approach Cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '36px' }}>
+        <div className="about-cards-grid">
           <div style={{
             background: '#ffffff',
             borderRadius: 'var(--radius-xl)',

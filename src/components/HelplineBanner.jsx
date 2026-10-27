@@ -33,19 +33,20 @@ export default function HelplineBanner() {
           {/* Helpline 1: PAN & Voter */}
           <div className="helpline-chip">
             <div className="helpline-chip-content">
-              <div style={{ 
+              <div className="helpline-chip-icon" style={{ 
                 background: '#ffedd5', 
                 color: '#ea580c', 
-                width: '42px', 
-                height: '42px', 
+                width: '38px', 
+                height: '38px', 
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                flexShrink: 0
               }}>
-                <Phone size={18} />
+                <Phone size={17} />
               </div>
-              <div>
+              <div className="helpline-chip-text">
                 <div className="helpline-chip-title">PAN & VOTER PDF HELPLINE</div>
                 <div className="helpline-chip-num">9124494239</div>
               </div>
@@ -55,8 +56,8 @@ export default function HelplineBanner() {
               href="https://wa.me/919124494239?text=Hello%20Apna%20Digital%20Service,%20I%20need%20assistance%20with%20PAN%20or%20Voter%20PDF" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="btn-whatsapp"
-              style={{ padding: '8px 14px', fontSize: '0.82rem' }}
+              className="btn-whatsapp helpline-chat-btn"
+              style={{ padding: '8px 14px', fontSize: '0.82rem', flexShrink: 0 }}
             >
               <MessageCircle size={15} />
               <span>Chat</span>
@@ -66,19 +67,20 @@ export default function HelplineBanner() {
           {/* Helpline 2: DL & RC */}
           <div className="helpline-chip">
             <div className="helpline-chip-content">
-              <div style={{ 
+              <div className="helpline-chip-icon" style={{ 
                 background: '#e0f2fe', 
                 color: '#0284c7', 
-                width: '42px', 
-                height: '42px', 
+                width: '38px', 
+                height: '38px', 
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                flexShrink: 0
               }}>
-                <Phone size={18} />
+                <Phone size={17} />
               </div>
-              <div>
+              <div className="helpline-chip-text">
                 <div className="helpline-chip-title">DL & VEHICLE RC HELPLINE</div>
                 <div className="helpline-chip-num">9078620775</div>
               </div>
@@ -88,8 +90,8 @@ export default function HelplineBanner() {
               href="https://wa.me/919078620775?text=Hello%20Apna%20Digital%20Service,%20I%20need%20assistance%20with%20DL%20or%20RC%20PDF" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="btn-whatsapp"
-              style={{ padding: '8px 14px', fontSize: '0.82rem' }}
+              className="btn-whatsapp helpline-chat-btn"
+              style={{ padding: '8px 14px', fontSize: '0.82rem', flexShrink: 0 }}
             >
               <MessageCircle size={15} />
               <span>Chat</span>

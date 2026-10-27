@@ -66,7 +66,7 @@ export default function HowItWorksPage({ onOpenTrack }) {
         </div>
 
         {/* 6 Steps Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '40px' }}>
+        <div className="how-it-works-page-grid">
           {steps.map((step, idx) => {
             const Icon = step.icon;
             return (

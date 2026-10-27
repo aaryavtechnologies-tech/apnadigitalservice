@@ -42,7 +42,7 @@ export default function ContactPage() {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '36px' }}>
+        <div className="contact-page-grid">
           
           {/* Left Column: Official Support Details */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>

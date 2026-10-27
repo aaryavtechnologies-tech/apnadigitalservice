@@ -58,7 +58,7 @@ export default function ServiceDetailPage({ onInitiateService }) {
         </nav>
 
         {/* Hero Card for Service */}
-        <div style={{
+        <div className="service-detail-hero-card" style={{
           background: '#ffffff',
           borderRadius: 'var(--radius-xl)',
           border: '1px solid var(--border-subtle)',
@@ -107,7 +107,7 @@ export default function ServiceDetailPage({ onInitiateService }) {
             </div>
 
             {/* Quick Action CTAs with login check & instruction flow */}
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <div className="service-detail-cta-group" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               {service.formUrl && (
                 <button 
                   type="button"
@@ -149,7 +149,7 @@ export default function ServiceDetailPage({ onInitiateService }) {
         </div>
 
         {/* 2-Column Content Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 0.9fr', gap: '32px' }}>
+        <div className="service-detail-content-grid">
           
           {/* Left Column: Official Workflow & Key Highlights */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>

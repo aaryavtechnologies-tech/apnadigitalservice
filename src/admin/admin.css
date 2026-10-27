@@ -26,10 +26,10 @@
   --admin-surface-border: #E2E8F0;
   --admin-surface-hover: #F1F5F9;
 
-  /* Typography */
+  /* Typography - Crisp High Contrast */
   --admin-text-main: #0F172A;
-  --admin-text-muted: #64748B;
-  --admin-text-dim: #94A3B8;
+  --admin-text-muted: #334155;
+  --admin-text-dim: #64748B;
 
   --admin-primary: #F97316;
   --admin-primary-hover: #EA580C;
@@ -38,8 +38,8 @@
   --admin-danger: #EF4444;
 
   --admin-radius: 12px;
-  --admin-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-  --admin-shadow-lg: 0 20px 30px -10px rgba(15, 23, 42, 0.08), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+  --admin-shadow: 0 2px 12px -2px rgba(15, 23, 42, 0.06), 0 1px 4px -1px rgba(15, 23, 42, 0.04);
+  --admin-shadow-lg: 0 16px 28px -8px rgba(15, 23, 42, 0.08), 0 6px 10px -4px rgba(15, 23, 42, 0.04);
 }
 
 /* Base Light Container */
@@ -57,12 +57,12 @@
 
 /* Role Announcement Banners */
 .admin-role-banner {
-  padding: 10px 24px;
+  padding: 10px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  font-size: 0.88rem;
+  gap: 12px;
+  font-size: 0.86rem;
   font-weight: 500;
   border-bottom: 1px solid transparent;
   flex-wrap: wrap;
@@ -84,13 +84,14 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .admin-role-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 10px;
+  padding: 4px 10px;
   border-radius: 9999px;
   font-size: 0.74rem;
   font-weight: 700;
@@ -114,11 +115,11 @@
 .admin-header {
   background-color: #FFFFFF;
   border-bottom: 1px solid var(--admin-surface-border);
-  padding: 14px 28px;
+  padding: 12px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 16px;
   position: sticky;
   top: 0;
   z-index: 40;
@@ -128,25 +129,26 @@
 .admin-brand {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
 .admin-brand-logo {
-  height: 40px;
+  height: 38px;
   width: auto;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid #E2E8F0;
   padding: 2px;
 }
 
 .admin-brand-title {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 800;
   letter-spacing: -0.01em;
   color: #0F172A;
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .admin-brand-tag {
@@ -782,4 +784,300 @@
   letter-spacing: 0.05em;
   font-weight: 700;
   text-align: center;
+}
+
+/* ==============================================================================
+   SERVICES CATALOG MANAGER LIGHT THEME STYLES (NO WASHED OUT COLORS)
+   ============================================================================== */
+.admin-services-header-box {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.05);
+}
+
+.admin-services-header-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0;
+}
+
+.admin-services-header-desc {
+  margin: 6px 0 0;
+  font-size: 0.88rem;
+  color: #475569;
+}
+
+.admin-services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.admin-service-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-service-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.08);
+  border-color: #CBD5E1;
+}
+
+.admin-service-card.active-service {
+  border-top: 3px solid #16A34A;
+}
+
+.admin-service-card.phase2-service {
+  border-top: 3px solid #7C3AED;
+}
+
+.admin-service-card-body {
+  padding: 20px;
+}
+
+.admin-service-title {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0F172A !important;
+  line-height: 1.35;
+}
+
+.admin-service-hindi {
+  font-size: 0.86rem;
+  color: #475569 !important;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.admin-service-integrations {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.82rem;
+}
+
+.admin-service-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-service-row-label {
+  color: #475569;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-service-link-configured {
+  color: #0284C7;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-service-link-configured:hover {
+  text-decoration: underline;
+  color: #0369A1;
+}
+
+.admin-service-link-connected {
+  color: #16A34A;
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-service-link-connected:hover {
+  text-decoration: underline;
+  color: #15803D;
+}
+
+.admin-service-footer {
+  padding: 12px 18px;
+  border-top: 1px solid #E2E8F0;
+  background: #F8FAFC;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* ==============================================================================
+   COMPREHENSIVE MOBILE RESPONSIVENESS (PHONES & TABLETS)
+   ============================================================================== */
+@media (max-width: 900px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .admin-header-actions {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .admin-brand {
+    justify-content: space-between;
+  }
+
+  .admin-brand-title {
+    font-size: 1rem;
+  }
+
+  .admin-main {
+    padding: 16px 12px;
+  }
+
+  .admin-role-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+  }
+
+  .admin-tabs-nav {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    padding-bottom: 2px;
+  }
+
+  .admin-tab-btn {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .admin-stat-card {
+    padding: 12px 14px;
+    gap: 12px;
+  }
+
+  .admin-stat-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .admin-stat-value {
+    font-size: 1.35rem;
+  }
+
+  .admin-stat-label {
+    font-size: 0.74rem;
+  }
+
+  .admin-card-header {
+    padding: 14px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .admin-filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .admin-search-input {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .admin-select {
+    width: 100%;
+  }
+
+  .admin-services-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .admin-modal-dialog {
+    margin: 8px;
+    width: calc(100% - 16px);
+    max-height: 94vh;
+    border-radius: 12px;
+  }
+
+  .admin-modal-header {
+    padding: 14px 16px;
+  }
+
+  .admin-modal-body {
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .admin-sheets-strip {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 14px;
+  }
+
+  .admin-sheets-links {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-sheet-chip {
+    flex-shrink: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-login-box {
+    padding: 24px 18px;
+    border-radius: 14px;
+  }
 }

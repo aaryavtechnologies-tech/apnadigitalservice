@@ -174,17 +174,17 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
     <div className="admin-modal-backdrop" onClick={onClose}>
       <div className="admin-modal-dialog" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="admin-modal-header">
+        <div className="admin-modal-header" style={{ borderBottom: '1px solid #E2E8F0' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#F8FAFC' }}>
+              <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A' }}>
                 {app.appId}
               </span>
-              <span className="admin-role-pill" style={{ background: '#334155', color: '#E2E8F0' }}>
+              <span className="admin-role-pill" style={{ background: '#FFF7ED', color: '#EA580C', border: '1px solid #FED7AA' }}>
                 {app.serviceName}
               </span>
             </div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--admin-text-muted)', marginTop: '4px' }}>
+            <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '4px' }}>
               Submitted on: {new Date(app.createdAt || Date.now()).toLocaleString('en-IN')}
             </div>
           </div>
@@ -207,9 +207,9 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
                 padding: '10px 14px',
                 borderRadius: '8px',
                 fontSize: '0.86rem',
-                background: actionNotice.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                color: actionNotice.type === 'success' ? '#6EE7B7' : '#FCA5A5',
-                border: `1px solid ${actionNotice.type === 'success' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                background: actionNotice.type === 'success' ? '#F0FDF4' : '#FEF2F2',
+                color: actionNotice.type === 'success' ? '#15803D' : '#B91C1C',
+                border: `1px solid ${actionNotice.type === 'success' ? '#BBF7D0' : '#FECACA'}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px'
@@ -238,26 +238,26 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
                 <div className="admin-detail-title">Customer Information</div>
                 <div className="admin-detail-row">
                   <span style={{ color: 'var(--admin-text-muted)' }}>Full Name:</span>
-                  <span style={{ fontWeight: 600 }}>{app.fullName || 'Not provided'}</span>
+                  <span style={{ fontWeight: 700, color: '#0F172A' }}>{app.fullName || 'Not provided'}</span>
                 </div>
                 <div className="admin-detail-row">
                   <span style={{ color: 'var(--admin-text-muted)' }}>Email Address:</span>
-                  <span>{app.email || 'Not provided'}</span>
+                  <span style={{ color: '#0F172A' }}>{app.email || 'Not provided'}</span>
                 </div>
                 <div className="admin-detail-row">
                   <span style={{ color: 'var(--admin-text-muted)' }}>WhatsApp / Phone:</span>
-                  <span style={{ fontWeight: 600 }}>{app.phone || 'Not provided'}</span>
+                  <span style={{ fontWeight: 700, color: '#0F172A' }}>{app.phone || 'Not provided'}</span>
                 </div>
                 <div className="admin-detail-row">
                   <span style={{ color: 'var(--admin-text-muted)' }}>Target Service:</span>
-                  <span style={{ color: '#38BDF8', fontWeight: 600 }}>{app.serviceName}</span>
+                  <span style={{ color: '#0284C7', fontWeight: 700 }}>{app.serviceName}</span>
                 </div>
                 {app.notes && (
-                  <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #334155' }}>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--admin-text-muted)', marginBottom: '4px' }}>
+                  <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#475569', marginBottom: '4px', fontWeight: 600 }}>
                       Customer Notes / Application Inputs:
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: '#E2E8F0', background: '#0F172A', padding: '8px 12px', borderRadius: '6px' }}>
+                    <div style={{ fontSize: '0.85rem', color: '#0F172A', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '8px 12px', borderRadius: '6px' }}>
                       {app.notes}
                     </div>
                   </div>
@@ -293,7 +293,7 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
                     target="_blank" 
                     rel="noreferrer"
                     className="admin-btn admin-btn-secondary"
-                    style={{ width: '100%', justifyContent: 'center', borderColor: '#10B981', color: '#6EE7B7' }}
+                    style={{ width: '100%', justifyContent: 'center', borderColor: '#BBF7D0', color: '#15803D', background: '#F0FDF4', fontWeight: 600 }}
                   >
                     <FileSpreadsheet size={16} />
                     <span>Open Service Google Sheet Responses</span>
@@ -379,8 +379,8 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
                   /* Document is already uploaded & delivered */
                   <div 
                     style={{
-                      background: 'rgba(16, 185, 129, 0.1)',
-                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      background: '#F0FDF4',
+                      border: '1px solid #BBF7D0',
                       borderRadius: '8px',
                       padding: '14px',
                       display: 'flex',
@@ -389,24 +389,24 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <CheckCircle size={20} style={{ color: '#10B981' }} />
+                      <CheckCircle size={20} style={{ color: '#16A34A', flexShrink: 0 }} />
                       <div style={{ overflow: 'hidden' }}>
-                        <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#F8FAFC', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0F172A', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                           {documentName || 'Verified_Document.pdf'}
                         </div>
-                        <div style={{ fontSize: '0.74rem', color: '#6EE7B7' }}>
+                        <div style={{ fontSize: '0.76rem', color: '#15803D', fontWeight: 500 }}>
                           Delivered & unlocked for customer download
                         </div>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       <a 
                         href={documentUrl} 
                         target="_blank" 
                         rel="noreferrer"
                         className="admin-btn admin-btn-success"
-                        style={{ flex: 1, padding: '7px 12px', fontSize: '0.8rem' }}
+                        style={{ flex: 1, padding: '7px 12px', fontSize: '0.82rem' }}
                       >
                         <Download size={14} />
                         <span>Preview / Download Document</span>
@@ -415,7 +415,7 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
                       {isSuperAdmin && (
                         <button 
                           className="admin-btn admin-btn-secondary"
-                          style={{ padding: '7px 10px', fontSize: '0.8rem', borderColor: '#EF4444', color: '#FCA5A5' }}
+                          style={{ padding: '7px 10px', fontSize: '0.8rem', borderColor: '#FECACA', color: '#DC2626' }}
                           onClick={() => {
                             if (window.confirm('Remove this document from the application? Customer will no longer be able to download it.')) {
                               setDocumentUrl('');

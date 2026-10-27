@@ -263,10 +263,10 @@ export default function AdminDashboardPage() {
             <div className="admin-sheets-info">
               <FileSpreadsheet size={22} style={{ color: '#16A34A' }} />
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#F8FAFC' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0F172A' }}>
                   Authorized Google Sheets Responses
                 </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--admin-text-muted)' }}>
+                <div style={{ fontSize: '0.78rem', color: '#475569' }}>
                   1-Click direct links to match website requests against customer form submissions
                 </div>
               </div>
@@ -363,14 +363,14 @@ export default function AdminDashboardPage() {
                 <tbody>
                   {filteredApps.length === 0 ? (
                     <tr>
-                      <td colSpan="6" style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--admin-text-muted)' }}>
-                        <div style={{ display: 'inline-flex', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', marginBottom: '12px' }}>
+                      <td colSpan="6" style={{ textAlign: 'center', padding: '48px 20px', color: '#64748B' }}>
+                        <div style={{ display: 'inline-flex', padding: '12px', background: '#F1F5F9', borderRadius: '50%', marginBottom: '12px', color: '#0F172A' }}>
                           <Inbox size={28} />
                         </div>
-                        <div style={{ fontWeight: 600, fontSize: '1rem', color: '#CBD5E1', marginBottom: '4px' }}>
+                        <div style={{ fontWeight: 700, fontSize: '1rem', color: '#0F172A', marginBottom: '4px' }}>
                           No service requests match the selected filters
                         </div>
-                        <div style={{ fontSize: '0.84rem' }}>
+                        <div style={{ fontSize: '0.84rem', color: '#64748B' }}>
                           {searchTerm || serviceFilter !== 'ALL' || statusFilter !== 'ALL'
                             ? 'Try clearing your search keyword or resetting the status filters.'
                             : 'New customer applications submitted on the website will instantly appear in this queue.'}
@@ -382,10 +382,10 @@ export default function AdminDashboardPage() {
                       <tr key={app.appId} style={{ cursor: 'pointer' }} onClick={() => setSelectedApp(app)}>
                         {/* App ID & Date */}
                         <td>
-                          <div style={{ fontWeight: 700, color: '#F8FAFC', fontSize: '0.92rem' }}>
+                          <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.92rem' }}>
                             {app.appId}
                           </div>
-                          <div style={{ fontSize: '0.74rem', color: 'var(--admin-text-muted)', marginTop: '2px' }}>
+                          <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '2px' }}>
                             {new Date(app.createdAt || Date.now()).toLocaleDateString('en-IN', {
                               day: '2-digit',
                               month: 'short',
@@ -396,24 +396,24 @@ export default function AdminDashboardPage() {
 
                         {/* Target Service */}
                         <td>
-                          <div style={{ fontWeight: 600, color: '#E2E8F0' }}>
+                          <div style={{ fontWeight: 700, color: '#0F172A' }}>
                             {app.serviceName}
                           </div>
-                          <div style={{ fontSize: '0.74rem', color: '#38BDF8' }}>
+                          <div style={{ fontSize: '0.74rem', color: '#0284C7', fontWeight: 600 }}>
                             {app.serviceSlug}
                           </div>
                         </td>
 
                         {/* Customer Contact */}
                         <td>
-                          <div style={{ fontWeight: 600, color: '#F1F5F9' }}>
+                          <div style={{ fontWeight: 700, color: '#0F172A' }}>
                             {app.fullName || 'Anonymous User'}
                           </div>
-                          <div style={{ fontSize: '0.76rem', color: 'var(--admin-text-muted)' }}>
+                          <div style={{ fontSize: '0.76rem', color: '#475569', marginTop: '2px' }}>
                             📞 {app.phone || 'No phone'}
                           </div>
                           {app.email && (
-                            <div style={{ fontSize: '0.74rem', color: 'var(--admin-text-dim)' }}>
+                            <div style={{ fontSize: '0.74rem', color: '#64748B' }}>
                               ✉️ {app.email}
                             </div>
                           )}

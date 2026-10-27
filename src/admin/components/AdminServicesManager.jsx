@@ -72,25 +72,16 @@ export default function AdminServicesManager() {
 
   return (
     <div>
-      {/* Top Controls Strip */}
-      <div 
-        style={{
-          background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(11, 17, 32, 0.95) 100%)',
-          border: '1px solid #334155',
-          borderRadius: '16px',
-          padding: '24px',
-          marginBottom: '24px',
-          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
-        }}
-      >
+      {/* Top Controls Strip - Crisp Clean Light Card */}
+      <div className="admin-services-header-box">
         <div 
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '20px',
+            gap: '16px',
             flexWrap: 'wrap',
-            marginBottom: '20px'
+            marginBottom: '18px'
           }}
         >
           <div>
@@ -104,16 +95,17 @@ export default function AdminServicesManager() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#fff'
+                  color: '#FFFFFF',
+                  boxShadow: '0 2px 8px rgba(249, 115, 22, 0.25)'
                 }}
               >
                 <Layers size={20} />
               </div>
-              <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: '#F8FAFC' }}>
+              <h2 className="admin-services-header-title">
                 Services Catalog Manager
               </h2>
             </div>
-            <p style={{ margin: '6px 0 0', fontSize: '0.86rem', color: 'var(--admin-text-muted)' }}>
+            <p className="admin-services-header-desc">
               Configure live citizen services, update Google Form URLs, map Google Sheet response targets, and manage helplines.
             </p>
           </div>
@@ -123,14 +115,11 @@ export default function AdminServicesManager() {
             {isSuperAdmin ? (
               <button 
                 type="button" 
-                className="admin-btn"
+                className="admin-btn admin-btn-primary"
                 style={{
-                  background: 'linear-gradient(90deg, #F97316 0%, #16A34A 100%)',
-                  color: '#FFFFFF',
                   fontWeight: 700,
-                  boxShadow: '0 4px 14px rgba(249, 115, 22, 0.35)',
-                  padding: '10px 20px',
-                  fontSize: '0.92rem'
+                  padding: '10px 18px',
+                  fontSize: '0.9rem'
                 }}
                 onClick={handleOpenAdd}
               >
@@ -183,39 +172,27 @@ export default function AdminServicesManager() {
       </div>
 
       {/* Services Cards Grid */}
-      <div 
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-          gap: '20px'
-        }}
-      >
+      <div className="admin-services-grid">
         {filtered.map((srv) => (
           <div 
             key={srv.id}
-            className="admin-card"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
-              transition: 'transform 0.2s ease, border-color 0.2s ease',
-              border: srv.status === 'active' ? '1px solid rgba(22, 163, 74, 0.4)' : '1px solid #334155'
-            }}
+            className={`admin-service-card ${srv.status === 'active' ? 'active-service' : 'phase2-service'}`}
           >
             {/* Top info */}
-            <div style={{ padding: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '12px' }}>
+            <div className="admin-service-card-body">
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' }}>
                 <div 
                   style={{
                     width: '44px',
                     height: '44px',
                     borderRadius: '10px',
-                    background: '#0F172A',
-                    border: '1px solid #334155',
+                    background: '#FFF7ED',
+                    border: '1px solid #FED7AA',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#F97316'
+                    color: '#EA580C',
+                    flexShrink: 0
                   }}
                 >
                   <ServiceIcon iconName={srv.iconName} size={22} />
@@ -231,86 +208,77 @@ export default function AdminServicesManager() {
                 </div>
               </div>
 
-              <h3 style={{ margin: '0 0 4px', fontSize: '1.05rem', fontWeight: 700, color: '#F8FAFC' }}>
+              {/* Service Titles - High Contrast Deep Slate Colors */}
+              <h3 className="admin-service-title">
                 {srv.title}
               </h3>
-              <div style={{ fontSize: '0.82rem', color: '#94A3B8', marginBottom: '10px' }}>
+              <div className="admin-service-hindi">
                 {srv.hindiTitle}
               </div>
 
-              {/* Badge */}
+              {/* Service Feature Badge */}
               <div style={{ marginBottom: '14px' }}>
                 <span 
                   className="admin-role-pill"
                   style={{
-                    background: srv.badgeColor === 'green' ? '#16A34A' : srv.badgeColor === 'blue' ? '#0284C7' : '#F97316',
+                    background: srv.badgeColor === 'green' ? '#16A34A' : srv.badgeColor === 'blue' ? '#0284C7' : '#EA580C',
                     color: '#FFFFFF',
-                    fontSize: '0.72rem'
+                    fontSize: '0.72rem',
+                    padding: '3px 9px'
                   }}
                 >
                   {srv.badge}
                 </span>
               </div>
 
-              {/* Integrations Indicator List */}
-              <div 
-                style={{
-                  background: 'rgba(15, 23, 42, 0.6)',
-                  border: '1px solid #334155',
-                  borderRadius: '10px',
-                  padding: '12px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
-                  fontSize: '0.8rem'
-                }}
-              >
+              {/* Integrations Indicator List - Clean Light Surface */}
+              <div className="admin-service-integrations">
                 {/* Google Form */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--admin-text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <LinkIcon size={13} style={{ color: '#F97316' }} /> Google Form:
+                <div className="admin-service-row">
+                  <span className="admin-service-row-label">
+                    <LinkIcon size={14} style={{ color: '#F97316' }} /> Google Form:
                   </span>
                   {srv.formUrl ? (
                     <a 
                       href={srv.formUrl} 
                       target="_blank" 
                       rel="noreferrer"
-                      style={{ color: '#38BDF8', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      className="admin-service-link-configured"
                     >
                       <span>Configured</span>
                       <ExternalLink size={12} />
                     </a>
                   ) : (
-                    <span style={{ color: 'var(--admin-text-dim)' }}>Not linked</span>
+                    <span style={{ color: '#94A3B8', fontSize: '0.8rem' }}>Not linked</span>
                   )}
                 </div>
 
                 {/* Google Sheet */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--admin-text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FileSpreadsheet size={13} style={{ color: '#16A34A' }} /> Sheet Responses:
+                <div className="admin-service-row">
+                  <span className="admin-service-row-label">
+                    <FileSpreadsheet size={14} style={{ color: '#16A34A' }} /> Sheet Responses:
                   </span>
                   {srv.spreadsheetUrl ? (
                     <a 
                       href={srv.spreadsheetUrl} 
                       target="_blank" 
                       rel="noreferrer"
-                      style={{ color: '#34D399', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      className="admin-service-link-connected"
                     >
                       <span>Connected</span>
                       <ExternalLink size={12} />
                     </a>
                   ) : (
-                    <span style={{ color: 'var(--admin-text-dim)' }}>Not linked</span>
+                    <span style={{ color: '#94A3B8', fontSize: '0.8rem' }}>Not linked</span>
                   )}
                 </div>
 
                 {/* Helpline */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'var(--admin-text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Phone size={13} style={{ color: '#F59E0B' }} /> Support Phone:
+                <div className="admin-service-row">
+                  <span className="admin-service-row-label">
+                    <Phone size={14} style={{ color: '#D97706' }} /> Support Phone:
                   </span>
-                  <span style={{ color: '#F8FAFC', fontWeight: 600 }}>
+                  <span style={{ color: '#0F172A', fontWeight: 700, fontSize: '0.84rem' }}>
                     +91 {srv.supportPhone || '9124494239'}
                   </span>
                 </div>
@@ -318,17 +286,7 @@ export default function AdminServicesManager() {
             </div>
 
             {/* Bottom Actions Bar */}
-            <div 
-              style={{
-                padding: '12px 20px',
-                borderTop: '1px solid #334155',
-                background: 'rgba(30, 41, 59, 0.4)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '8px'
-              }}
-            >
+            <div className="admin-service-footer">
               <a 
                 href={`/service/${srv.slug}`} 
                 target="_blank" 

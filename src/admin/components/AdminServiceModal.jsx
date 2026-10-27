@@ -149,7 +149,7 @@ export default function AdminServiceModal({ service, isOpen, onClose, onSaved })
     <div className="admin-modal-backdrop" onClick={onClose}>
       <div className="admin-modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px' }}>
         {/* Header */}
-        <div className="admin-modal-header" style={{ borderBottom: '1px solid #334155' }}>
+        <div className="admin-modal-header" style={{ borderBottom: '1px solid #E2E8F0' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div 
               style={{ 
@@ -166,10 +166,10 @@ export default function AdminServiceModal({ service, isOpen, onClose, onSaved })
               <Sparkles size={18} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#F8FAFC' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0F172A', fontWeight: 800 }}>
                 {isEditing ? `Edit Service: ${service.shortName || service.title}` : 'Add New Live Service'}
               </h3>
-              <div style={{ fontSize: '0.76rem', color: 'var(--admin-text-muted)' }}>
+              <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
                 {isEditing 
                   ? 'Update Google Form, Sheet link, status, and display details'
                   : 'Instantly publish a new service to the customer catalog and detail page'}
@@ -206,9 +206,9 @@ export default function AdminServiceModal({ service, isOpen, onClose, onSaved })
                 padding: '10px 14px',
                 borderRadius: '8px',
                 fontSize: '0.86rem',
-                background: notice.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                color: notice.type === 'success' ? '#6EE7B7' : '#FCA5A5',
-                border: `1px solid ${notice.type === 'success' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                background: notice.type === 'success' ? '#F0FDF4' : '#FEF2F2',
+                color: notice.type === 'success' ? '#15803D' : '#B91C1C',
+                border: `1px solid ${notice.type === 'success' ? '#BBF7D0' : '#FECACA'}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px'
@@ -220,11 +220,11 @@ export default function AdminServiceModal({ service, isOpen, onClose, onSaved })
           )}
 
           <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {/* Live Service Preview Card */}
+            {/* Live Service Preview Card - Light Mode Warm Glass */}
             <div 
               style={{
-                background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(22, 163, 74, 0.08) 100%)',
-                border: '1px solid rgba(249, 115, 22, 0.25)',
+                background: '#FFF7ED',
+                border: '1px solid #FED7AA',
                 borderRadius: '12px',
                 padding: '16px',
                 display: 'flex',
@@ -240,25 +240,26 @@ export default function AdminServiceModal({ service, isOpen, onClose, onSaved })
                     width: '48px',
                     height: '48px',
                     borderRadius: '12px',
-                    background: '#0F172A',
-                    border: '1px solid #334155',
+                    background: '#FFFFFF',
+                    border: '1px solid #FED7AA',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#F97316'
+                    color: '#EA580C',
+                    flexShrink: 0
                   }}
                 >
                   <ServiceIcon iconName={iconName} size={24} />
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontWeight: 700, fontSize: '1rem', color: '#F8FAFC' }}>
+                    <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0F172A' }}>
                       {title || 'Service Title Here'}
                     </span>
                     <span 
                       className="admin-role-pill"
                       style={{
-                        background: badgeColor === 'green' ? '#16A34A' : badgeColor === 'blue' ? '#0284C7' : '#F97316',
+                        background: badgeColor === 'green' ? '#16A34A' : badgeColor === 'blue' ? '#0284C7' : '#EA580C',
                         color: '#FFFFFF',
                         fontSize: '0.7rem'
                       }}
@@ -266,8 +267,8 @@ export default function AdminServiceModal({ service, isOpen, onClose, onSaved })
                       {badge || 'Badge'}
                     </span>
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: '#94A3B8', marginTop: '2px' }}>
-                    {hindiTitle || 'हिंदी शीर्षक यहाँ दिखेगा'} • Slug: <code style={{ color: '#38BDF8' }}>/service/{slug || 'service-slug'}</code>
+                  <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '2px' }}>
+                    {hindiTitle || 'हिंदी शीर्षक यहाँ दिखेगा'} • Slug: <code style={{ color: '#0284C7', fontWeight: 600 }}>/service/{slug || 'service-slug'}</code>
                   </div>
                 </div>
               </div>
@@ -484,7 +485,7 @@ export default function AdminServiceModal({ service, isOpen, onClose, onSaved })
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 paddingTop: '16px',
-                borderTop: '1px solid #334155'
+                borderTop: '1px solid #E2E8F0'
               }}
             >
               {isEditing && isSuperAdmin ? (

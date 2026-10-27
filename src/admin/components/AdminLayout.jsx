@@ -37,10 +37,10 @@ export default function AdminLayout({ children }) {
             </span>
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.78rem', color: '#FCD34D' }}>Testing Role Switch:</span>
+            <span style={{ fontSize: '0.78rem', color: '#92400E', fontWeight: 600 }}>Testing Role Switch:</span>
             <button 
               className="admin-btn admin-btn-secondary" 
-              style={{ padding: '3px 10px', fontSize: '0.76rem', background: 'rgba(255,255,255,0.1)' }}
+              style={{ padding: '3px 10px', fontSize: '0.76rem', background: '#FFFFFF', borderColor: '#FDE68A', color: '#92400E' }}
               onClick={() => switchDemoRole('admin')}
               title="Switch role to Admin to test View-Only lockdown"
             >
@@ -59,10 +59,10 @@ export default function AdminLayout({ children }) {
             </span>
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.78rem', color: '#7DD3FC' }}>Testing Role Switch:</span>
+            <span style={{ fontSize: '0.78rem', color: '#0369A1', fontWeight: 600 }}>Testing Role Switch:</span>
             <button 
               className="admin-btn admin-btn-secondary" 
-              style={{ padding: '3px 10px', fontSize: '0.76rem', background: 'rgba(255,255,255,0.1)' }}
+              style={{ padding: '3px 10px', fontSize: '0.76rem', background: '#FFFFFF', borderColor: '#BAE6FD', color: '#0369A1' }}
               onClick={() => switchDemoRole('super_admin')}
               title="Switch role to Super Admin to test full write access"
             >
@@ -108,7 +108,7 @@ export default function AdminLayout({ children }) {
               <div style={{ fontWeight: 600, lineHeight: 1.2 }}>
                 {adminUser?.fullName || 'Operator'}
               </div>
-              <div style={{ fontSize: '0.72rem', color: isSuperAdmin ? '#F59E0B' : '#38BDF8' }}>
+              <div style={{ fontSize: '0.72rem', color: isSuperAdmin ? '#D97706' : '#0284C7', fontWeight: 700 }}>
                 {isSuperAdmin ? '👑 Super Admin' : '👁️ View-Only Admin'}
               </div>
             </div>

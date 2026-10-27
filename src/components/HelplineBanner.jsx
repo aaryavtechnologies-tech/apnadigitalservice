@@ -57,7 +57,6 @@ export default function HelplineBanner() {
               target="_blank" 
               rel="noopener noreferrer"
               className="btn-whatsapp helpline-chat-btn"
-              style={{ padding: '8px 14px', fontSize: '0.82rem', flexShrink: 0 }}
             >
               <MessageCircle size={15} />
               <span>Chat</span>
@@ -91,7 +90,6 @@ export default function HelplineBanner() {
               target="_blank" 
               rel="noopener noreferrer"
               className="btn-whatsapp helpline-chat-btn"
-              style={{ padding: '8px 14px', fontSize: '0.82rem', flexShrink: 0 }}
             >
               <MessageCircle size={15} />
               <span>Chat</span>

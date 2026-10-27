@@ -55,6 +55,7 @@ function ScrollToTop() {
  */
 function AppContent() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   const [services, setServices] = useState(() => getActiveServices());
@@ -85,41 +86,64 @@ function AppContent() {
   const [selectedServiceForRequest, setSelectedServiceForRequest] = useState(null);
   const [pendingServiceAction, setPendingServiceAction] = useState(null);
 
-  // Sync Supabase Auth state if configured
+  // Sync Supabase Auth state if configured & auto-route Super Admin to /admin
   useEffect(() => {
     if (isSupabaseConfigured) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session?.user) {
-          const userObj = {
-            id: session.user.id,
-            email: session.user.email,
-            fullName: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
-            phone: session.user.user_metadata?.phone || ''
-          };
-          setCurrentUser(userObj);
-          localStorage.setItem('apna_user', JSON.stringify(userObj));
-        }
-      });
+      const isAuthCallback = window.location.hash.includes('access_token') || 
+                             window.location.search.includes('code') ||
+                             window.location.hash.includes('type=magiclink') ||
+                             window.location.hash.includes('type=recovery');
 
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const processSession = async (session) => {
         if (session?.user) {
+          const userEmail = session.user.email?.toLowerCase().trim();
+          const isSuperAdminEmail = userEmail === 'help.apnadigitalservice@gmail.com';
+          let userRole = isSuperAdminEmail ? 'super_admin' : 'customer';
+
+          try {
+            const { data: prof } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('id', session.user.id)
+              .single();
+            if (prof?.role) userRole = prof.role;
+          } catch (e) {
+            console.warn('Profile fetch warning:', e);
+          }
+
           const userObj = {
             id: session.user.id,
             email: session.user.email,
             fullName: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
-            phone: session.user.user_metadata?.phone || ''
+            phone: session.user.user_metadata?.phone || '',
+            role: userRole
           };
           setCurrentUser(userObj);
           localStorage.setItem('apna_user', JSON.stringify(userObj));
+
+          // If user is super_admin or admin, automatically route to the admin portal!
+          if (userRole === 'super_admin' || userRole === 'admin') {
+            if (isAuthCallback || location.pathname === '/' || location.pathname === '/dashboard') {
+              navigate('/admin');
+            }
+          }
         } else {
           setCurrentUser(null);
           localStorage.removeItem('apna_user');
         }
+      };
+
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        processSession(session);
+      });
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        processSession(session);
       });
 
       return () => subscription.unsubscribe();
     }
-  }, []);
+  }, [location.pathname, navigate]);
 
   const handleSignOut = async () => {
     if (isSupabaseConfigured) {

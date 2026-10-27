@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   User, 
   Mail, 
@@ -20,14 +20,27 @@ import {
   FileQuestion,
   HelpCircle,
   FolderOpen,
-  ArrowRight
+  ArrowRight,
+  Crown
 } from 'lucide-react';
 import ServiceIcon from '../components/ServiceIcon';
 import { fetchCustomerApplications } from '../lib/supabaseClient';
 
 export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAuth }) {
+  const navigate = useNavigate();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const isSuperAdminOrAdmin = currentUser?.role === 'super_admin' || 
+                              currentUser?.role === 'admin' || 
+                              currentUser?.email?.toLowerCase().trim() === 'help.apnadigitalservice@gmail.com';
+
+  // Automatically redirect Super Admin or Admin staff to the Admin Operations Portal
+  useEffect(() => {
+    if (isSuperAdminOrAdmin) {
+      navigate('/admin');
+    }
+  }, [isSuperAdminOrAdmin, navigate]);
 
   // Load user applications strictly from Supabase / localStorage (NO DUMMY DATA)
   useEffect(() => {
@@ -190,6 +203,55 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
     <div className="dashboard-page-wrapper">
       <div className="dashboard-container">
         
+        {/* Super Admin Notice Banner if viewing Customer Dashboard */}
+        {isSuperAdminOrAdmin && (
+          <div 
+            style={{
+              background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+              border: '1.5px solid #FDE68A',
+              borderRadius: '16px',
+              padding: '16px 20px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+              flexWrap: 'wrap',
+              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.08)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+                <Crown size={22} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, color: '#92400E', fontSize: '0.96rem' }}>
+                  Super Admin Account Detected ({currentUser.email})
+                </div>
+                <div style={{ fontSize: '0.82rem', color: '#B45309' }}>
+                  You have full operator write privileges to manage applications, update status, and upload verified documents.
+                </div>
+              </div>
+            </div>
+            <Link 
+              to="/admin" 
+              className="btn-primary" 
+              style={{ 
+                padding: '10px 18px', 
+                fontSize: '0.88rem', 
+                background: 'linear-gradient(135deg, #EA580C 0%, #D97706 100%)',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              <span>Open Super Admin Portal</span>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+        )}
+
         {/* Profile Header Bar */}
         <div className="dashboard-profile-bar">
           <div className="profile-identity-group">

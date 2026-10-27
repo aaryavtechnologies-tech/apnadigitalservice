@@ -17,7 +17,8 @@ import {
   HelpCircle,
   Phone,
   Info,
-  LogOut
+  LogOut,
+  Crown
 } from 'lucide-react';
 
 export default function Header({ onOpenAuth, onOpenTrack, currentUser, onSignOut }) {
@@ -25,6 +26,10 @@ export default function Header({ onOpenAuth, onOpenTrack, currentUser, onSignOut
   const location = useLocation();
 
   const closeMobile = () => setMobileMenuOpen(false);
+
+  const isAdminUser = currentUser?.role === 'super_admin' || 
+                      currentUser?.role === 'admin' || 
+                      currentUser?.email?.toLowerCase().trim() === 'help.apnadigitalservice@gmail.com';
 
   return (
     <>
@@ -136,24 +141,51 @@ export default function Header({ onOpenAuth, onOpenTrack, currentUser, onSignOut
               <span>Track Request</span>
             </button>
 
+            {/* Super Admin Quick Badge / Link */}
+            {isAdminUser && (
+              <Link 
+                to="/admin" 
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+                  border: '1px solid #FDE68A',
+                  color: '#92400E',
+                  padding: '5px 12px',
+                  borderRadius: '9999px',
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  textDecoration: 'none',
+                  boxShadow: '0 2px 6px rgba(245, 158, 11, 0.12)'
+                }}
+                title="Open Super Admin Operations Portal"
+              >
+                <Crown size={14} style={{ color: '#D97706' }} />
+                <span>Super Admin</span>
+              </Link>
+            )}
+
             {/* User Account State: As requested, sleek PROFILE ICON instead of text username */}
             {currentUser ? (
               <div className="user-nav-group">
                 <Link 
-                  to="/dashboard"
+                  to={isAdminUser ? "/admin" : "/dashboard"}
                   className="header-profile-icon-btn"
-                  title={`Customer Dashboard (${currentUser.fullName || currentUser.email})`}
+                  title={isAdminUser ? `Super Admin Portal (${currentUser.email})` : `Customer Dashboard (${currentUser.fullName || currentUser.email})`}
                   onClick={closeMobile}
-                  aria-label="Go to Customer Dashboard"
+                  aria-label={isAdminUser ? "Go to Super Admin Portal" : "Go to Customer Dashboard"}
                 >
-                  <div className="profile-icon-avatar">
-                    {currentUser.fullName ? (
+                  <div className="profile-icon-avatar" style={isAdminUser ? { background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', color: '#fff' } : {}}>
+                    {isAdminUser ? (
+                      <Crown size={16} />
+                    ) : currentUser.fullName ? (
                       currentUser.fullName.charAt(0).toUpperCase()
                     ) : (
                       <User size={18} />
                     )}
                   </div>
-                  <span className="profile-status-dot" title="Active Account"></span>
+                  <span className="profile-status-dot" style={isAdminUser ? { background: '#F59E0B' } : {}} title="Active Account"></span>
                 </Link>
 
                 <button 
@@ -250,6 +282,28 @@ export default function Header({ onOpenAuth, onOpenTrack, currentUser, onSignOut
 
               {/* Mobile Drawer Actions */}
               <div className="mobile-drawer-actions">
+                {isAdminUser && (
+                  <Link 
+                    to="/admin" 
+                    className="mobile-action-btn"
+                    style={{
+                      background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+                      border: '1.5px solid #FDE68A',
+                      color: '#92400E',
+                      fontWeight: 800,
+                      textDecoration: 'none',
+                      justifyContent: 'center',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                    onClick={closeMobile}
+                  >
+                    <Crown size={18} style={{ color: '#D97706' }} />
+                    <span>Open Super Admin Portal</span>
+                  </Link>
+                )}
+
                 <button 
                   type="button" 
                   className="mobile-action-btn mobile-track-btn"

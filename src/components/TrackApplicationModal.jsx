@@ -60,7 +60,7 @@ export default function TrackApplicationModal({ isOpen, onClose }) {
       `WHATSAPP PHONE   : ${app.phone}\n` +
       `STATUS           : VERIFIED COMPLETED\n` +
       `DELIVERY DATE    : ${new Date().toLocaleDateString('en-IN')}\n\n` +
-      `OPERATOR NOTE    : ${app.operatorNote || 'Verified by Super Admin'}\n` +
+      `OPERATOR NOTE    : ${app.operatorNote || 'Verified by our team'}\n` +
       `SUPPORT HELPLINE : +91 ${app.supportPhone || '9124494239'}\n`
     ], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
@@ -157,7 +157,7 @@ export default function TrackApplicationModal({ isOpen, onClose }) {
                         </div>
 
                         <div style={{ fontSize: '0.82rem', color: 'var(--slate-600)', marginBottom: '14px', lineHeight: '1.5' }}>
-                          <strong>Super Admin Note:</strong> {result.operatorNote || 'Request received. Verification in progress with Google Forms response sheet.'}
+                          <strong>Verification Desk Note:</strong> {result.operatorNote || 'Request received. Verification in progress with Google Forms response sheet.'}
                         </div>
 
                         <div style={{
@@ -187,7 +187,7 @@ export default function TrackApplicationModal({ isOpen, onClose }) {
                               </button>
                             ) : (
                               <button 
-                                type="button"
+                                type="button" 
                                 disabled
                                 style={{
                                   background: 'var(--slate-200)',
@@ -201,10 +201,10 @@ export default function TrackApplicationModal({ isOpen, onClose }) {
                                   alignItems: 'center',
                                   gap: '6px'
                                 }}
-                                title="Awaiting Super Admin document upload"
+                                title="Awaiting document verification & upload"
                               >
                                 <Lock size={13} />
-                                <span>Download PDF (Awaiting Admin Upload)</span>
+                                <span>Download PDF (Verification in Progress)</span>
                               </button>
                             )}
                           </div>

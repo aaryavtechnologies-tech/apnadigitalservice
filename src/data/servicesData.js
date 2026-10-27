@@ -272,11 +272,13 @@ export function getAllServices() {
 }
 
 /**
- * Retrieve only active or live services for the customer-facing catalog
+ * Retrieve only active or live services for the customer-facing catalog.
+ * As per specification: Only show services which have active Google Form links configured.
+ * Services without a Google Form link remain hidden until Super Admin adds the link.
  */
 export function getActiveServices() {
   const all = getAllServices();
-  return all.filter(s => s.status !== 'inactive');
+  return all.filter(s => s.status !== 'inactive' && Boolean(s.formUrl && s.formUrl.trim()));
 }
 
 /**

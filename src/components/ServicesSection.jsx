@@ -5,15 +5,16 @@ import {
   Send, 
   Check, 
   MessageCircle, 
-  Sparkles, 
-  ArrowRight, 
-  ChevronRight 
+  ArrowRight 
 } from 'lucide-react';
 import ServiceIcon from './ServiceIcon';
 
 export default function ServicesSection({ services = [], onInitiateService }) {
-  const activeServices = services.filter(s => s.status === 'active');
-  const phase2Services = services.filter(s => s.status === 'phase2');
+  // Only display services that are active AND have an active Google Form link configured.
+  // Any upcoming service without a Google Form link is kept hidden until configured by Super Admin.
+  const activeServices = services.filter(
+    (s) => s.status !== 'inactive' && Boolean(s.formUrl && s.formUrl.trim())
+  );
 
   return (
     <section id="services" className="section-wrapper">
@@ -28,7 +29,7 @@ export default function ServicesSection({ services = [], onInitiateService }) {
         </p>
       </div>
 
-      {/* Dynamic Active Services Grid */}
+      {/* Dynamic Services Grid (Only Active Services with Google Form Links) */}
       <div className="services-grid">
         {activeServices.map((service) => (
           <div key={service.id} className="service-card">
@@ -54,32 +55,34 @@ export default function ServicesSection({ services = [], onInitiateService }) {
             <p className="service-card-desc">{service.description}</p>
 
             {/* Key Service Highlights */}
-            <ul className="service-highlights-list">
-              {service.features.slice(0, 3).map((item, idx) => (
-                <li key={idx}>
-                  <Check size={14} />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
+            {Array.isArray(service.features) && service.features.length > 0 && (
+              <ul className="service-highlights-list">
+                {service.features.slice(0, 3).map((item, idx) => (
+                  <li key={idx}>
+                    <Check size={14} />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {/* Dedicated Support Contact */}
             <div className="service-support-contact">
               <span>Assigned Support:</span>
               <a 
-                href={service.supportWhatsapp} 
+                href={service.supportWhatsapp || `https://wa.me/91${service.supportPhone || '9124494239'}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 title="Chat on WhatsApp"
               >
                 <MessageCircle size={14} />
-                <span>{service.supportPhone}</span>
+                <span>{service.supportPhone || '9124494239'}</span>
               </a>
             </div>
 
             {/* Direct Action Buttons */}
             <div className="service-actions-row">
-              {/* Appropriate button label as requested: "View Service" */}
+              {/* Every service has View Service linking to its own dedicated page */}
               <Link 
                 to={`/service/${service.slug}`}
                 className="btn-form-link"
@@ -116,87 +119,6 @@ export default function ServicesSection({ services = [], onInitiateService }) {
           </div>
         ))}
       </div>
-
-      {/* Phase 2 Services Suite */}
-      {phase2Services.length > 0 && (
-        <div style={{ marginTop: '54px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-            <Sparkles size={20} style={{ color: 'var(--saffron-600)' }} />
-            <h3 style={{ fontSize: '1.45rem', fontWeight: '800', color: 'var(--navy-900)' }}>
-              Upcoming Modules (View Requirements & Information)
-            </h3>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
-            {phase2Services.map((service) => (
-              <div key={service.id} style={{
-                background: '#ffffff',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '22px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                transition: 'all var(--transition-fast)'
-              }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <div style={{
-                      width: '40px',
-                      height: '40px',
-                      borderRadius: 'var(--radius-md)',
-                      background: 'var(--slate-100)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'var(--navy-800)'
-                    }}>
-                      <ServiceIcon name={service.iconName} size={20} color="var(--navy-800)" />
-                    </div>
-                    <span style={{
-                      fontSize: '0.72rem',
-                      fontWeight: '700',
-                      padding: '3px 10px',
-                      borderRadius: '9999px',
-                      background: 'var(--saffron-100)',
-                      color: 'var(--saffron-700)'
-                    }}>
-                      {service.badge}
-                    </span>
-                  </div>
-
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--navy-900)', marginBottom: '4px' }}>
-                    {service.title}
-                  </h4>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--slate-500)', marginBottom: '10px' }}>
-                    {service.hindiTitle}
-                  </div>
-                  <p style={{ fontSize: '0.86rem', color: 'var(--slate-600)', lineHeight: '1.5', marginBottom: '16px' }}>
-                    {service.description}
-                  </p>
-                </div>
-
-                <Link 
-                  to={`/service/${service.slug}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    fontSize: '0.84rem',
-                    fontWeight: '700',
-                    color: 'var(--saffron-600)',
-                    paddingTop: '12px',
-                    borderTop: '1px solid var(--border-subtle)'
-                  }}
-                >
-                  <span>View Service</span>
-                  <ChevronRight size={16} />
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </section>
   );
 }

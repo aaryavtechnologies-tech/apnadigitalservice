@@ -126,10 +126,10 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
       `DISPATCHED PHONE : ${app.phone}\n` +
       `STATUS           : VERIFIED COMPLETED\n` +
       `DELIVERY DATE    : ${new Date().toLocaleDateString('en-IN')}\n\n` +
-      `OPERATOR NOTE    : ${app.operatorNote || 'Verified by Super Admin'}\n` +
+      `OPERATOR NOTE    : ${app.operatorNote || 'Verified by Apna Digital Service team'}\n` +
       `SUPPORT HELPLINE : +91 ${app.supportPhone || '9124494239'}\n\n` +
       `Notice: This official digital document assistance record was\n` +
-      `verified by Super Admin (Meher). For questions, contact support.\n`
+      `verified by Apna Digital Service team. For questions, contact support.\n`
     ], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
     element.download = filename;
@@ -276,7 +276,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                 My Service Requests & Document Delivery
               </h2>
               <p className="panel-subtitle">
-                Live status updates as reviewed by Super Admin. Verified PDF files will unlock for download below as soon as uploaded.
+                Live status updates as reviewed by our verification team. Verified PDF files will unlock for download below as soon as uploaded.
               </p>
             </div>
 
@@ -316,7 +316,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                 </div>
                 <div className="step-point">
                   <span className="step-num">3</span>
-                  <span>Super Admin will verify your submission, update status, and upload your verified PDF directly here.</span>
+                  <span>We will verify your submission, update status, and upload your verified PDF directly here.</span>
                 </div>
               </div>
 
@@ -438,17 +438,17 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                       </div>
                     </div>
 
-                    {/* Super Admin Live Update Box */}
+                    {/* Live Verification Update Box */}
                     <div className="admin-update-box">
                       <div className="admin-update-title">
                         <ShieldCheck size={15} style={{ color: 'var(--saffron-600)' }} />
-                        <span>Super Admin Live Status Update:</span>
+                        <span>Live Verification Status Update:</span>
                       </div>
                       <p className="admin-update-note">
                         {app.operatorNote || (
                           isCompleted
                             ? 'Google Form response verified and approved. Verified document PDF is attached and ready for download below and delivered to WhatsApp.'
-                            : 'Super Admin is reviewing your Google Form submission and matching records with the authorized departmental system. Estimated completion time: 2 to 4 hours.'
+                            : 'We are reviewing your Google Form submission and matching records with the authorized departmental system. Estimated completion time: 2 to 4 hours.'
                         )}
                       </p>
                     </div>
@@ -458,7 +458,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                       <div className="download-container">
                         {/* 
                           RULE: Download PDF button is ALWAYS rendered.
-                          - Disabled if admin hasn't uploaded PDF / not completed
+                          - Disabled if team hasn't uploaded PDF / not completed
                           - Enabled if completed and ready
                         */}
                         {isCompleted && hasUploadedDoc ? (
@@ -473,7 +473,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                               <span>Download Verified Document (PDF)</span>
                             </button>
                             <span className="download-hint-active">
-                              ✅ Verified PDF uploaded by Admin • Ready to save
+                              ✅ Verified PDF uploaded • Ready to save
                             </span>
                           </div>
                         ) : (
@@ -482,13 +482,13 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                               type="button" 
                               disabled
                               className="btn-download-disabled"
-                              title="Awaiting Super Admin document upload"
+                              title="Awaiting document verification & upload"
                             >
                               <Lock size={15} />
-                              <span>Download PDF (Awaiting Admin Upload)</span>
+                              <span>Download PDF (Verification in Progress)</span>
                             </button>
                             <span className="download-hint-disabled">
-                              🔒 Download unlocks automatically once Super Admin verifies & uploads your file.
+                              🔒 Download unlocks automatically once we verify & upload your file.
                             </span>
                           </div>
                         )}
@@ -496,7 +496,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
 
                       {/* Helpline contact directly for this specific application */}
                       <a 
-                        href={`https://wa.me/91${app.supportPhone || '9124494239'}?text=Hello%20Super%20Admin,%20checking%20status%20for%20Application%20ID%20${app.appId}%20(${encodeURIComponent(app.serviceName)})`}
+                        href={`https://wa.me/91${app.supportPhone || '9124494239'}?text=Hello%20Apna%20Digital%20Service,%20checking%20status%20for%20Application%20ID%20${app.appId}%20(${encodeURIComponent(app.serviceName)})`}
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="btn-whatsapp"

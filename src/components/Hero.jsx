@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowRight, 
   ShieldCheck, 
@@ -21,7 +21,36 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+const HERO_SLIDES = [
+  {
+    url: '/hero-slide-1.jpg',
+    tag: 'Encrypted Digital Identity Infrastructure'
+  },
+  {
+    url: '/hero-slide-2.jpg',
+    tag: 'Holographic Citizen Identity Network'
+  },
+  {
+    url: '/hero-slide-3.jpg',
+    tag: 'Cloud Verified Digital Certificates'
+  },
+  {
+    url: '/hero-slide-4.jpg',
+    tag: 'Fast Track Official e-Governance Delivery'
+  }
+];
+
 export default function Hero({ onOpenRequestModal }) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // 3-second automatic slide rotation
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
   const quickServices = [
     {
       slug: 'pan-card-pdf',
@@ -59,6 +88,24 @@ export default function Hero({ onOpenRequestModal }) {
 
   return (
     <section className="hero-section">
+      {/* 
+        3-SECOND SLIDING BACKGROUND LAYERS (Ken-Burns Smooth Crossfade)
+        4 Professional, non-human, corporate e-governance wallpapers
+      */}
+      <div className="hero-slider-backdrop">
+        {HERO_SLIDES.map((slide, index) => (
+          <div
+            key={index}
+            className={`hero-slide-layer ${index === currentSlide ? 'active' : ''}`}
+            style={{
+              backgroundImage: `url(${slide.url})`
+            }}
+          />
+        ))}
+        {/* Soft Modern Glass Gradient Overlay for High-Contrast Text Legibility */}
+        <div className="hero-slider-overlay" />
+      </div>
+
       {/* Ambient Visual Glow Orbs */}
       <div className="hero-glow-orb-saffron"></div>
       <div className="hero-glow-orb-green"></div>
@@ -303,6 +350,21 @@ export default function Hero({ onOpenRequestModal }) {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* 3-Second Slide Pagination Indicator Dots */}
+      <div className="hero-slide-indicators">
+        {HERO_SLIDES.map((slide, index) => (
+          <button
+            key={index}
+            type="button"
+            className={`hero-indicator-dot ${index === currentSlide ? 'active' : ''}`}
+            onClick={() => setCurrentSlide(index)}
+            title={`Slide ${index + 1}: ${slide.tag}`}
+          >
+            <span className="dot-progress-fill" />
+          </button>
+        ))}
       </div>
     </section>
   );

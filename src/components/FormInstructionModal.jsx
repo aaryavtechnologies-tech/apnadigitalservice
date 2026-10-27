@@ -130,7 +130,7 @@ export default function FormInstructionModal({ isOpen, onClose, service, current
                   2
                 </div>
                 <div style={{ fontSize: '0.88rem', color: '#7c2d12', lineHeight: '1.5' }}>
-                  <strong>Return to this website tab & confirm:</strong> When you return to this page, the website request dialog will already be open. Submit it to create your unique <strong>Application ID</strong> so our Super Admin can verify your spreadsheet entry and update your status in your Customer Dashboard!
+                  <strong>Return to this website tab & confirm:</strong> When you return to this page, the website request dialog will already be open. Submit it to create your unique <strong>Application ID</strong> so we can verify your submission entry and update your status in your Customer Dashboard!
                 </div>
               </div>
             </div>

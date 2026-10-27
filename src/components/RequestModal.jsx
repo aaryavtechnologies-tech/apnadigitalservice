@@ -60,7 +60,7 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
       notes: notes.trim(),
       createdAt: new Date().toISOString(),
       status: 'Request Received',
-      operatorNote: 'Website request record created. Super Admin will verify your Google Form response.',
+      operatorNote: 'Website request record created. We will verify your Google Form response.',
       documentName: null
     };
 
@@ -133,7 +133,7 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
               </h4>
 
               <p style={{ fontSize: '0.86rem', color: 'var(--slate-600)', marginBottom: '16px', lineHeight: '1.5' }}>
-                Your request is saved to your Customer Dashboard. Super Admin will verify your Google Form and upload your verified PDF.
+                Your request is saved to your Customer Dashboard. We will verify your Google Form and upload your verified PDF.
               </p>
 
               <div style={{

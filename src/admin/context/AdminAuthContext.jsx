@@ -10,11 +10,22 @@ export function AdminAuthProvider({ children }) {
   const [role, setRole] = useState(null); // 'super_admin' | 'admin' | 'customer' | null
   const [loading, setLoading] = useState(true);
 
-  // Check Supabase active session on mount
+  // Check Supabase active session or testing bypass on mount
   useEffect(() => {
     async function initAuth() {
-      // Clear legacy demo session bypass
-      sessionStorage.removeItem('apna_admin_demo_role');
+      // Check for active testing bypass session
+      const bypassRole = sessionStorage.getItem('apna_admin_demo_role');
+      if (bypassRole === 'super_admin' || bypassRole === 'admin') {
+        setRole(bypassRole);
+        setAdminUser({
+          id: 'testing-super-admin-id',
+          email: SUPER_ADMIN_EMAIL,
+          fullName: 'Super Admin (Testing Bypass)',
+          role: bypassRole
+        });
+        setLoading(false);
+        return;
+      }
 
       if (isSupabaseConfigured && supabase) {
         try {
@@ -242,6 +253,22 @@ export function AdminAuthProvider({ children }) {
     setRole(null);
   }
 
+  /**
+   * Testing Bypass: Instant Super Admin login for development and review
+   */
+  function loginAsTestingSuperAdmin() {
+    sessionStorage.setItem('apna_admin_demo_role', 'super_admin');
+    const mockSuperAdmin = {
+      id: 'testing-super-admin-id',
+      email: SUPER_ADMIN_EMAIL,
+      fullName: 'Super Admin (Testing Bypass)',
+      role: 'super_admin'
+    };
+    setRole('super_admin');
+    setAdminUser(mockSuperAdmin);
+    return { success: true };
+  }
+
   const isSuperAdmin = role === 'super_admin';
   const isAdmin = role === 'admin' || role === 'super_admin';
   const isViewOnly = role === 'admin';
@@ -257,6 +284,7 @@ export function AdminAuthProvider({ children }) {
         loading,
         adminSignIn,
         adminSignOut,
+        loginAsTestingSuperAdmin,
         sendAdminOtp,
         verifyAdminOtp,
         superAdminEmail: SUPER_ADMIN_EMAIL

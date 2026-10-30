@@ -1081,3 +1081,22 @@
     border-radius: 14px;
   }
 }
+
+/* ==========================================================================
+   CMS GREEN TICK SUCCESS ANIMATION
+   ========================================================================== */
+@keyframes popCheckIcon {
+  0% { transform: scale(0.35); opacity: 0; }
+  65% { transform: scale(1.18); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes scaleUpCheck {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}

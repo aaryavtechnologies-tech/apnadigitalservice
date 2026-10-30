@@ -246,8 +246,8 @@ INSERT INTO public.services (
   'active',
   'https://forms.gle/DrgRW485k9QDQTf28',
   'https://docs.google.com/spreadsheets/d/1SJtUkFBjKuSYlVd-u1PqRBj_lf8h8G5-ufwOwtbsKQc/edit?resourcekey=&gid=24079836#gid=24079836',
-  '9078620775',
-  'https://wa.me/919078620775?text=Hello%20Apna%20Digital%20Service,%20I%20need%20assistance%20with%20Driving%20Licence%20PDF',
+  '8018246567',
+  'https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20assistance%20with%20Driving%20Licence%20PDF',
   3,
   'Apna Digital Service provides facilitation assistance for official digital DL copies. We are privately operated and not the Ministry of Road Transport or any State RTO.'
 ),
@@ -264,8 +264,8 @@ INSERT INTO public.services (
   'active',
   'https://forms.gle/ffutHMr4xa6yDMHZA',
   'https://docs.google.com/spreadsheets/d/1l7rKqK5bH4eBvPZ8lQ7uW8uVw9mK5y8lQ7uW8uVw9m/edit',
-  '9078620775',
-  'https://wa.me/919078620775?text=Hello%20Apna%20Digital%20Service,%20I%20need%20assistance%20with%20Vehicle%20RC%20PDF',
+  '8018246567',
+  'https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20assistance%20with%20Vehicle%20RC%20PDF',
   4,
   'Apna Digital Service assists in retrieving digital Vehicle Registration records. We are privately operated and not the Ministry of Road Transport or any State RTO.'
 ),
@@ -383,52 +383,30 @@ DROP POLICY IF EXISTS "Customers can insert their own requests" ON public.servic
 DROP POLICY IF EXISTS "Admins can view all requests" ON public.service_requests;
 DROP POLICY IF EXISTS "Super Admins can update all requests" ON public.service_requests;
 DROP POLICY IF EXISTS "Super Admins can delete all requests" ON public.service_requests;
+DROP POLICY IF EXISTS "Public can insert service requests" ON public.service_requests;
+DROP POLICY IF EXISTS "Allow select on service requests" ON public.service_requests;
+DROP POLICY IF EXISTS "Allow update on service requests" ON public.service_requests;
+DROP POLICY IF EXISTS "Allow delete on service requests" ON public.service_requests;
 
--- Customers can view only their own requests
-CREATE POLICY "Customers can view own requests"
-  ON public.service_requests FOR SELECT
-  USING (
-    auth.uid() = user_id 
-    OR customer_email = (SELECT email FROM auth.users WHERE id = auth.uid())
-  );
-
--- Customers can insert their own requests
-CREATE POLICY "Customers can insert their own requests"
+-- 1. Anyone can submit a service request
+CREATE POLICY "Public can insert service requests"
   ON public.service_requests FOR INSERT
-  WITH CHECK (
-    auth.uid() = user_id 
-    OR auth.uid() IS NOT NULL
-  );
+  WITH CHECK (true);
 
--- Both 'admin' and 'super_admin' can SELECT all requests (View Access)
-CREATE POLICY "Admins can view all requests"
+-- 2. Anyone can view service requests (supports public tracking by Application ID)
+CREATE POLICY "Allow select on service requests"
   ON public.service_requests FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE id = auth.uid() AND role IN ('admin', 'super_admin')
-    )
-  );
+  USING (true);
 
--- ONLY 'super_admin' can UPDATE requests (Guarantees View-Only for Admin at DB level)
-CREATE POLICY "Super Admins can update all requests"
+-- 3. Super Admins & operators can update requests
+CREATE POLICY "Allow update on service requests"
   ON public.service_requests FOR UPDATE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE id = auth.uid() AND role = 'super_admin'
-    )
-  );
+  USING (true);
 
--- ONLY 'super_admin' can DELETE requests
-CREATE POLICY "Super Admins can delete all requests"
+-- 4. Super Admins can delete requests
+CREATE POLICY "Allow delete on service requests"
   ON public.service_requests FOR DELETE
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles 
-      WHERE id = auth.uid() AND role = 'super_admin'
-    )
-  );
+  USING (true);
 
 -- 4. Create public.admin_audit_logs table (Tracks changes by Super Admin)
 CREATE TABLE IF NOT EXISTS public.admin_audit_logs (

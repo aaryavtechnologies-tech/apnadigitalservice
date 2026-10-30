@@ -102,8 +102,8 @@
 ## 4 Live Services Reference Table
 1. **PAN PDF Download**: `https://forms.gle/o2AfsRZuxcPpYBnL9` | Helpline: `+91 9124494239`
 2. **Voter PDF Download (No OTP)**: `https://forms.gle/dR8S5SBYRM9qrfvF8` | Helpline: `+91 9124494239`
-3. **Driving Licence (DL) PDF**: `https://forms.gle/DrgRW485k9QDQTf28` | Helpline: `+91 9078620775`
-4. **Vehicle RC PDF**: `https://forms.gle/ffutHMr4xa6yDMHZA` | Helpline: `+91 9078620775`
+3. **Driving Licence (DL) PDF**: `https://forms.gle/DrgRW485k9QDQTf28` | Helpline: `+91 8018246567`
+4. **Vehicle RC PDF**: `https://forms.gle/ffutHMr4xa6yDMHZA` | Helpline: `+91 8018246567`
 
 ---
 

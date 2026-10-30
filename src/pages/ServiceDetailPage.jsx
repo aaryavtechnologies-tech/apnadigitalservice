@@ -84,19 +84,32 @@ export default function ServiceDetailPage({ onInitiateService }) {
               </div>
 
               <div>
-                <span className="badge-pill" style={{
-                  display: 'inline-block',
-                  background: 'var(--green-50)',
-                  color: 'var(--green-700)',
-                  border: '1px solid var(--green-200)',
-                  padding: '3px 12px',
-                  borderRadius: '9999px',
-                  fontSize: '0.75rem',
-                  fontWeight: '700',
-                  marginBottom: '6px'
-                }}>
-                  {service.badge}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <span className="badge-pill" style={{
+                    display: 'inline-block',
+                    background: 'var(--green-50)',
+                    color: 'var(--green-700)',
+                    border: '1px solid var(--green-200)',
+                    padding: '3px 12px',
+                    borderRadius: '9999px',
+                    fontSize: '0.75rem',
+                    fontWeight: '700'
+                  }}>
+                    {service.badge}
+                  </span>
+                  <span style={{
+                    display: 'inline-block',
+                    background: '#fef3c7',
+                    color: '#92400e',
+                    border: '1px solid #fde68a',
+                    padding: '3px 12px',
+                    borderRadius: '9999px',
+                    fontSize: '0.78rem',
+                    fontWeight: '800'
+                  }}>
+                    Application Fee: ₹{service.serviceCharge || '100'}/-
+                  </span>
+                </div>
                 <h1 style={{ fontSize: '1.95rem', fontWeight: '800', color: 'var(--navy-900)', marginBottom: '4px' }}>
                   {service.title}
                 </h1>
@@ -106,28 +119,22 @@ export default function ServiceDetailPage({ onInitiateService }) {
               </div>
             </div>
 
-            {/* Quick Action CTAs with login check & instruction flow */}
+            {/* Quick Action CTAs */}
             <div className="service-detail-cta-group" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              {service.formUrl && (
-                <button 
-                  type="button"
-                  className="btn-primary"
-                  style={{ padding: '12px 20px', fontSize: '0.92rem' }}
-                  onClick={() => onInitiateService(service, 'google-form')}
-                >
-                  <span>Open Google Form</span>
-                  <ExternalLink size={16} />
-                </button>
-              )}
-
               <button 
                 type="button" 
-                className="btn-secondary"
-                style={{ padding: '12px 20px', fontSize: '0.92rem' }}
+                className="btn-primary"
+                style={{ 
+                  padding: '12px 24px', 
+                  fontSize: '0.95rem',
+                  fontWeight: 800,
+                  background: 'linear-gradient(90deg, #ea580c 0%, #16a34a 100%)',
+                  boxShadow: '0 4px 14px rgba(234, 88, 12, 0.3)'
+                }}
                 onClick={() => onInitiateService(service, 'request')}
               >
-                <Send size={15} style={{ color: 'var(--saffron-600)' }} />
-                <span>Submit Website Request</span>
+                <Send size={16} />
+                <span>Apply Online (₹{service.serviceCharge || '100'})</span>
               </button>
 
               <a 
@@ -363,11 +370,18 @@ export default function ServiceDetailPage({ onInitiateService }) {
               <button 
                 type="button" 
                 className="btn-primary"
-                style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
+                style={{ 
+                  width: '100%', 
+                  justifyContent: 'center', 
+                  padding: '13px', 
+                  fontWeight: 800,
+                  background: 'linear-gradient(90deg, #ea580c 0%, #16a34a 100%)',
+                  boxShadow: '0 4px 14px rgba(234, 88, 12, 0.25)'
+                }}
                 onClick={() => onInitiateService(service, 'request')}
               >
-                <Send size={15} />
-                <span>Submit Website Request</span>
+                <Send size={16} />
+                <span>Apply Online (Fee: ₹{service.serviceCharge || '100'}/-)</span>
               </button>
             </div>
 

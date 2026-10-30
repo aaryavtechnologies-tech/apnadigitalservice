@@ -4,30 +4,34 @@ import {
   Search, 
   Edit3, 
   ExternalLink, 
-  CheckCircle, 
-  AlertTriangle, 
   Phone, 
   Layers, 
   Lock, 
   Eye, 
-  Crown,
-  FileSpreadsheet,
-  Link as LinkIcon,
-  Sparkles,
-  MessageCircle
+  QrCode, 
+  IndianRupee, 
+  UploadCloud, 
+  CheckCircle, 
+  FileCheck2
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { getAllServices } from '../../data/servicesData';
+import { getAllServices, getMasterQrCodeUrl, updateMasterQrCodeUrl } from '../../data/servicesData';
+import { uploadDocumentToCloudinary } from '../services/cloudinaryService';
 import AdminServiceModal from './AdminServiceModal';
 import ServiceIcon from '../../components/ServiceIcon';
 
 export default function AdminServicesManager() {
-  const { isSuperAdmin, isViewOnly } = useAdminAuth();
+  const { isSuperAdmin, isViewOnly, role } = useAdminAuth();
 
   const [servicesList, setServicesList] = useState(() => getAllServices());
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   
+  // Master QR Code Manager State
+  const [masterQr, setMasterQr] = useState('/default-payment-qr.png');
+  const [isUploadingMasterQr, setIsUploadingMasterQr] = useState(false);
+  const [masterQrNotice, setMasterQrNotice] = useState(null);
+
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState(null);
@@ -37,9 +41,23 @@ export default function AdminServicesManager() {
   };
 
   useEffect(() => {
-    const handleChanged = () => refreshServices();
+    getMasterQrCodeUrl().then(url => {
+      if (url) setMasterQr(url);
+    });
+
+    const handleChanged = () => {
+      refreshServices();
+      getMasterQrCodeUrl().then(url => {
+        if (url) setMasterQr(url);
+      });
+    };
+
     window.addEventListener('apna_services_changed', handleChanged);
-    return () => window.removeEventListener('apna_services_changed', handleChanged);
+    window.addEventListener('apna_settings_changed', handleChanged);
+    return () => {
+      window.removeEventListener('apna_services_changed', handleChanged);
+      window.removeEventListener('apna_settings_changed', handleChanged);
+    };
   }, []);
 
   const handleOpenAdd = () => {
@@ -51,6 +69,35 @@ export default function AdminServicesManager() {
   const handleOpenEdit = (srv) => {
     setEditingService(srv);
     setIsModalOpen(true);
+  };
+
+  // Upload New Master QR Code
+  const handleUploadMasterQr = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || isViewOnly) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMasterQrNotice({ type: 'error', text: 'Master QR code image size must be less than 5MB.' });
+      return;
+    }
+
+    setIsUploadingMasterQr(true);
+    setMasterQrNotice(null);
+
+    const res = await uploadDocumentToCloudinary(file);
+    setIsUploadingMasterQr(false);
+
+    if (res.success && res.secureUrl) {
+      setMasterQr(res.secureUrl);
+      const updateRes = await updateMasterQrCodeUrl(res.secureUrl, role);
+      if (updateRes.success) {
+        setMasterQrNotice({ type: 'success', text: 'Master QR code updated and deployed live!' });
+      } else {
+        setMasterQrNotice({ type: 'error', text: updateRes.error || 'Failed to update master QR setting.' });
+      }
+    } else {
+      setMasterQrNotice({ type: 'error', text: res.error || 'Cloudinary upload failed.' });
+    }
   };
 
   // Filtered services
@@ -72,7 +119,102 @@ export default function AdminServicesManager() {
 
   return (
     <div>
-      {/* Top Controls Strip - Crisp Clean Light Card */}
+      {/* 1. Master QR Code Global Strip */}
+      <div style={{
+        background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
+        border: '1.5px solid #E2E8F0',
+        borderRadius: '16px',
+        padding: '20px 24px',
+        marginBottom: '24px',
+        boxShadow: '0 4px 14px rgba(0,0,0,0.04)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '20px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <a 
+            href={masterQr}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Click to view / inspect full size QR image"
+            style={{
+              width: '76px',
+              height: '96px',
+              background: '#FFFFFF',
+              border: '1.5px solid #CBD5E1',
+              borderRadius: '10px',
+              padding: '4px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer'
+            }}
+          >
+            <img 
+              src={masterQr} 
+              alt="Master QR" 
+              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '6px' }}
+              onError={(e) => { e.target.src = '/default-payment-qr.png'; }}
+            />
+          </a>
+
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.74rem', fontWeight: 800, background: '#FEF3C7', color: '#92400E', padding: '2px 8px', borderRadius: '12px' }}>
+                GLOBAL PAYMENT GATEWAY
+              </span>
+              <span style={{ fontSize: '0.8rem', color: '#16A34A', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <CheckCircle size={14} /> Active on all forms
+              </span>
+            </div>
+            <h3 style={{ margin: '4px 0 2px', fontSize: '1.15rem', fontWeight: 800, color: '#0F172A' }}>
+              Master Payment QR Code & Scan-to-Pay
+            </h3>
+            <p style={{ margin: 0, fontSize: '0.84rem', color: '#64748B' }}>
+              Customers scan this QR code to pay the service fee. You can change this QR code image anytime.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {masterQrNotice && (
+            <span style={{
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              color: masterQrNotice.type === 'error' ? '#DC2626' : '#16A34A'
+            }}>
+              {masterQrNotice.text}
+            </span>
+          )}
+
+          {!isViewOnly ? (
+            <label 
+              className="admin-btn admin-btn-primary" 
+              style={{ cursor: isUploadingMasterQr ? 'wait' : 'pointer', padding: '10px 18px', fontSize: '0.88rem' }}
+            >
+              <UploadCloud size={16} />
+              <span>{isUploadingMasterQr ? 'Uploading QR...' : 'Change Master QR Code'}</span>
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleUploadMasterQr}
+                disabled={isUploadingMasterQr}
+              />
+            </label>
+          ) : (
+            <span style={{ fontSize: '0.82rem', color: '#64748B' }}>
+              (Master QR managed by Super Admin)
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* 2. Top Controls Strip - Crisp Clean Light Card */}
       <div className="admin-services-header-box">
         <div 
           style={{
@@ -102,11 +244,11 @@ export default function AdminServicesManager() {
                 <Layers size={20} />
               </div>
               <h2 className="admin-services-header-title">
-                Services Catalog Manager
+                Native Services & Dynamic Forms Manager
               </h2>
             </div>
             <p className="admin-services-header-desc">
-              Configure live citizen services, update Google Form URLs, map Google Sheet response targets, and manage helplines.
+              Manage website services, customize form questions for each service, set fees, and review active offerings.
             </p>
           </div>
 
@@ -124,7 +266,7 @@ export default function AdminServicesManager() {
                 onClick={handleOpenAdd}
               >
                 <Plus size={18} />
-                <span>+ Add New Live Service</span>
+                <span>+ Add New Service</span>
               </button>
             ) : (
               <button 
@@ -141,176 +283,176 @@ export default function AdminServicesManager() {
           </div>
         </div>
 
-        {/* Search & Filter Row */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
-            <Search 
-              size={16} 
-              style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--admin-text-dim)' }} 
-            />
+        {/* Real-time Filters Bar */}
+        <div className="admin-services-filter-row">
+          <div className="admin-services-search-wrap">
+            <Search size={16} className="search-icon" />
             <input 
-              type="text" 
-              placeholder="Search by title, Hindi name, or slug..."
+              type="text"
+              placeholder="Search by title, Hindi, slug, or keywords..."
               className="admin-search-input"
-              style={{ width: '100%', paddingLeft: '36px' }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <select 
-            className="admin-select"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="ALL">All Statuses ({totalCount})</option>
-            <option value="active">Active Live ({activeCount})</option>
-            <option value="phase2">Phase 2 / Upcoming ({phase2Count})</option>
-            <option value="inactive">Inactive / Hidden</option>
-          </select>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button 
+              type="button"
+              className={`admin-pill-filter ${statusFilter === 'ALL' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('ALL')}
+            >
+              All ({totalCount})
+            </button>
+            <button 
+              type="button"
+              className={`admin-pill-filter ${statusFilter === 'active' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('active')}
+            >
+              Active ({activeCount})
+            </button>
+            <button 
+              type="button"
+              className={`admin-pill-filter ${statusFilter === 'phase2' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('phase2')}
+            >
+              Phase 2 ({phase2Count})
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Services Cards Grid */}
+      {/* 3. Services Cards Grid */}
       <div className="admin-services-grid">
-        {filtered.map((srv) => (
-          <div 
-            key={srv.id}
-            className={`admin-service-card ${srv.status === 'active' ? 'active-service' : 'phase2-service'}`}
-          >
-            {/* Top info */}
-            <div className="admin-service-card-body">
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' }}>
-                <div 
-                  style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '10px',
-                    background: '#FFF7ED',
-                    border: '1px solid #FED7AA',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#EA580C',
-                    flexShrink: 0
-                  }}
-                >
-                  <ServiceIcon iconName={srv.iconName} size={22} />
-                </div>
+        {filtered.map((srv) => {
+          const fieldsCount = Array.isArray(srv.formFields) ? srv.formFields.length : 0;
+          const fee = srv.serviceCharge || '100';
 
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  <span 
-                    className={`admin-status-badge ${srv.status === 'active' ? 'status-completed' : srv.status === 'phase2' ? 'status-processing' : 'status-rejected'}`}
-                    style={{ fontSize: '0.74rem' }}
+          return (
+            <div key={srv.id} className="admin-service-card">
+              <div className="admin-service-body">
+                {/* Header Row: Icon + Catalog Status */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                  <div 
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '10px',
+                      background: '#FFF7ED',
+                      border: '1.5px solid #FED7AA',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#F97316'
+                    }}
                   >
-                    ● {srv.status.toUpperCase()}
+                    <ServiceIcon name={srv.iconName} size={24} color="#EA580C" />
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <span 
+                      className={`admin-status-badge ${srv.status === 'active' ? 'status-completed' : srv.status === 'phase2' ? 'status-processing' : 'status-rejected'}`}
+                      style={{ fontSize: '0.74rem' }}
+                    >
+                      ● {srv.status.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Service Titles */}
+                <h3 className="admin-service-title">
+                  {srv.title}
+                </h3>
+                <div className="admin-service-hindi">
+                  {srv.hindiTitle}
+                </div>
+
+                {/* Service Feature Badge */}
+                <div style={{ marginBottom: '14px' }}>
+                  <span 
+                    className="admin-role-pill"
+                    style={{
+                      background: srv.badgeColor === 'green' ? '#16A34A' : srv.badgeColor === 'blue' ? '#0284C7' : '#EA580C',
+                      color: '#FFFFFF',
+                      fontSize: '0.72rem',
+                      padding: '3px 9px'
+                    }}
+                  >
+                    {srv.badge}
                   </span>
+                </div>
+
+                {/* Form & Pricing Integrations */}
+                <div className="admin-service-integrations">
+                  {/* Service Charge */}
+                  <div className="admin-service-row">
+                    <span className="admin-service-row-label">
+                      <IndianRupee size={14} style={{ color: '#16A34A' }} /> Service Charge:
+                    </span>
+                    <span style={{ color: '#16A34A', fontWeight: 800, fontSize: '0.92rem' }}>
+                      ₹{fee}/-
+                    </span>
+                  </div>
+
+                  {/* Dynamic Form Fields */}
+                  <div className="admin-service-row">
+                    <span className="admin-service-row-label">
+                      <FileCheck2 size={14} style={{ color: '#0284C7' }} /> Form Questions:
+                    </span>
+                    <span style={{ color: '#0284C7', fontWeight: 700, fontSize: '0.84rem' }}>
+                      {fieldsCount} custom {fieldsCount === 1 ? 'field' : 'fields'}
+                    </span>
+                  </div>
+
+                  {/* Payment QR Code */}
+                  <div className="admin-service-row">
+                    <span className="admin-service-row-label">
+                      <QrCode size={14} style={{ color: '#D97706' }} /> Payment QR:
+                    </span>
+                    <span style={{ color: '#0F172A', fontWeight: 600, fontSize: '0.82rem' }}>
+                      UPI Scan & Pay Active
+                    </span>
+                  </div>
+
+                  {/* Helpline */}
+                  <div className="admin-service-row">
+                    <span className="admin-service-row-label">
+                      <Phone size={14} style={{ color: '#475569' }} /> Helpline:
+                    </span>
+                    <span style={{ color: '#0F172A', fontWeight: 700, fontSize: '0.84rem' }}>
+                      +91 {srv.supportPhone || '9124494239'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Service Titles - High Contrast Deep Slate Colors */}
-              <h3 className="admin-service-title">
-                {srv.title}
-              </h3>
-              <div className="admin-service-hindi">
-                {srv.hindiTitle}
-              </div>
-
-              {/* Service Feature Badge */}
-              <div style={{ marginBottom: '14px' }}>
-                <span 
-                  className="admin-role-pill"
-                  style={{
-                    background: srv.badgeColor === 'green' ? '#16A34A' : srv.badgeColor === 'blue' ? '#0284C7' : '#EA580C',
-                    color: '#FFFFFF',
-                    fontSize: '0.72rem',
-                    padding: '3px 9px'
-                  }}
+              {/* Bottom Actions Bar */}
+              <div className="admin-service-footer">
+                <a 
+                  href={`/service/${srv.slug}`} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="admin-btn admin-btn-secondary"
+                  style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                  title="Open user-facing service page"
                 >
-                  {srv.badge}
-                </span>
-              </div>
+                  <ExternalLink size={13} />
+                  <span>View Page</span>
+                </a>
 
-              {/* Integrations Indicator List - Clean Light Surface */}
-              <div className="admin-service-integrations">
-                {/* Google Form */}
-                <div className="admin-service-row">
-                  <span className="admin-service-row-label">
-                    <LinkIcon size={14} style={{ color: '#F97316' }} /> Google Form:
-                  </span>
-                  {srv.formUrl ? (
-                    <a 
-                      href={srv.formUrl} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="admin-service-link-configured"
-                    >
-                      <span>Configured</span>
-                      <ExternalLink size={12} />
-                    </a>
-                  ) : (
-                    <span style={{ color: '#94A3B8', fontSize: '0.8rem' }}>Not linked</span>
-                  )}
-                </div>
-
-                {/* Google Sheet */}
-                <div className="admin-service-row">
-                  <span className="admin-service-row-label">
-                    <FileSpreadsheet size={14} style={{ color: '#16A34A' }} /> Sheet Responses:
-                  </span>
-                  {srv.spreadsheetUrl ? (
-                    <a 
-                      href={srv.spreadsheetUrl} 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="admin-service-link-connected"
-                    >
-                      <span>Connected</span>
-                      <ExternalLink size={12} />
-                    </a>
-                  ) : (
-                    <span style={{ color: '#94A3B8', fontSize: '0.8rem' }}>Not linked</span>
-                  )}
-                </div>
-
-                {/* Helpline */}
-                <div className="admin-service-row">
-                  <span className="admin-service-row-label">
-                    <Phone size={14} style={{ color: '#D97706' }} /> Support Phone:
-                  </span>
-                  <span style={{ color: '#0F172A', fontWeight: 700, fontSize: '0.84rem' }}>
-                    +91 {srv.supportPhone || '9124494239'}
-                  </span>
-                </div>
+                <button 
+                  type="button" 
+                  className="admin-btn admin-btn-primary"
+                  style={{ padding: '6px 14px', fontSize: '0.82rem' }}
+                  onClick={() => handleOpenEdit(srv)}
+                >
+                  {isSuperAdmin ? <Edit3 size={13} /> : <Eye size={13} />}
+                  <span>{isSuperAdmin ? 'Edit Form & Price' : 'Inspect Details'}</span>
+                </button>
               </div>
             </div>
-
-            {/* Bottom Actions Bar */}
-            <div className="admin-service-footer">
-              <a 
-                href={`/service/${srv.slug}`} 
-                target="_blank" 
-                rel="noreferrer"
-                className="admin-btn admin-btn-secondary"
-                style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                title="Open user-facing service page"
-              >
-                <ExternalLink size={13} />
-                <span>Live Page</span>
-              </a>
-
-              <button 
-                type="button" 
-                className="admin-btn admin-btn-primary"
-                style={{ padding: '6px 14px', fontSize: '0.82rem' }}
-                onClick={() => handleOpenEdit(srv)}
-              >
-                {isSuperAdmin ? <Edit3 size={13} /> : <Eye size={13} />}
-                <span>{isSuperAdmin ? 'Edit Service' : 'Inspect Details'}</span>
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Service Edit / Add Modal */}

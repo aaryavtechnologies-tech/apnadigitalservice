@@ -22,7 +22,7 @@ export default function HowItWorksPage({ onOpenTrack }) {
     {
       num: '2',
       title: 'Submit Your Details',
-      desc: 'Complete the relevant website request form or open the linked official Google Form and provide the required document identification information securely.',
+      desc: 'Complete the online application form, provide the required document identification details, and upload your payment screenshot securely.',
       icon: SearchCheck
     },
     {
@@ -40,7 +40,7 @@ export default function HowItWorksPage({ onOpenTrack }) {
     {
       num: '5',
       title: 'Track Your Request',
-      desc: 'Use your unique Application / Order ID through our online tracking facility or customer dashboard to check real-time progress.',
+      desc: 'Use your unique Tracking ID through our online tracking facility or customer dashboard to check real-time progress.',
       icon: Search
     },
     {
@@ -52,17 +52,33 @@ export default function HowItWorksPage({ onOpenTrack }) {
   ];
 
   return (
-    <div style={{ background: '#f8fafc', minHeight: '80vh', padding: '50px 24px 80px' }}>
-      <div style={{ maxWidth: '1040px', margin: '0 auto' }}>
+    <div style={{ background: '#f8fafc', minHeight: '80vh', padding: '40px 16px 80px' }}>
+      <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
         
-        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <span className="section-tag">Step-by-Step Guide</span>
           <h1 style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--navy-900)', marginTop: '8px', marginBottom: '16px' }}>
             How Apna Digital Service Works
           </h1>
           <p style={{ fontSize: '1.1rem', color: 'var(--slate-600)', maxWidth: '750px', margin: '0 auto', lineHeight: '1.6' }}>
-            Our 6-step backend assisted lifecycle ensures fast, transparent, and accurate digital document retrieval.
+            Our streamlined assisted lifecycle ensures fast, transparent, and accurate digital document retrieval.
           </p>
+        </div>
+
+        {/* Full-Width Clean Diagram Image */}
+        <div style={{
+          borderRadius: '20px',
+          overflow: 'hidden',
+          boxShadow: '0 8px 30px rgba(15, 23, 42, 0.08)',
+          border: '1.5px solid #E2E8F0',
+          background: '#FFFFFF',
+          marginBottom: '40px'
+        }}>
+          <img 
+            src="/how-it-works-diagram.png" 
+            alt="How Apna Digital Service Works Infographic" 
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
         </div>
 
         {/* 6 Steps Grid */}

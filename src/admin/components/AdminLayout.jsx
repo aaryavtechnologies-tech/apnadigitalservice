@@ -1,15 +1,10 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  ShieldCheck, 
   Eye, 
   Crown, 
   LogOut, 
-  ExternalLink, 
-  Lock, 
-  Layers, 
-  FileText,
-  UserCheck
+  ExternalLink
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import '../admin.css';

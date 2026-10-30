@@ -1,21 +1,41 @@
 import React from 'react';
 import { ShieldCheck, Target, HeartHandshake, HelpCircle, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useWebsiteContent } from '../services/websiteContentService';
 
 export default function AboutPage() {
+  const { content } = useWebsiteContent();
+  const about = content.about_page || {};
+
   return (
     <div style={{ background: '#f8fafc', minHeight: '80vh', padding: '50px 24px 80px' }}>
       <div style={{ maxWidth: '980px', margin: '0 auto' }}>
         
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <span className="section-tag">About Our Platform</span>
+          <span className="section-tag">{about.tag || 'About Our Platform'}</span>
           <h1 style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--navy-900)', marginTop: '8px', marginBottom: '16px' }}>
-            About Apna Digital Service
+            {about.title || 'About Apna Digital Service'}
           </h1>
           <p style={{ fontSize: '1.1rem', color: 'var(--slate-600)', maxWidth: '750px', margin: '0 auto', lineHeight: '1.6' }}>
-            A privately operated online platform designed to make digital documentation and related assistance convenient, fast, and accessible across India.
+            {about.subtitle || 'A privately operated online platform designed to make digital documentation and related assistance convenient, fast, and accessible across India.'}
           </p>
+        </div>
+
+        {/* High-Resolution Brand Trust Banner */}
+        <div style={{
+          borderRadius: '24px',
+          overflow: 'hidden',
+          boxShadow: '0 10px 30px rgba(15, 23, 42, 0.08)',
+          border: '1.5px solid #E2E8F0',
+          background: '#FFFFFF',
+          marginBottom: '36px'
+        }}>
+          <img 
+            src={about.bannerImageUrl || "/your-documents-our-support.png"} 
+            alt="Your Documents, Our Support, Always — Apna Digital Service" 
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
         </div>
 
         {/* Core Description Card */}
@@ -31,13 +51,13 @@ export default function AboutPage() {
           fontSize: '1.02rem'
         }}>
           <p style={{ marginBottom: '18px' }}>
-            <strong>Apna Digital Service</strong> is a privately operated online platform designed to make digital documentation and related assistance more convenient for customers across India.
+            {about.paragraph1 || 'Apna Digital Service is a privately operated online platform designed to make digital documentation and related assistance more convenient for customers across India.'}
           </p>
           <p style={{ marginBottom: '18px' }}>
-            Our platform allows customers to submit service requests and required information online. Our backend team reviews each request and provides assistance through applicable authorized systems and procedures.
+            {about.paragraph2 || 'Our platform allows customers to submit service requests and required information online. Our backend team reviews each request and provides assistance through applicable authorized systems and procedures.'}
           </p>
           <p>
-            We aim to offer a simple, organized, and customer-friendly experience through online request submission, service updates, and dedicated support.
+            {about.paragraph3 || 'We aim to offer a simple, organized, and customer-friendly experience through online request submission, service updates, and dedicated support.'}
           </p>
         </div>
 
@@ -63,10 +83,10 @@ export default function AboutPage() {
               <Target size={26} />
             </div>
             <h3 style={{ fontSize: '1.3rem', marginBottom: '10px', color: 'var(--navy-900)' }}>
-              Our Mission
+              {about.missionTitle || 'Our Mission'}
             </h3>
             <p style={{ fontSize: '0.94rem', color: 'var(--slate-600)', lineHeight: '1.65' }}>
-              To make digital documentation assistance more accessible and convenient through a reliable online service experience for every citizen.
+              {about.missionDesc || 'To make digital documentation assistance more accessible and convenient through a reliable online service experience for every citizen.'}
             </p>
           </div>
 
@@ -90,10 +110,10 @@ export default function AboutPage() {
               <HeartHandshake size={26} />
             </div>
             <h3 style={{ fontSize: '1.3rem', marginBottom: '10px', color: 'var(--navy-900)' }}>
-              Our Approach
+              {about.approachTitle || 'Our Approach'}
             </h3>
             <p style={{ fontSize: '0.94rem', color: 'var(--slate-600)', lineHeight: '1.65' }}>
-              Simple online requests, responsible document handling, transparent service information, and customer-focused daily support.
+              {about.approachDesc || 'Simple online requests, responsible document handling, transparent service information, and customer-focused daily support.'}
             </p>
           </div>
         </div>

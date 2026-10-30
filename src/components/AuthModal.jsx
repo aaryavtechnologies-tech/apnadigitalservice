@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
-import { X, Mail, Lock, User, Phone, CheckCircle, AlertTriangle, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Mail, Lock, User, Phone, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react';
 import { supabase, isSupabaseConfigured, signInWithGoogle } from '../lib/supabaseClient';
 
-export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActionNotice }) {
-  if (!isOpen) return null;
-
-  const [mode, setMode] = useState('login'); // 'login' or 'signup'
+export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActionNotice, initialMode = 'login' }) {
+  const [mode, setMode] = useState(initialMode || 'login'); // 'login', 'signup', or 'forgot'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -13,6 +11,17 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
+
+  // Sync mode with initialMode when modal opens or initialMode changes
+  useEffect(() => {
+    if (initialMode) {
+      setMode(initialMode);
+      setErrorMessage('');
+      setInfoMessage('');
+    }
+  }, [initialMode, isOpen]);
+
+  if (!isOpen) return null;
 
   const handleGoogleAuth = async () => {
     setLoading(true);
@@ -30,7 +39,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
           id: 'google-user-' + Date.now(),
           email: email || 'citizen@gmail.com',
           fullName: 'Google User',
-          phone: '9124494239',
+          phone: '8018246567',
           provider: 'google'
         };
         localStorage.setItem('apna_user', JSON.stringify(mockUser));
@@ -64,7 +73,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
     } else {
       setTimeout(() => {
         setLoading(false);
-        setInfoMessage('Password reset simulation: In production, Supabase sends a secure reset link to your email.');
+        setInfoMessage('In production, Supabase sends a secure reset link to your email.');
       }, 500);
     }
   };
@@ -94,7 +103,7 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
         if (error) {
           setErrorMessage(error.message);
         } else {
-          setInfoMessage('Account created! Please check your email for confirmation or log in.');
+          setInfoMessage('Account created successfully! Please sign in with your credentials.');
           setMode('login');
         }
       } else {
@@ -117,13 +126,13 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
         }
       }
     } else {
-      // Safe local mock flow while developer configures Supabase in .env
+      // Safe local mock flow
       setTimeout(() => {
         const userObj = {
           id: 'user-' + Date.now(),
           email: email || 'customer@gmail.com',
           fullName: fullName || email.split('@')[0] || 'Customer',
-          phone: phone || '9124494239'
+          phone: phone || '8018246567'
         };
         localStorage.setItem('apna_user', JSON.stringify(userObj));
         onAuthSuccess(userObj);
@@ -135,39 +144,43 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <img src="/logo.png" alt="Logo" style={{ width: '28px', height: '28px', borderRadius: '50%' }} />
-            <h3 style={{ fontSize: '1.2rem' }}>
-              {mode === 'login' ? 'Customer Sign In' : mode === 'signup' ? 'Create Customer Account' : 'Reset Your Password'}
-            </h3>
+            <img src="/logo.png" alt="Apna Digital Service" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+            <div>
+              <h3 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 800, color: '#0F172A' }}>
+                {mode === 'login' ? 'Customer Sign In' : mode === 'signup' ? 'New Customer Registration' : 'Reset Password'}
+              </h3>
+              <div style={{ fontSize: '0.74rem', color: '#64748B' }}>
+                Apna Digital Service Portal
+              </div>
+            </div>
           </div>
           <button type="button" className="modal-close-btn" onClick={onClose}>
             <X size={20} />
           </button>
         </div>
 
-        <div className="modal-body">
-          {/* STRICT Notice on login screen as instructed */}
+        <div className="modal-body" style={{ padding: '20px' }}>
+          {/* Subtle Security Badge */}
           <div style={{
-            background: '#fff7ed',
-            border: '1.5px solid #fdba74',
-            borderRadius: 'var(--radius-md)',
-            padding: '12px 14px',
-            marginBottom: '18px',
+            background: '#F0FDF4',
+            border: '1px solid #BBF7D0',
+            borderRadius: '8px',
+            padding: '10px 12px',
+            marginBottom: '16px',
             display: 'flex',
-            gap: '10px',
-            alignItems: 'flex-start'
+            gap: '8px',
+            alignItems: 'center'
           }}>
-            <AlertTriangle size={18} style={{ color: '#ea580c', flexShrink: 0, marginTop: '2px' }} />
-            <div style={{ fontSize: '0.82rem', color: '#9a3412', lineHeight: '1.5' }}>
-              <strong>STRICT REQUIREMENT:</strong> Please sign in with the <strong>exact same Email / Gmail address</strong> that you will use when filling out the external Google Forms. 
-              Our verification team checks and matches submissions using this email ID!
+            <ShieldCheck size={16} style={{ color: '#16A34A', flexShrink: 0 }} />
+            <div style={{ fontSize: '0.78rem', color: '#15803D', fontWeight: 600 }}>
+              Official 256-Bit Encrypted Platform • Track Requests Anytime
             </div>
           </div>
 
-          {/* Mode Switch Tabs */}
+          {/* Mode Switch Tabs: Clearly visible */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
@@ -180,13 +193,16 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
               type="button" 
               onClick={() => { setMode('login'); setErrorMessage(''); }}
               style={{
-                padding: '8px',
+                padding: '9px',
                 borderRadius: 'var(--radius-sm)',
                 fontWeight: '700',
-                fontSize: '0.85rem',
+                fontSize: '0.86rem',
+                border: 'none',
+                cursor: 'pointer',
                 background: mode === 'login' ? '#ffffff' : 'transparent',
                 color: mode === 'login' ? 'var(--navy-900)' : 'var(--slate-500)',
-                boxShadow: mode === 'login' ? 'var(--shadow-sm)' : 'none'
+                boxShadow: mode === 'login' ? 'var(--shadow-sm)' : 'none',
+                transition: 'all 0.2s'
               }}
             >
               Sign In
@@ -195,13 +211,16 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
               type="button" 
               onClick={() => { setMode('signup'); setErrorMessage(''); }}
               style={{
-                padding: '8px',
+                padding: '9px',
                 borderRadius: 'var(--radius-sm)',
                 fontWeight: '700',
-                fontSize: '0.85rem',
+                fontSize: '0.86rem',
+                border: 'none',
+                cursor: 'pointer',
                 background: mode === 'signup' ? '#ffffff' : 'transparent',
                 color: mode === 'signup' ? 'var(--navy-900)' : 'var(--slate-500)',
-                boxShadow: mode === 'signup' ? 'var(--shadow-sm)' : 'none'
+                boxShadow: mode === 'signup' ? 'var(--shadow-sm)' : 'none',
+                transition: 'all 0.2s'
               }}
             >
               New Registration
@@ -222,11 +241,12 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
               border: '1.5px solid var(--border-subtle)',
               borderRadius: 'var(--radius-md)',
               background: '#ffffff',
-              fontSize: '0.92rem',
+              fontSize: '0.90rem',
               fontWeight: '600',
               color: 'var(--navy-800)',
-              marginBottom: '18px',
-              transition: 'background var(--transition-fast)'
+              marginBottom: '16px',
+              cursor: 'pointer',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24">
@@ -235,16 +255,16 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
             </svg>
-            <span>Continue with Google (Matches Google Form)</span>
+            <span>Continue with Google</span>
           </button>
 
           <div style={{
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
-            margin: '16px 0',
+            margin: '14px 0',
             color: 'var(--slate-400)',
-            fontSize: '0.78rem',
+            fontSize: '0.76rem',
             textTransform: 'uppercase',
             letterSpacing: '0.05em'
           }}>
@@ -285,22 +305,26 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
             {mode === 'signup' && (
               <>
                 <div className="form-field">
-                  <label className="form-label">Full Name *</label>
+                  <label className="form-label">
+                    Full Name <span style={{ color: '#dc2626' }}>*</span>
+                  </label>
                   <input 
                     type="text" 
                     className="form-input" 
-                    placeholder="Enter your name"
+                    placeholder="Enter your full legal name"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required 
                   />
                 </div>
                 <div className="form-field">
-                  <label className="form-label">WhatsApp Mobile Number *</label>
+                  <label className="form-label">
+                    WhatsApp Mobile Number <span style={{ color: '#dc2626' }}>*</span>
+                  </label>
                   <input 
                     type="tel" 
                     className="form-input" 
-                    placeholder="10-digit mobile number for PDF delivery"
+                    placeholder="10-digit WhatsApp number for updates"
                     pattern="[0-9]{10}"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
@@ -311,7 +335,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
             )}
 
             <div className="form-field">
-              <label className="form-label">Email Address (Google Form ID) *</label>
+              <label className="form-label">
+                Email Address <span style={{ color: '#dc2626' }}>*</span>
+              </label>
               <input 
                 type="email" 
                 className="form-input" 
@@ -320,13 +346,17 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
                 onChange={(e) => setEmail(e.target.value)}
                 required 
               />
-              <span className="form-helper-text">Must match the email you use to submit Google Forms</span>
+              <span className="form-helper-text" style={{ fontSize: '0.74rem', color: '#64748B' }}>
+                Used to dispatch your Tracking ID and verified document updates
+              </span>
             </div>
 
             {mode !== 'forgot' && (
               <div className="form-field">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label className="form-label" style={{ margin: 0 }}>Password *</label>
+                  <label className="form-label" style={{ margin: 0 }}>
+                    Password <span style={{ color: '#dc2626' }}>*</span>
+                  </label>
                   {mode === 'login' && (
                     <button 
                       type="button" 
@@ -362,9 +392,9 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
               {loading 
                 ? 'Processing...' 
                 : mode === 'login' 
-                  ? 'Sign In & Continue' 
+                  ? 'Sign In & Access Dashboard' 
                   : mode === 'signup' 
-                    ? 'Create Account & Continue' 
+                    ? 'Register New Account' 
                     : 'Send Password Reset Link'}
             </button>
 

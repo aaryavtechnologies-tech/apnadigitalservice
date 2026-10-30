@@ -19,22 +19,34 @@ import {
   Layers,
   Inbox,
   Plus,
-  Sparkles
+  Sparkles,
+  LayoutDashboard,
+  Globe,
+  PhoneCall,
+  Save,
+  Check,
+  AlertCircle
 } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';
 import AdminApplicationModal from '../components/AdminApplicationModal';
 import AdminServicesManager from '../components/AdminServicesManager';
 import AdminServiceModal from '../components/AdminServiceModal';
+import AdminWebsiteCMS from '../components/AdminWebsiteCMS';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { fetchAllAdminApplications } from '../services/adminDataService';
-import { getActiveServices, getAllServices } from '../../data/servicesData';
+import { getActiveServices, getAllServices, getHomepageSettings, saveHomepageSettings } from '../../data/servicesData';
 
 export default function AdminDashboardPage() {
   const { adminUser, role, isSuperAdmin, isViewOnly, loading } = useAdminAuth();
   const navigate = useNavigate();
 
-  // Active Tab: 'queue' | 'services'
+  // Active Tab: 'queue' | 'services' | 'homepage'
   const [activeTab, setActiveTab] = useState('queue');
+
+  // Homepage & Site Content Management State
+  const [homepageConfig, setHomepageConfig] = useState(() => getHomepageSettings());
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [configNotice, setConfigNotice] = useState(null);
 
   const [applications, setApplications] = useState([]);
   const [fetching, setFetching] = useState(true);
@@ -167,6 +179,15 @@ export default function AdminDashboardPage() {
             <span>Services Catalog & Settings</span>
             <span className="admin-tab-count">{allServicesList.length}</span>
           </button>
+
+          <button 
+            type="button" 
+            className={`admin-tab-btn ${activeTab === 'homepage' ? 'active' : ''}`}
+            onClick={() => setActiveTab('homepage')}
+          >
+            <Globe size={18} />
+            <span>Website CMS & Content</span>
+          </button>
         </div>
 
         {/* Quick Action Button */}
@@ -212,6 +233,156 @@ export default function AdminDashboardPage() {
       {activeTab === 'services' ? (
         /* Services Catalog Manager Component */
         <AdminServicesManager />
+      ) : activeTab === 'homepage' ? (
+        /* Homepage & Sections Management Component */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Header Action Bar */}
+          <div style={{
+            background: '#FFFFFF',
+            border: '1.5px solid #E2E8F0',
+            borderRadius: '16px',
+            padding: '20px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '14px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+          }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: '#0F172A' }}>
+                Homepage & Site Content Management
+              </h2>
+              <p style={{ margin: '4px 0 0', fontSize: '0.86rem', color: '#64748B' }}>
+                Toggle homepage sections (Hero, Services, How It Works, About, FAQ), update banner text, helpline numbers, and legal disclaimers.
+              </p>
+            </div>
+
+            {isSuperAdmin && (
+              <button
+                type="button"
+                className="admin-btn"
+                style={{
+                  background: 'linear-gradient(90deg, #F97316 0%, #16A34A 100%)',
+                  color: '#FFFFFF',
+                  fontWeight: 700,
+                  padding: '10px 20px',
+                  borderRadius: '10px',
+                  boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)'
+                }}
+                disabled={savingConfig}
+                onClick={() => {
+                  setSavingConfig(true);
+                  const res = saveHomepageSettings(homepageConfig, role);
+                  setSavingConfig(false);
+                  if (res.success) {
+                    setConfigNotice({ type: 'success', text: 'Homepage configuration saved and published live!' });
+                    setTimeout(() => setConfigNotice(null), 3000);
+                  } else {
+                    setConfigNotice({ type: 'error', text: res.error || 'Failed to save settings.' });
+                  }
+                }}
+              >
+                <Save size={16} />
+                <span>{savingConfig ? 'Saving...' : 'Save & Publish Changes'}</span>
+              </button>
+            )}
+          </div>
+
+          {configNotice && (
+            <div style={{
+              padding: '14px 20px',
+              borderRadius: '12px',
+              background: configNotice.type === 'error' ? '#FEE2E2' : '#DCFCE7',
+              color: configNotice.type === 'error' ? '#991B1B' : '#166534',
+              border: configNotice.type === 'error' ? '1px solid #FCA5A5' : '1px solid #86EFAC',
+              fontWeight: 600,
+              fontSize: '0.92rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              {configNotice.type === 'error' ? <AlertCircle size={18} /> : <Check size={18} />}
+              <span>{configNotice.text}</span>
+            </div>
+          )}
+
+          {/* Section 1: Homepage Section Visibility (Show / Hide) */}
+          <div style={{ background: '#FFFFFF', border: '1.5px solid #E2E8F0', borderRadius: '16px', padding: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#FFF7ED', color: '#F97316', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <LayoutDashboard size={20} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.12rem', fontWeight: 800, color: '#0F172A' }}>
+                  1. Homepage Sections Visibility
+                </h3>
+                <div style={{ fontSize: '0.80rem', color: '#64748B' }}>
+                  Toggle which main sections are displayed on the public homepage.
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px', marginTop: '16px' }}>
+              {[
+                { key: 'hero', label: '1. Hero / Main Banner Section' },
+                { key: 'services', label: '2. Document Services Grid' },
+                { key: 'howItWorks', label: '3. How It Works (4-Step Banner)' },
+                { key: 'about', label: '4. About Apna Digital Service' },
+                { key: 'faq', label: '5. Frequently Asked Questions (FAQ)' }
+              ].map(sec => {
+                const isEnabled = homepageConfig.sections?.[sec.key] !== false;
+                return (
+                  <div 
+                    key={sec.key} 
+                    style={{
+                      border: isEnabled ? '1.5px solid #86EFAC' : '1.5px solid #E2E8F0',
+                      background: isEnabled ? '#F0FDF4' : '#F8FAFC',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: '12px'
+                    }}
+                  >
+                    <div style={{ fontWeight: 700, fontSize: '0.90rem', color: isEnabled ? '#166534' : '#64748B' }}>
+                      {sec.label}
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isViewOnly}
+                      onClick={() => {
+                        setHomepageConfig(prev => ({
+                          ...prev,
+                          sections: {
+                            ...prev.sections,
+                            [sec.key]: !isEnabled
+                          }
+                        }));
+                      }}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        fontSize: '0.78rem',
+                        border: 'none',
+                        cursor: isViewOnly ? 'default' : 'pointer',
+                        background: isEnabled ? '#16A34A' : '#94A3B8',
+                        color: '#FFFFFF'
+                      }}
+                    >
+                      {isEnabled ? '● Visible on Homepage' : '○ Hidden from Homepage'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section 2: Full Website Content CMS (Super Admin Live Text Editor) */}
+          <AdminWebsiteCMS />
+        </div>
       ) : (
         /* Verification Queue & Dashboard Overview */
         <>
@@ -355,15 +526,16 @@ export default function AdminDashboardPage() {
                     <th>App ID & Date</th>
                     <th>Target Service</th>
                     <th>Customer Contact</th>
+                    <th>Payment Proof</th>
+                    <th>Customer Document</th>
                     <th>Live Status</th>
-                    <th>Verified Document</th>
                     <th style={{ textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredApps.length === 0 ? (
                     <tr>
-                      <td colSpan="6" style={{ textAlign: 'center', padding: '48px 20px', color: '#64748B' }}>
+                      <td colSpan="7" style={{ textAlign: 'center', padding: '48px 20px', color: '#64748B' }}>
                         <div style={{ display: 'inline-flex', padding: '12px', background: '#F1F5F9', borderRadius: '50%', marginBottom: '12px', color: '#0F172A' }}>
                           <Inbox size={28} />
                         </div>
@@ -378,83 +550,173 @@ export default function AdminDashboardPage() {
                       </td>
                     </tr>
                   ) : (
-                    filteredApps.map((app) => (
-                      <tr key={app.appId} style={{ cursor: 'pointer' }} onClick={() => setSelectedApp(app)}>
-                        {/* App ID & Date */}
-                        <td>
-                          <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.92rem' }}>
-                            {app.appId}
-                          </div>
-                          <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '2px' }}>
-                            {new Date(app.createdAt || Date.now()).toLocaleDateString('en-IN', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
-                          </div>
-                        </td>
+                    filteredApps.map((app) => {
+                      const hasUserDoc = Boolean(
+                        app.userDocumentUrl || 
+                        (Array.isArray(app.userDocuments) && app.userDocuments.length > 0)
+                      );
+                      const userDocsCount = Array.isArray(app.userDocuments) ? app.userDocuments.length : (app.userDocumentUrl ? 1 : 0);
 
-                        {/* Target Service */}
-                        <td>
-                          <div style={{ fontWeight: 700, color: '#0F172A' }}>
-                            {app.serviceName}
-                          </div>
-                          <div style={{ fontSize: '0.74rem', color: '#0284C7', fontWeight: 600 }}>
-                            {app.serviceSlug}
-                          </div>
-                        </td>
-
-                        {/* Customer Contact */}
-                        <td>
-                          <div style={{ fontWeight: 700, color: '#0F172A' }}>
-                            {app.fullName || 'Anonymous User'}
-                          </div>
-                          <div style={{ fontSize: '0.76rem', color: '#475569', marginTop: '2px' }}>
-                            📞 {app.phone || 'No phone'}
-                          </div>
-                          {app.email && (
-                            <div style={{ fontSize: '0.74rem', color: '#64748B' }}>
-                              ✉️ {app.email}
+                      return (
+                        <tr key={app.appId} style={{ cursor: 'pointer' }} onClick={() => setSelectedApp(app)}>
+                          {/* App ID & Date */}
+                          <td>
+                            <div style={{ fontWeight: 700, color: '#0F172A', fontSize: '0.92rem' }}>
+                              {app.appId}
                             </div>
-                          )}
-                        </td>
-
-                        {/* Status Badge */}
-                        <td>
-                          <span className={`admin-status-badge ${getStatusBadgeClass(app.status)}`}>
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }} />
-                            {app.status || 'Request Received'}
-                          </span>
-                        </td>
-
-                        {/* Document Status */}
-                        <td>
-                          {app.documentUrl ? (
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#34D399', fontSize: '0.82rem', fontWeight: 600 }}>
-                              <CheckCircle2 size={16} />
-                              <span>PDF Attached</span>
+                            <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '2px' }}>
+                              {new Date(app.createdAt || Date.now()).toLocaleDateString('en-IN', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
                             </div>
-                          ) : (
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--admin-text-dim)', fontSize: '0.82rem' }}>
-                              <Lock size={14} />
-                              <span>Awaiting Upload</span>
-                            </div>
-                          )}
-                        </td>
+                          </td>
 
-                        {/* Actions Button */}
-                        <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
-                          <button 
-                            className="admin-btn admin-btn-secondary"
-                            style={{ padding: '6px 12px', fontSize: '0.8rem' }}
-                            onClick={() => setSelectedApp(app)}
-                          >
-                            {isSuperAdmin ? <Crown size={13} style={{ color: '#F59E0B' }} /> : <Eye size={13} />}
-                            <span>{isSuperAdmin ? 'Inspect / Edit' : 'Inspect Details'}</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                          {/* Target Service */}
+                          <td>
+                            <div style={{ fontWeight: 700, color: '#0F172A' }}>
+                              {app.serviceName}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                              <span style={{ fontSize: '0.72rem', color: '#0284C7', fontWeight: 600 }}>
+                                {app.serviceSlug}
+                              </span>
+                              {app.serviceCharge && (
+                                <span style={{ fontSize: '0.7rem', background: '#DCFCE7', color: '#166534', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                                  ₹{app.serviceCharge}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Customer Contact */}
+                          <td>
+                            <div style={{ fontWeight: 700, color: '#0F172A' }}>
+                              {app.fullName || 'Anonymous User'}
+                            </div>
+                            <div style={{ fontSize: '0.76rem', color: '#475569', marginTop: '2px' }}>
+                              📞 {app.phone || 'No phone'}
+                            </div>
+                            {app.email && (
+                              <div style={{ fontSize: '0.74rem', color: '#64748B' }}>
+                                ✉️ {app.email}
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Payment Screenshot & Verification Status */}
+                          <td>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                              {app.paymentScreenshotUrl ? (
+                                <a 
+                                  href={app.paymentScreenshotUrl} 
+                                  target="_blank" 
+                                  rel="noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontSize: '0.74rem',
+                                    fontWeight: 700,
+                                    color: '#0284C7',
+                                    background: '#F0F9FF',
+                                    padding: '3px 7px',
+                                    borderRadius: '5px',
+                                    border: '1px solid #BAE6FD',
+                                    textDecoration: 'none'
+                                  }}
+                                >
+                                  <ExternalLink size={11} />
+                                  <span>Proof Attached</span>
+                                </a>
+                              ) : (
+                                <span style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 600 }}>
+                                  No Proof
+                                </span>
+                              )}
+
+                              {/* Payment Status Pill */}
+                              <span style={{
+                                fontSize: '0.70rem',
+                                fontWeight: 800,
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                textTransform: 'uppercase',
+                                background: (app.paymentStatus || 'pending') === 'received' ? '#DCFCE7' : (app.paymentStatus || 'pending') === 'failed' ? '#FEE2E2' : '#FEF3C7',
+                                color: (app.paymentStatus || 'pending') === 'received' ? '#15803D' : (app.paymentStatus || 'pending') === 'failed' ? '#B91C1C' : '#B45309',
+                                border: `1px solid ${(app.paymentStatus || 'pending') === 'received' ? '#86EFAC' : (app.paymentStatus || 'pending') === 'failed' ? '#FCA5A5' : '#FDE68A'}`
+                              }}>
+                                {(app.paymentStatus || 'pending') === 'received' ? '✓ Received' : (app.paymentStatus || 'pending') === 'failed' ? '✕ Failed' : '⏳ Pending'}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Customer Uploaded Document (or "No document available") */}
+                          <td>
+                            {hasUserDoc ? (
+                              <a 
+                                href={app.userDocumentUrl || app.userDocuments?.[0]?.url} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  fontSize: '0.78rem',
+                                  fontWeight: 700,
+                                  color: '#0284C7',
+                                  background: '#F0F9FF',
+                                  padding: '4px 8px',
+                                  borderRadius: '6px',
+                                  border: '1px solid #BAE6FD',
+                                  textDecoration: 'none'
+                                }}
+                              >
+                                <FileText size={13} />
+                                <span>{userDocsCount > 1 ? `${userDocsCount} Documents` : 'View Document'}</span>
+                                <ExternalLink size={11} />
+                              </a>
+                            ) : (
+                              <span style={{
+                                fontSize: '0.74rem',
+                                fontWeight: 700,
+                                color: '#64748B',
+                                background: '#F1F5F9',
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                                border: '1px solid #E2E8F0',
+                                display: 'inline-block'
+                              }}>
+                                No document available
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Status Badge */}
+                          <td>
+                            <span className={`admin-status-badge ${getStatusBadgeClass(app.status)}`}>
+                              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor' }} />
+                              {app.status || 'Request Received'}
+                            </span>
+                          </td>
+
+                          {/* Actions Button */}
+                          <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
+                            <button 
+                              className="admin-btn admin-btn-secondary"
+                              style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+                              onClick={() => setSelectedApp(app)}
+                            >
+                              <Eye size={13} />
+                              <span>Review</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -468,12 +730,17 @@ export default function AdminDashboardPage() {
         <AdminApplicationModal 
           app={selectedApp}
           onClose={() => setSelectedApp(null)}
-          onUpdated={() => {
+          onUpdated={(updatedFields) => {
+            // Refresh modal state from localStorage immediately (avoids stale Supabase roundtrip)
+            try {
+              const local = JSON.parse(localStorage.getItem('apna_applications') || '[]');
+              const fresh = local.find(a => a.appId === selectedApp.appId);
+              if (fresh) setSelectedApp({ ...fresh, ...updatedFields });
+            } catch (e) {
+              // fallback: just keep modal open with current state
+            }
+            // Reload the applications list in the background
             loadApplications();
-            fetchAllAdminApplications().then(updatedList => {
-              const fresh = updatedList.find(a => a.appId === selectedApp.appId);
-              if (fresh) setSelectedApp(fresh);
-            });
           }}
         />
       )}

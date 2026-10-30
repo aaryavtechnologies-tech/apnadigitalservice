@@ -81,12 +81,12 @@ export default function HelplineBanner() {
               </div>
               <div className="helpline-chip-text">
                 <div className="helpline-chip-title">DL & VEHICLE RC HELPLINE</div>
-                <div className="helpline-chip-num">9078620775</div>
+                <div className="helpline-chip-num">8018246567</div>
               </div>
             </div>
 
             <a 
-              href="https://wa.me/919078620775?text=Hello%20Apna%20Digital%20Service,%20I%20need%20assistance%20with%20DL%20or%20RC%20PDF" 
+              href="https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20assistance%20with%20DL%20or%20RC%20PDF" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn-whatsapp helpline-chat-btn"

@@ -10,10 +10,11 @@ import FAQPage from './pages/FAQPage';
 import ContactPage from './pages/ContactPage';
 import PolicyPage from './pages/PolicyPage';
 import CustomerDashboardPage from './pages/CustomerDashboardPage';
+import AuthPage from './pages/AuthPage';
 import RequestModal from './components/RequestModal';
 import AuthModal from './components/AuthModal';
 import TrackApplicationModal from './components/TrackApplicationModal';
-import FormInstructionModal from './components/FormInstructionModal';
+import SiteLoader from './components/SiteLoader';
 import { getActiveServices } from './data/servicesData';
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
 
@@ -78,11 +79,20 @@ function AppContent() {
   });
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('login');
   const [isTrackModalOpen, setIsTrackModalOpen] = useState(false);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-  const [isInstructionModalOpen, setIsInstructionModalOpen] = useState(false);
 
-  const [selectedServiceForAction, setSelectedServiceForAction] = useState(null);
+  const handleOpenLogin = () => {
+    setAuthModalMode('login');
+    setIsAuthModalOpen(true);
+  };
+
+  const handleOpenRegister = () => {
+    setAuthModalMode('signup');
+    setIsAuthModalOpen(true);
+  };
+
   const [selectedServiceForRequest, setSelectedServiceForRequest] = useState(null);
   const [pendingServiceAction, setPendingServiceAction] = useState(null);
 
@@ -153,30 +163,13 @@ function AppContent() {
     localStorage.removeItem('apna_user');
   };
 
-  const handleInitiateService = (service, type = 'google-form') => {
-    setSelectedServiceForAction(service);
-
-    if (!currentUser) {
-      setPendingServiceAction({ service, type });
-      setIsAuthModalOpen(true);
-      return;
-    }
-
-    setIsInstructionModalOpen(true);
-  };
-
-  const handleProceedToForm = (service) => {
-    setIsInstructionModalOpen(false);
-    setSelectedServiceForRequest(service);
+  // Direct 1-Click trigger: Opens native application form immediately
+  const handleInitiateService = (service) => {
+    setSelectedServiceForRequest(service || services[0]);
     setIsRequestModalOpen(true);
   };
 
   const handleOpenRequestModal = (service = null) => {
-    if (!currentUser) {
-      setPendingServiceAction({ service: service || services[0], type: 'request' });
-      setIsAuthModalOpen(true);
-      return;
-    }
     setSelectedServiceForRequest(service || services[0]);
     setIsRequestModalOpen(true);
   };
@@ -184,8 +177,8 @@ function AppContent() {
   const handleAuthSuccess = (user) => {
     setCurrentUser(user);
     if (pendingServiceAction) {
-      setSelectedServiceForAction(pendingServiceAction.service);
-      setIsInstructionModalOpen(true);
+      setSelectedServiceForRequest(pendingServiceAction.service);
+      setIsRequestModalOpen(true);
       setPendingServiceAction(null);
     }
   };
@@ -206,10 +199,15 @@ function AppContent() {
   // Customer Portal
   return (
     <div className="apna-app-root">
+      {/* 3-Colour Rotating Circle Site Loading Animation */}
+      <SiteLoader />
+
       {/* Navigation Header (Strictly user-facing) */}
       <Header 
         currentUser={currentUser}
-        onOpenAuth={() => setIsAuthModalOpen(true)}
+        onOpenAuth={() => handleOpenLogin()}
+        onOpenLogin={handleOpenLogin}
+        onOpenRegister={handleOpenRegister}
         onOpenTrack={() => setIsTrackModalOpen(true)}
         onSignOut={handleSignOut}
       />
@@ -259,6 +257,38 @@ function AppContent() {
             } 
           />
 
+          {/* Dedicated Customer Login & Registration Pages */}
+          <Route 
+            path="/login" 
+            element={
+              <AuthPage 
+                mode="login" 
+                onAuthSuccess={handleAuthSuccess} 
+                currentUser={currentUser} 
+              />
+            } 
+          />
+          <Route 
+            path="/register" 
+            element={
+              <AuthPage 
+                mode="signup" 
+                onAuthSuccess={handleAuthSuccess} 
+                currentUser={currentUser} 
+              />
+            } 
+          />
+          <Route 
+            path="/signup" 
+            element={
+              <AuthPage 
+                mode="signup" 
+                onAuthSuccess={handleAuthSuccess} 
+                currentUser={currentUser} 
+              />
+            } 
+          />
+
           <Route path="/about" element={<AboutPage />} />
           <Route path="/how-it-works" element={<HowItWorksPage onOpenTrack={() => setIsTrackModalOpen(true)} />} />
           <Route path="/faq" element={<FAQPage />} />
@@ -291,15 +321,9 @@ function AppContent() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onAuthSuccess={handleAuthSuccess}
+        initialMode={authModalMode}
       />
 
-      <FormInstructionModal 
-        isOpen={isInstructionModalOpen}
-        onClose={() => setIsInstructionModalOpen(false)}
-        service={selectedServiceForAction}
-        currentUser={currentUser}
-        onProceedToForm={handleProceedToForm}
-      />
 
       <RequestModal 
         isOpen={isRequestModalOpen}

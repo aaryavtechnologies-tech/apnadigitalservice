@@ -14,30 +14,31 @@ export const isCloudinaryConfigured = Boolean(
 );
 
 /**
- * Upload a document file (PDF, JPG, PNG) directly to Cloudinary
+ * Upload a document file (PDF, JPG, PNG, WEBP) directly to Cloudinary
  * @param {File} file - The file to upload
  * @param {Function} onProgress - Progress callback (percentage)
+ * @param {string} folderName - Subfolder in Cloudinary (e.g. apna_documents/payment_proofs, apna_documents/customer_docs)
  * @returns {Promise<{success: boolean, secureUrl?: string, originalName?: string, bytes?: number, error?: string}>}
  */
-export async function uploadDocumentToCloudinary(file, onProgress) {
+export async function uploadDocumentToCloudinary(file, onProgress, folderName = 'apna_documents/customer_docs') {
   if (!file) {
     return { success: false, error: 'No file provided for upload.' };
   }
 
   // Validate allowed file types
-  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
   const isAllowed = allowedTypes.includes(file.type) || file.name.toLowerCase().endsWith('.pdf');
   
   if (!isAllowed) {
     return { 
       success: false, 
-      error: 'Invalid file format. Please upload a PDF document or high-resolution image (JPG/PNG).' 
+      error: 'Invalid file format. Please upload a PDF document or image (JPG, PNG, WEBP).' 
     };
   }
 
-  // Max 15MB file size limit
-  if (file.size > 15 * 1024 * 1024) {
-    return { success: false, error: 'File size exceeds maximum allowed limit (15MB).' };
+  // Max 5MB file size limit
+  if (file.size > 5 * 1024 * 1024) {
+    return { success: false, error: 'File size exceeds maximum allowed limit (5MB).' };
   }
 
   // If Cloudinary is not configured in .env, use local offline simulator for instant testing
@@ -71,7 +72,7 @@ export async function uploadDocumentToCloudinary(file, onProgress) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
-    formData.append('folder', 'apna_documents/pdfs');
+    formData.append('folder', folderName || 'apna_documents/customer_docs');
 
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();

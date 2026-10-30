@@ -10,21 +10,60 @@ import {
   HelpCircle,
   Headphones
 } from 'lucide-react';
+import { useWebsiteContent } from '../services/websiteContentService';
+
+import { supabase } from '../lib/supabaseClient';
 
 export default function ContactPage() {
+  const { content } = useWebsiteContent();
+  const contact = content.contact_page || {};
+
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [subject, setSubject] = useState('Service-related enquiry');
   const [message, setMessage] = useState('');
   const [dispatched, setDispatched] = useState(false);
 
-  const handleSubmit = (e) => {
+  const cleanWhatsApp = (contact.whatsappNumber || contact.primaryPhone1 || '8018246567').replace(/\D/g, '').slice(-10);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 1. Save to Supabase contact_inquiries table
+    if (supabase) {
+      try {
+        await supabase.from('contact_inquiries').insert([{
+          name: name.trim(),
+          phone: phone.trim(),
+          topic: subject,
+          message: message.trim(),
+          status: 'New'
+        }]);
+      } catch (err) {
+        console.warn('Inquiry save notice:', err.message);
+      }
+    }
+
+    // 2. Also keep in localStorage for offline availability
+    try {
+      const localInquiries = JSON.parse(localStorage.getItem('apna_inquiries') || '[]');
+      localInquiries.unshift({
+        name: name.trim(),
+        phone: phone.trim(),
+        topic: subject,
+        message: message.trim(),
+        date: new Date().toISOString()
+      });
+      localStorage.setItem('apna_inquiries', JSON.stringify(localInquiries));
+    } catch (e) {
+      console.warn(e);
+    }
+
+    // 3. Connect via WhatsApp
     const encoded = encodeURIComponent(
       `Hello Apna Digital Service,\nName: ${name}\nPhone: ${phone}\nTopic: ${subject}\nMessage: ${message}`
     );
-    // Direct WhatsApp dispatch
-    window.open(`https://wa.me/919124494239?text=${encoded}`, '_blank');
+    window.open(`https://wa.me/91${cleanWhatsApp}?text=${encoded}`, '_blank');
     setDispatched(true);
   };
 
@@ -33,13 +72,29 @@ export default function ContactPage() {
       <div style={{ maxWidth: '1040px', margin: '0 auto' }}>
         
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <span className="section-tag">Get in Touch</span>
+          <span className="section-tag">{contact.tag || 'Get in Touch'}</span>
           <h1 style={{ fontSize: '2.5rem', fontWeight: '800', color: 'var(--navy-900)', marginTop: '8px', marginBottom: '14px' }}>
-            Contact Customer Support
+            {contact.title || 'Contact Customer Support'}
           </h1>
           <p style={{ fontSize: '1.1rem', color: 'var(--slate-600)', maxWidth: '750px', margin: '0 auto', lineHeight: '1.6' }}>
-            We are committed to helping customers with their digital documentation and service requests. Reach out to our operators daily.
+            {contact.subtitle || 'We are committed to helping customers with their digital documentation and service requests. Reach out to our operators daily.'}
           </p>
+        </div>
+
+        {/* Aapka Kaam, Hamari Zimmedari Office Banner */}
+        <div style={{
+          borderRadius: '24px',
+          overflow: 'hidden',
+          boxShadow: '0 10px 30px rgba(15, 23, 42, 0.08)',
+          border: '1.5px solid #E2E8F0',
+          background: '#FFFFFF',
+          marginBottom: '40px'
+        }}>
+          <img 
+            src={contact.bannerImageUrl || "/banner-extra.png"} 
+            alt="Apna Digital Service — Aapka Kaam, Hamari Zimmedari" 
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+          />
         </div>
 
         <div className="contact-page-grid">
@@ -79,7 +134,7 @@ export default function ContactPage() {
                       Primary Helplines
                     </div>
                     <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--navy-900)' }}>
-                      +91 8018246567 / +91 9124494239
+                      {contact.primaryPhone1 || '+91 8018246567'} {contact.primaryPhone2 ? `/ ${contact.primaryPhone2}` : ''}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--slate-600)' }}>
                       Assistance for PAN Card, Voter ID & General Enquiries
@@ -106,7 +161,7 @@ export default function ContactPage() {
                       Driving Licence & Vehicle RC Helpline
                     </div>
                     <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--navy-900)' }}>
-                      +91 9078620775
+                      {contact.primaryPhone1 || '+91 8018246567'}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--slate-600)' }}>
                       Sarathi & Vahan digital duplicate assistance
@@ -133,7 +188,7 @@ export default function ContactPage() {
                       Official Support Email
                     </div>
                     <div style={{ fontSize: '0.98rem', fontWeight: '700', color: 'var(--navy-900)' }}>
-                      help.apnadigitalservice@gmail.com
+                      {contact.supportEmail || 'help.apnadigitalservice@gmail.com'}
                     </div>
                   </div>
                 </div>
@@ -157,7 +212,7 @@ export default function ContactPage() {
                       Support Hours
                     </div>
                     <div style={{ fontSize: '0.98rem', fontWeight: '700', color: 'var(--navy-900)' }}>
-                      Every day, 9:00 AM to 9:00 PM IST
+                      {contact.operatingHours || 'Every day, 9:00 AM to 9:00 PM IST'}
                     </div>
                   </div>
                 </div>
@@ -264,7 +319,7 @@ export default function ContactPage() {
                 <textarea 
                   className="form-textarea"
                   rows={4}
-                  placeholder="Explain your query or mention your Application ID..."
+                  placeholder="Explain your query or mention your Tracking ID..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   required

@@ -1,8 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Mail, Phone, Clock, Sparkles, ExternalLink } from 'lucide-react';
+import { useWebsiteContent } from '../services/websiteContentService';
 
 export default function Footer({ onOpenRequestModal }) {
+  const { content } = useWebsiteContent();
+  const footer = content.footer || {};
+  const contact = content.contact_page || {};
+
   return (
     <footer className="main-footer">
       <div className="footer-container">
@@ -20,7 +25,7 @@ export default function Footer({ onOpenRequestModal }) {
           </div>
 
           <p>
-            Apna Pan Agency provides seamless facilitation assistance for citizens needing fast retrieval of official PAN, Voter ID, Driving Licence, and Vehicle RC digital documents.
+            {footer.brandDesc || 'Apna Digital Service provides seamless facilitation assistance for citizens needing fast retrieval of official PAN, Voter ID, Driving Licence, and Vehicle RC digital documents.'}
           </p>
 
           <div style={{
@@ -36,7 +41,7 @@ export default function Footer({ onOpenRequestModal }) {
               <ShieldCheck size={14} style={{ color: 'var(--saffron-400)' }} />
               <span>Private Platform Disclaimer</span>
             </strong>
-            This website is privately operated and is <strong>NOT an official government portal</strong> or affiliated with any government department.
+            {footer.disclaimer || 'This website is privately operated and is NOT an official government portal or affiliated with any government department.'}
           </div>
         </div>
 
@@ -107,7 +112,7 @@ export default function Footer({ onOpenRequestModal }) {
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Phone size={15} style={{ color: 'var(--green-400)' }} />
-              <span>+91 9078620775 (DL/RC)</span>
+              <span>+91 8018246567 (DL/RC)</span>
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Phone size={15} style={{ color: 'var(--slate-400)' }} />
@@ -127,7 +132,7 @@ export default function Footer({ onOpenRequestModal }) {
 
       <div className="footer-bottom">
         <div>
-          © {new Date().getFullYear()} Apna Digital Service (Apna Pan Agency). All rights reserved.
+          {footer.copyright || `© ${new Date().getFullYear()} Apna Digital Service. All rights reserved.`}
           <Link to="/admin/login" style={{ color: '#64748b', fontSize: '0.75rem', textDecoration: 'none', marginLeft: '14px' }}>
             🔒 Staff Portal
           </Link>

@@ -233,8 +233,8 @@ INSERT INTO public.services (
   'active',
   'https://forms.gle/DrgRW485k9QDQTf28',
   'https://docs.google.com/spreadsheets/d/1SJtUkFBjKuSYlVd-u1PqRBj_lf8h8G5-ufwOwtbsKQc/edit?resourcekey=&gid=24079836#gid=24079836',
-  '9078620775',
-  'https://wa.me/919078620775?text=Hello%20Apna%20Digital%20Service,%20I%20need%20assistance%20with%20Driving%20Licence%20PDF',
+  '8018246567',
+  'https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20assistance%20with%20Driving%20Licence%20PDF',
   3,
   'Apna Digital Service provides facilitation assistance for official digital DL copies. We are privately operated and not the Ministry of Road Transport or any State RTO.'
 ),
@@ -251,8 +251,8 @@ INSERT INTO public.services (
   'active',
   'https://forms.gle/ffutHMr4xa6yDMHZA',
   'https://docs.google.com/spreadsheets/d/1l7rKqK5bH4eBvPZ8lQ7uW8uVw9mK5y8lQ7uW8uVw9m/edit',
-  '9078620775',
-  'https://wa.me/919078620775?text=Hello%20Apna%20Digital%20Service,%20I%20need%20assistance%20with%20Vehicle%20RC%20PDF',
+  '8018246567',
+  'https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20assistance%20with%20Vehicle%20RC%20PDF',
   4,
   'Apna Digital Service assists in retrieving digital Vehicle Registration records. We are privately operated and not the Ministry of Road Transport or any State RTO.'
 ),

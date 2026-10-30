@@ -8,14 +8,13 @@ import {
   CheckCircle,
   Loader2,
   KeyRound,
-  Send,
-  Crown
+  Send
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import '../admin.css';
 
 export default function AdminLoginPage() {
-  const { adminUser, role, isAdmin, adminSignIn, sendAdminOtp, verifyAdminOtp, loginAsTestingSuperAdmin } = useAdminAuth();
+  const { adminUser, role, isAdmin, adminSignIn, sendAdminOtp, verifyAdminOtp } = useAdminAuth();
   const navigate = useNavigate();
 
   // Mode: 'password' | 'forgot_request' | 'forgot_verify'
@@ -318,41 +317,6 @@ export default function AdminLoginPage() {
             </div>
           </form>
         )}
-
-        {/* Developer & Client Testing Bypass */}
-        <div style={{ marginTop: '24px', paddingTop: '18px', borderTop: '1px dashed #E2E8F0', textAlign: 'center' }}>
-          <button 
-            type="button" 
-            onClick={() => {
-              loginAsTestingSuperAdmin();
-              navigate('/admin');
-            }}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              padding: '11px 16px',
-              background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
-              border: '1.5px solid #F59E0B',
-              borderRadius: '8px',
-              color: '#92400E',
-              fontWeight: 800,
-              fontSize: '0.86rem',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(245, 158, 11, 0.15)',
-              transition: 'all 0.15s ease'
-            }}
-            title="Instantly authenticate as Super Admin for development and testing review"
-          >
-            <Crown size={17} style={{ color: '#D97706' }} />
-            <span>Testing Bypass: Instant Super Admin Login</span>
-          </button>
-          <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '6px' }}>
-            Developer testing mode — Grants immediate Super Admin access without Supabase OTP
-          </div>
-        </div>
 
         {/* Back to site */}
         <div style={{ marginTop: '20px', textAlign: 'center' }}>

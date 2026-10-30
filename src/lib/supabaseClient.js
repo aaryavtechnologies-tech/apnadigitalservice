@@ -79,8 +79,11 @@ export async function saveServiceRequest(requestData) {
     typeof str === 'string' &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
 
-  // ── Supabase is the source of truth ──
-  if (supabase) {
+  // ── Supabase is the source of truth; never claim success from a local-only save ──
+  if (!supabase) {
+    throw new Error('Supabase is not configured. Your request was not submitted. Please try again later.');
+  }
+  {
     const safeUserId = isValidUUID(requestData.userId) ? requestData.userId : null;
 
     const payload = {
@@ -107,9 +110,11 @@ export async function saveServiceRequest(requestData) {
       form_data:               requestData.formData || {}
     };
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('service_requests')
-      .upsert([payload], { onConflict: 'application_id' });
+      .insert(payload)
+      .select('application_id')
+      .single();
 
     if (error) {
       // ❌ Real error — throw so the UI shows it to the user. No silent fallback.
@@ -118,43 +123,12 @@ export async function saveServiceRequest(requestData) {
         `Failed to save your application to the database: ${error.message}\n\nPlease try again or contact support.`
       );
     }
+    if (!data?.application_id) throw new Error('Supabase did not confirm that the request was saved.');
 
     console.log('[saveServiceRequest] Saved to Supabase:', requestData.appId);
 
-    // Secondary: also cache in localStorage so the user can see it immediately
-    try {
-      const local = JSON.parse(localStorage.getItem('apna_applications') || '[]');
-      const existingIdx = local.findIndex(a => a.appId === requestData.appId);
-      if (existingIdx !== -1) {
-        local[existingIdx] = { ...local[existingIdx], ...requestData };
-      } else {
-        local.unshift(requestData);
-      }
-      localStorage.setItem('apna_applications', JSON.stringify(local));
-    } catch (cacheErr) {
-      // localStorage failure is non-critical — Supabase already has the data
-      console.warn('[saveServiceRequest] localStorage cache failed (non-critical):', cacheErr);
-    }
-
     return true;
   }
-
-  // ── Supabase not configured: dev-mode only localStorage fallback ──
-  console.warn('[saveServiceRequest] Supabase not configured. Saving to localStorage ONLY (dev mode).');
-  try {
-    const local = JSON.parse(localStorage.getItem('apna_applications') || '[]');
-    const existingIdx = local.findIndex(a => a.appId === requestData.appId);
-    if (existingIdx !== -1) {
-      local[existingIdx] = { ...local[existingIdx], ...requestData };
-    } else {
-      local.unshift(requestData);
-    }
-    localStorage.setItem('apna_applications', JSON.stringify(local));
-  } catch (err) {
-    throw new Error('Failed to save your application. Please check your internet connection and try again.');
-  }
-
-  return true;
 }
 
 /**

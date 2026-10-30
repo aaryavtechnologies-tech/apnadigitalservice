@@ -50,6 +50,7 @@ export default function AdminDashboardPage() {
 
   const [applications, setApplications] = useState([]);
   const [fetching, setFetching] = useState(true);
+  const [applicationsError, setApplicationsError] = useState('');
   const [selectedApp, setSelectedApp] = useState(null);
 
   // Quick Add Service Modal state from top header
@@ -72,9 +73,16 @@ export default function AdminDashboardPage() {
   // Load all applications
   const loadApplications = async () => {
     setFetching(true);
-    const data = await fetchAllAdminApplications();
-    setApplications(data);
-    setFetching(false);
+    setApplicationsError('');
+    try {
+      const data = await fetchAllAdminApplications();
+      setApplications(data);
+    } catch (error) {
+      setApplications([]);
+      setApplicationsError(error.message || 'Could not load applications from the database.');
+    } finally {
+      setFetching(false);
+    }
   };
 
   useEffect(() => {
@@ -519,6 +527,11 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Verification Queue Table */}
+            {applicationsError && (
+              <div role="alert" style={{ padding: '14px 16px', marginBottom: '12px', border: '1px solid #FCA5A5', borderRadius: '8px', background: '#FEF2F2', color: '#991B1B' }}>
+                <strong>Database data unavailable.</strong> {applicationsError} The queue below is not presented as current until the database can be reached.
+              </div>
+            )}
             <div className="admin-table-container">
               <table className="admin-table">
                 <thead>
@@ -731,15 +744,7 @@ export default function AdminDashboardPage() {
           app={selectedApp}
           onClose={() => setSelectedApp(null)}
           onUpdated={(updatedFields) => {
-            // Refresh modal state from localStorage immediately (avoids stale Supabase roundtrip)
-            try {
-              const local = JSON.parse(localStorage.getItem('apna_applications') || '[]');
-              const fresh = local.find(a => a.appId === selectedApp.appId);
-              if (fresh) setSelectedApp({ ...fresh, ...updatedFields });
-            } catch (e) {
-              // fallback: just keep modal open with current state
-            }
-            // Reload the applications list in the background
+            if (updatedFields) setSelectedApp(current => current ? { ...current, ...updatedFields } : current);
             loadApplications();
           }}
         />

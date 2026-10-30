@@ -3230,6 +3230,21 @@ button {
     gap: 5px !important;
     flex-shrink: 0 !important;
   }
+
+  .brand-wrapper {
+    min-width: 0;
+    gap: 7px;
+    flex: 1 1 auto;
+  }
+
+  .brand-text-block {
+    min-width: 0;
+  }
+
+  .brand-title {
+    font-size: clamp(0.72rem, 3.6vw, 0.9rem) !important;
+    letter-spacing: -0.025em;
+  }
   .header-profile-icon-btn .profile-icon-avatar {
     width: 30px !important;
     height: 30px !important;
@@ -3273,6 +3288,19 @@ button {
   .mobile-nav-drawer {
     top: 56px !important;
     max-height: calc(100dvh - 56px) !important;
+  }
+
+  .mobile-auth-actions {
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .mobile-auth-actions a {
+    flex: 1;
+    justify-content: center;
+    min-height: 42px;
   }
 
   /* Prevent any text, email, or card clipping on phones */
@@ -4285,6 +4313,48 @@ button {
     padding: 16px 12px 40px;
   }
 
+  /* The dashboard uses dashboard-metrics-grid (not dashboard-metrics-row).
+     Keep all three summary figures legible on narrow screens. */
+  .dashboard-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .dashboard-metrics-grid .metric-box:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-metrics-grid .metric-box {
+    min-width: 0;
+    padding: 13px 12px;
+  }
+
+  .dashboard-metrics-grid .metric-desc {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
+
+  .dashboard-profile-bar,
+  .profile-identity-group,
+  .profile-info-block {
+    min-width: 0;
+  }
+
+  .profile-name-row {
+    align-items: flex-start;
+  }
+
+  .profile-user-name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .profile-verified-badge {
+    white-space: normal;
+  }
+
   .dashboard-profile-bar {
     padding: 14px 14px;
     border-radius: 14px;
@@ -4340,6 +4410,12 @@ button {
 
   .panel-title {
     font-size: 0.95rem;
+    overflow-wrap: anywhere;
+  }
+
+  .panel-subtitle,
+  .admin-update-note {
+    overflow-wrap: anywhere;
   }
 
   .applications-stack {
@@ -4385,6 +4461,14 @@ button {
 
   .detail-val {
     font-size: 0.75rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-update-box a {
+    max-width: 100%;
+    white-space: normal;
+    line-height: 1.35;
   }
 
   .app-card-footer {
@@ -4429,12 +4513,40 @@ button {
 }
 
 @media (max-width: 400px) {
-  .dashboard-metrics-row {
+  .auth-header-btn-group {
+    display: none !important;
+  }
+
+  .header-container,
+  .nav-container {
+    gap: 6px !important;
+    padding-right: 8px !important;
+    padding-left: 10px !important;
+  }
+
+  .brand-wrapper {
+    gap: 5px;
+  }
+
+  .brand-logo-img {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .brand-title {
+    font-size: 0.72rem !important;
+  }
+
+  .dashboard-metrics-grid {
     grid-template-columns: 1fr;
   }
 
-  .metric-box:last-child {
+  .dashboard-metrics-grid .metric-box:last-child {
     grid-column: unset;
+  }
+
+  .panel-count-badge {
+    white-space: normal;
   }
 
   .app-card-top-row {

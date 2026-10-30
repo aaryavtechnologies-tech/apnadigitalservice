@@ -211,7 +211,7 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
     setSavingStatus(false);
 
     if (res.success) {
-      const msg = `Status updated to "${status}".`;
+      const msg = `Database confirmed status: "${status}".`;
       setActionNotice({ 
         type: res.dbWarning ? 'warning' : 'success', 
         text: res.dbWarning ? `${msg} (${res.dbWarning})` : msg 
@@ -232,7 +232,7 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
     setSavingNote(false);
 
     if (res.success) {
-      const msg = 'Operator remarks saved successfully.';
+      const msg = 'Database confirmed operator remarks were saved.';
       setActionNotice({ 
         type: res.dbWarning ? 'warning' : 'success', 
         text: res.dbWarning ? `${msg} (${res.dbWarning})` : msg 
@@ -256,7 +256,7 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
     if (res.success) {
       setPaymentStatus(targetStatus);
       const label = targetStatus === 'received' ? 'Received (Verified)' : targetStatus === 'failed' ? 'Failed / Rejected' : 'Pending Verification';
-      const msg = `Payment status marked as "${label}". The customer will see this live in their dashboard.`;
+      const msg = `Database confirmed payment status: "${label}".`;
       setActionNotice({ 
         type: res.dbWarning ? 'warning' : 'success', 
         text: res.dbWarning ? `${msg} \n${res.dbWarning}` : msg 
@@ -390,7 +390,7 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
               }}
             >
               {actionNotice.type === 'success' ? <CheckCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} /> : <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />}
-              <span>{actionNotice.text}</span>
+        <span>{actionNotice.text}</span>
             </div>
           )}
 
@@ -945,10 +945,16 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
                           style={{ padding: '7px 10px', fontSize: '0.8rem', borderColor: '#FECACA', color: '#DC2626' }}
                           onClick={() => {
                             if (window.confirm('Remove this document from the application? Customer will no longer be able to download it.')) {
-                              setDocumentUrl('');
-                              setDocumentName('');
-                              attachDocumentRecord(app.appId, null, null, role);
-                              if (onUpdated) onUpdated();
+                              attachDocumentRecord(app.appId, null, null, role).then((res) => {
+                                if (res.success) {
+                                  setDocumentUrl('');
+                                  setDocumentName('');
+                                  setActionNotice({ type: 'success', text: 'Database confirmed the document was removed.' });
+                                  if (onUpdated) onUpdated();
+                                } else {
+                                  setActionNotice({ type: 'error', text: res.error || 'Could not remove document from the database.' });
+                                }
+                              }).catch((error) => setActionNotice({ type: 'error', text: error.message }));
                             }
                           }}
                         >

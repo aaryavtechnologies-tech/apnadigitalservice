@@ -278,6 +278,19 @@ export default function Header({ onOpenAuth, onOpenLogin, onOpenRegister, onOpen
                 </div>
               )}
 
+              {!currentUser && (
+                <div className="mobile-auth-actions">
+                  <Link to="/login" className="btn-header-login" onClick={closeMobile}>
+                    <User size={14} />
+                    <span>Login</span>
+                  </Link>
+                  <Link to="/register" className="btn-header-register" onClick={closeMobile}>
+                    <UserPlus size={14} />
+                    <span>Register</span>
+                  </Link>
+                </div>
+              )}
+
               {/* Navigation Links — Compact & perfectly proportioned for mobile view */}
               <div className="mobile-links-list">
                 <Link to="/" className={`mobile-link-item ${location.pathname === '/' ? 'active' : ''}`} onClick={closeMobile}>

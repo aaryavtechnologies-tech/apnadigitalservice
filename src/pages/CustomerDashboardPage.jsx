@@ -27,7 +27,7 @@ import {
   Maximize2
 } from 'lucide-react';
 import ServiceIcon from '../components/ServiceIcon';
-import { fetchCustomerApplications } from '../lib/supabaseClient';
+import { fetchCustomerApplications, supabase } from '../lib/supabaseClient';
 
 // ── In-page Document Viewer ──────────────────────────────────────────────────
 function DocumentViewer({ doc, onClose }) {
@@ -198,10 +198,12 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
 
   // Load user applications strictly from Supabase (NO CACHED / FAKE DATA)
   const [fetchError, setFetchError] = useState(null);
+  const [downloadingAppId, setDownloadingAppId] = useState(null);
+  const [downloadError, setDownloadError] = useState('');
 
   useEffect(() => {
-    async function loadApps() {
-      setLoading(true);
+    async function loadApps(isInitial = false) {
+      if (isInitial) setLoading(true);
       setFetchError(null);
       if (currentUser) {
         try {
@@ -214,20 +216,29 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
       } else {
         setApplications([]);
       }
-      setLoading(false);
+      if (isInitial) setLoading(false);
     }
-    loadApps();
+    loadApps(true);
 
     // Live sync: listen for admin status & payment updates
     const handleLiveSync = () => { loadApps(); };
     window.addEventListener('apna_applications_updated', handleLiveSync);
 
-    // Poll Supabase every 15 seconds to show real-time status updates from admin
+    // Realtime updates arrive after committed database changes (requires the
+    // service_requests table to be enabled in Supabase Realtime publication).
+    const channel = currentUser && supabase
+      ? supabase.channel(`customer-requests-${currentUser.id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'service_requests', filter: `user_id=eq.${currentUser.id}` }, handleLiveSync)
+        .subscribe()
+      : null;
+
+    // Keep a low-frequency refresh as recovery if realtime is disconnected.
     const pollInterval = setInterval(() => { loadApps(); }, 15000);
 
     return () => {
       window.removeEventListener('apna_applications_updated', handleLiveSync);
       clearInterval(pollInterval);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [currentUser]);
 
@@ -303,35 +314,35 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
   };
 
   // Safe document downloader
-  const handleDownloadDocument = (app) => {
-    if (app.documentUrl) {
-      window.open(app.documentUrl, '_blank');
+  const handleDownloadDocument = async (app) => {
+    if (!app.documentUrl) {
+      setDownloadError('The verified document is not attached to this request yet.');
       return;
     }
 
-    const filename = app.documentName || `${app.serviceSlug || 'document'}_${app.appId}.pdf`;
-    const element = document.createElement('a');
-    const file = new Blob([
-      `=======================================================\n` +
-      `APNA DIGITAL SERVICE — VERIFIED RESULT\n` +
-      `=======================================================\n\n` +
-      `TRACKING ID      : ${app.appId}\n` +
-      `SERVICE          : ${app.serviceName}\n` +
-      `CUSTOMER NAME    : ${app.fullName}\n` +
-      `REGISTERED EMAIL : ${app.email}\n` +
-      `DISPATCHED PHONE : ${app.phone}\n` +
-      `STATUS           : VERIFIED COMPLETED\n` +
-      `DELIVERY DATE    : ${new Date().toLocaleDateString('en-IN')}\n\n` +
-      `OPERATOR NOTE    : ${app.operatorNote || 'Verified by Apna Digital Service team'}\n` +
-      `SUPPORT HELPLINE : +91 ${app.supportPhone || '8018246567'}\n\n` +
-      `Notice: This official digital document assistance record was\n` +
-      `verified by Apna Digital Service team. For questions, contact support.\n`
-    ], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = filename;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    setDownloadingAppId(app.appId);
+    setDownloadError('');
+    try {
+      const response = await fetch(app.documentUrl);
+      if (!response.ok) throw new Error(`Download failed (HTTP ${response.status}).`);
+      const file = await response.blob();
+      if (!file.size) throw new Error('The downloaded file is empty. Please contact support.');
+      const url = URL.createObjectURL(file);
+      const fallbackName = `${app.serviceSlug || 'document'}_${app.appId}.pdf`;
+      const filename = (app.documentName || fallbackName).replace(/[\\/:*?"<>|]+/g, '_');
+      const element = document.createElement('a');
+      element.href = url;
+      element.download = filename;
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      element.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      setDownloadError(`${error.message || 'Could not download the document.'} Check your connection or contact support.`);
+    } finally {
+      setDownloadingAppId(null);
+    }
   };
 
   if (!currentUser) {
@@ -624,7 +635,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                 const badge = getStatusBadge(app.status, app.paymentStatus);
                 const StatusIcon = badge.icon;
                 const isCompleted = app.status === 'Completed';
-                const hasUploadedDoc = Boolean(app.documentUrl || app.documentName || isCompleted);
+                const hasUploadedDoc = Boolean(app.documentUrl);
 
                 return (
                   <div 
@@ -1143,10 +1154,11 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                               type="button" 
                               className="btn-download-active"
                               onClick={() => handleDownloadDocument(app)}
+                              disabled={downloadingAppId === app.appId}
                               title="Download verified official document PDF"
                             >
                               <Download size={16} />
-                              <span>Download Verified Document (PDF)</span>
+                              <span>{downloadingAppId === app.appId ? 'Downloading…' : 'Download Verified Document'}</span>
                             </button>
                             <span className="download-hint-active">
                               ✅ Verified PDF uploaded • Ready to save
@@ -1169,6 +1181,11 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                           </div>
                         )}
                       </div>
+                      {downloadError && (
+                        <div role="alert" style={{ marginTop: '8px', color: '#B91C1C', fontSize: '0.84rem' }}>
+                          {downloadError}
+                        </div>
+                      )}
 
                       {/* Helpline contact directly for this specific application */}
                       <a 

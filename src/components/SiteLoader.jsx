@@ -5,15 +5,14 @@ export default function SiteLoader() {
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
-    // Show smooth 3-colour rotating circle loader during initial website load
-    const timer = setTimeout(() => {
+    let fadeTimer;
+    const finish = () => {
       setFading(true);
-      setTimeout(() => {
-        setLoading(false);
-      }, 400); // 400ms fade transition
-    }, 750); // 750ms clean display
-
-    return () => clearTimeout(timer);
+      fadeTimer = setTimeout(() => setLoading(false), 400);
+    };
+    if (document.readyState === 'complete') finish();
+    else window.addEventListener('load', finish, { once: true });
+    return () => { window.removeEventListener('load', finish); clearTimeout(fadeTimer); };
   }, []);
 
   if (!loading) return null;
@@ -58,7 +57,7 @@ export default function SiteLoader() {
             objectFit: 'contain',
             position: 'relative',
             zIndex: 2,
-            transform: 'none !important'
+            transform: 'none'
           }}
         />
       </div>

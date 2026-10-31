@@ -99,7 +99,7 @@ export default function PolicyPage() {
               <p>Approved refunds will be processed through the applicable payment method. The time taken for the refund to appear in the customer's account may depend on the payment provider and banking system.</p>
 
               <h3>7. How to Request a Refund</h3>
-              <p>Please contact our support team and provide: Order or request ID, Payment transaction reference, and Reason for the refund request. Please do not share passwords or OTPs.</p>
+              <p>Please contact our support team and provide: Tracking ID, Payment transaction reference, and Reason for the refund request. Please do not share passwords or OTPs.</p>
 
               <h3>8. Customer Support</h3>
               <p>Phone: 8018246567 / 9124494239. Support Hours: Every day, 9:00 AM to 9:00 PM.</p>

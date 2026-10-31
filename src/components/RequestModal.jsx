@@ -157,6 +157,7 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitError(null);
+    if (!currentUser?.id) { setSubmitError('Please sign in before submitting your request.'); return; }
 
     // 1. Verify payment screenshot is selected
     if (!selectedPaymentFile?.file) {
@@ -724,8 +725,8 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
               {/* Service Switcher if not initiated from specific service */}
               {allServices.length > 1 && (
                 <div className="form-field form-field-compact">
-                  <label className="form-label form-label-compact">Selected Service *</label>
-                  <select 
+                  <label htmlFor="request-service" className="form-label form-label-compact">Selected Service *</label>
+                  <select id="request-service"
                     className="form-select form-input-compact"
                     value={selectedServiceId}
                     onChange={(e) => {
@@ -755,13 +756,13 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
                   1. APPLICANT DETAILS
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div className="request-applicant-grid">
                   <div className="form-field" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.8rem' }}>Full Name *</label>
+                    <label htmlFor="request-name" className="form-label" style={{ fontSize: '0.8rem' }}>Full Name *</label>
                     <input 
                       type="text" 
                       className="form-input form-input-compact"
-                      placeholder="Applicant full name"
+                      id="request-name" placeholder="Applicant full name"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required
@@ -769,11 +770,11 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
                   </div>
 
                   <div className="form-field" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.8rem' }}>Email Address *</label>
+                    <label htmlFor="request-email" className="form-label" style={{ fontSize: '0.8rem' }}>Email Address *</label>
                     <input 
                       type="email" 
                       className="form-input form-input-compact"
-                      placeholder="For status updates"
+                      id="request-email" placeholder="For status updates"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -801,14 +802,14 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
 
                     return (
                       <div key={field.id} className="form-field" style={{ margin: 0 }}>
-                        <label className="form-label" style={{ fontSize: '0.84rem' }}>
+                        <label htmlFor={'request-field-' + field.id} className="form-label" style={{ fontSize: '0.84rem' }}>
                           {field.label} {field.required && <span style={{ color: '#dc2626' }}>*</span>}
                         </label>
 
                         {field.type === 'select' ? (
                           <select
                             className="form-select form-input-compact"
-                            value={fieldVal}
+                            id={'request-field-' + field.id} value={fieldVal}
                             onChange={(e) => handleFieldChange(field.id, e.target.value)}
                             required={field.required}
                           >
@@ -822,7 +823,7 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
                             className="form-input form-input-compact"
                             rows="2"
                             placeholder={field.placeholder}
-                            value={fieldVal}
+                            id={'request-field-' + field.id} value={fieldVal}
                             onChange={(e) => handleFieldChange(field.id, e.target.value)}
                             required={field.required}
                           />
@@ -925,7 +926,7 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
                             type={field.type}
                             className="form-input form-input-compact"
                             placeholder={field.placeholder}
-                            value={fieldVal}
+                            id={'request-field-' + field.id} value={fieldVal}
                             onChange={(e) => handleFieldChange(field.id, e.target.value)}
                             required={field.required}
                           />

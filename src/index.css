@@ -4653,3 +4653,62 @@ button {
   animation: spin 1s linear infinite;
   display: block;
 }
+
+/* Responsive review: keep primary account and help actions accessible. */
+.mobile-header-help { display: none; }
+.mobile-process { display: none; }
+.request-applicant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 1080px) {
+  .mobile-header-help { display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: #15803d; font-weight: 700; min-height: 44px; }
+}
+@media (max-width: 768px) {
+  .navbar-header .nav-container { display: grid !important; grid-template-columns: minmax(0, 1fr) auto; gap: 8px !important; padding: 10px 12px !important; }
+  .navbar-header .brand-wrapper { min-width: 0; width: auto; }
+  .navbar-header .brand-title { font-size: 12px !important; white-space: normal; }
+  .navbar-header .brand-text-block { min-width: 0; }
+  .navbar-header .brand-subtitle { display: none; }
+  .navbar-header .brand-logo-img { width: 32px !important; height: 32px !important; object-fit: contain; }
+  .navbar-header .nav-actions { grid-column: 1 / -1; width: 100%; justify-content: space-between; gap: 8px; }
+  .navbar-header .auth-header-btn-group { display: flex !important; flex: 1; gap: 8px; }
+  .navbar-header .btn-header-login, .navbar-header .btn-header-register { min-height: 44px; font-size: 13px !important; padding: 8px 12px !important; justify-content: center; }
+  .navbar-header .mobile-hamburger { width: 44px; height: 44px; flex-shrink: 0; }
+  .mobile-header-help { font-size: 12px; }
+  .mobile-nav-drawer { max-height: calc(100dvh - 160px); overflow-y: auto; }
+  input:not([type="file"]), select, textarea { font-size: 16px !important; }
+  .request-applicant-grid { grid-template-columns: minmax(0, 1fr); }
+  .request-applicant-grid > div { min-width: 0; }
+  .hero-banner-image-wrapper { display: none; }
+  .how-it-works-full-banner { display: none; }
+  .mobile-process { display: block; padding: 32px 20px; }
+  .mobile-process h2 { font-size: 24px; line-height: 1.3; margin-bottom: 20px; }
+  .mobile-process ol { padding-left: 24px; }
+  .mobile-process li { padding: 8px 0; font-size: 16px; line-height: 1.6; }
+  .mobile-process li strong { display: block; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loader-rotating-ring, .ticker-track { animation: none !important; }
+}
+
+.custom-home-section { max-width: 1120px; margin: auto; padding: 32px 20px; overflow-wrap: anywhere; }
+@media(max-width:768px) {
+  .navbar-header .nav-container { height: auto !important; }
+  .navbar-header .brand-title { white-space: normal !important; flex-wrap: wrap; gap: 2px 4px; }
+  .navbar-header .mobile-hamburger { width:44px !important; height:44px !important; }
+  .mobile-nav-drawer, .mobile-backdrop { top: 100% !important; }
+  .mobile-nav-drawer { max-height: calc(100dvh - 160px) !important; }
+  .hero-banner-image-wrapper { display: block; }
+}
+
+.recovery-page { min-height:70vh; padding:32px 16px; background:#f8fafc; display:flex; justify-content:center; align-items:center; }
+.password-recovery { width:100%; max-width:460px; padding:24px; background:white; border:1px solid #e2e8f0; border-radius:16px; }
+.password-recovery h2 { margin:16px 0; font-size:24px; }
+.password-recovery p { font-size:14px; line-height:1.6; overflow-wrap:anywhere; }
+.password-recovery label { display:block; font-weight:600; margin:16px 0; }
+.password-recovery input { width:100%; min-height:46px; font-size:16px; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; margin-top:8px; box-sizing:border-box; }
+.password-recovery .btn-primary { width:100%; min-height:46px; justify-content:center; }
+.password-recovery button:disabled { opacity:.6; cursor:not-allowed; }
+.recovery-notice { background:#f0fdf4; color:#166534; padding:12px; border-radius:8px; }
+.recovery-error { background:#fef2f2; color:#991b1b; padding:12px; border-radius:8px; }
+.recovery-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; }
+.recovery-actions button, .recovery-back { background:none; border:0; color:#9a3412; min-height:44px; cursor:pointer; font:inherit; }
+.recovery-back { margin-top:12px; }

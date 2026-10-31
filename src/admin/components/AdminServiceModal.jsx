@@ -1281,7 +1281,7 @@ export default function AdminServiceModal({ service, isOpen, onClose, onSaved })
                     }}
                     disabled
                   >
-                    Submit Application & Generate Application ID
+                    Submit Application & Generate Tracking ID
                   </button>
                 </div>
               </div>

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { resolveAccountRole } from './lib/accountRole';
+import RequireAdmin from './admin/components/RequireAdmin';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -69,14 +71,7 @@ function AppContent() {
     return () => window.removeEventListener('apna_services_changed', handleServicesChanged);
   }, []);
 
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem('apna_user');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [currentUser, setCurrentUser] = useState(null);
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login');
@@ -106,20 +101,7 @@ function AppContent() {
 
       const processSession = async (session) => {
         if (session?.user) {
-          const userEmail = session.user.email?.toLowerCase().trim();
-          const isSuperAdminEmail = userEmail === 'help.apnadigitalservice@gmail.com';
-          let userRole = isSuperAdminEmail ? 'super_admin' : 'customer';
-
-          try {
-            const { data: prof } = await supabase
-              .from('profiles')
-              .select('role')
-              .eq('id', session.user.id)
-              .single();
-            if (prof?.role) userRole = prof.role;
-          } catch (e) {
-            console.warn('Profile fetch warning:', e);
-          }
+          const userRole = await resolveAccountRole(supabase, session.user.id);
 
           const userObj = {
             id: session.user.id,
@@ -148,7 +130,7 @@ function AppContent() {
       });
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-        processSession(session);
+        setTimeout(() => processSession(session), 0);
       });
 
       return () => subscription.unsubscribe();
@@ -165,14 +147,27 @@ function AppContent() {
 
   // Direct 1-Click trigger: Opens native application form immediately
   const handleInitiateService = (service) => {
+    if (!currentUser) {
+      sessionStorage.setItem('apna_pending_service', (service || services[0]).id);
+      navigate('/login');
+      return;
+    }
     setSelectedServiceForRequest(service || services[0]);
     setIsRequestModalOpen(true);
   };
 
-  const handleOpenRequestModal = (service = null) => {
-    setSelectedServiceForRequest(service || services[0]);
-    setIsRequestModalOpen(true);
-  };
+  const handleOpenRequestModal = (service = null) => handleInitiateService(service);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const pendingId = sessionStorage.getItem('apna_pending_service');
+    const pending = services.find(service => service.id === pendingId);
+    if (pending) {
+      sessionStorage.removeItem('apna_pending_service');
+      setSelectedServiceForRequest(pending);
+      setIsRequestModalOpen(true);
+    }
+  }, [currentUser, services]);
 
   const handleAuthSuccess = (user) => {
     setCurrentUser(user);
@@ -189,8 +184,8 @@ function AppContent() {
       <AdminAuthProvider>
         <Routes>
           <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin" element={<AdminDashboardPage />} />
-          <Route path="/admin/*" element={<AdminDashboardPage />} />
+          <Route path="/admin" element={<RequireAdmin><AdminDashboardPage /></RequireAdmin>} />
+          <Route path="/admin/*" element={<RequireAdmin><AdminDashboardPage /></RequireAdmin>} />
         </Routes>
       </AdminAuthProvider>
     );

@@ -364,7 +364,7 @@ export default function ServiceDetailPage({ onInitiateService }) {
                 Ready to Submit?
               </h4>
               <p style={{ fontSize: '0.84rem', color: 'var(--slate-500)', marginBottom: '16px' }}>
-                Submit details and generate your Application ID for tracking.
+                Submit details and generate your Tracking ID for tracking.
               </p>
 
               <button 

@@ -41,7 +41,7 @@ export default function Footer({ onOpenRequestModal }) {
               <ShieldCheck size={14} style={{ color: 'var(--saffron-400)' }} />
               <span>Private Platform Disclaimer</span>
             </strong>
-            {footer.disclaimer || 'This website is privately operated and is NOT an official government portal or affiliated with any government department.'}
+            {(footer.disclaimer !== footer.brandDesc && footer.disclaimer) || 'This website is privately operated and is NOT an official government portal or affiliated with any government department.'}
           </div>
         </div>
 

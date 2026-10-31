@@ -34,7 +34,7 @@ import AdminServiceModal from '../components/AdminServiceModal';
 import AdminWebsiteCMS from '../components/AdminWebsiteCMS';
 import { useAdminAuth } from '../context/AdminAuthContext';
 import { fetchAllAdminApplications } from '../services/adminDataService';
-import { getActiveServices, getAllServices, getHomepageSettings, saveHomepageSettings } from '../../data/servicesData';
+import { getActiveServices, getAllServices, getHomepageSettings, fetchHomepageSettings, saveHomepageSettings } from '../../data/servicesData';
 
 export default function AdminDashboardPage() {
   const { adminUser, role, isSuperAdmin, isViewOnly, loading } = useAdminAuth();
@@ -47,6 +47,9 @@ export default function AdminDashboardPage() {
   const [homepageConfig, setHomepageConfig] = useState(() => getHomepageSettings());
   const [savingConfig, setSavingConfig] = useState(false);
   const [configNotice, setConfigNotice] = useState(null);
+  useEffect(() => {
+    fetchHomepageSettings().then(setHomepageConfig).catch(error => setConfigNotice({ type: 'error', text: error.message }));
+  }, []);
 
   const [applications, setApplications] = useState([]);
   const [fetching, setFetching] = useState(true);
@@ -279,9 +282,9 @@ export default function AdminDashboardPage() {
                   boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)'
                 }}
                 disabled={savingConfig}
-                onClick={() => {
+                onClick={async () => {
                   setSavingConfig(true);
-                  const res = saveHomepageSettings(homepageConfig, role);
+                  const res = await saveHomepageSettings(homepageConfig, role);
                   setSavingConfig(false);
                   if (res.success) {
                     setConfigNotice({ type: 'success', text: 'Homepage configuration saved and published live!' });
@@ -388,6 +391,18 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
+          <section style={{ background: '#fff', padding: 24, borderRadius: 16 }}>
+            <h3>Additional homepage sections</h3>
+            {(homepageConfig.customSections || []).map((section, index) => (
+              <div key={section.id} style={{ display: 'grid', gap: 10, margin: '20px 0' }}>
+                <label>Section title<input className="form-input" value={section.title} disabled={!isSuperAdmin} onChange={e => setHomepageConfig(prev => ({ ...prev, customSections: prev.customSections.map((item, i) => i === index ? { ...item, title: e.target.value } : item) }))} /></label>
+                <label>Section text<textarea className="form-input" value={section.body} disabled={!isSuperAdmin} onChange={e => setHomepageConfig(prev => ({ ...prev, customSections: prev.customSections.map((item, i) => i === index ? { ...item, body: e.target.value } : item) }))} /></label>
+                {isSuperAdmin && <button type="button" className="admin-btn" onClick={() => setHomepageConfig(prev => ({ ...prev, customSections: prev.customSections.filter(item => item.id !== section.id) }))}>Remove section</button>}
+              </div>
+            ))}
+            {isSuperAdmin && <button type="button" className="admin-btn" onClick={() => setHomepageConfig(prev => ({ ...prev, customSections: [...(prev.customSections || []), { id: crypto.randomUUID(), title: 'New section', body: '' }] }))}>Add section</button>}
+            <p>Use Save &amp; Publish Changes above to publish your sections.</p>
+          </section>
           {/* Section 2: Full Website Content CMS (Super Admin Live Text Editor) */}
           <AdminWebsiteCMS />
         </div>

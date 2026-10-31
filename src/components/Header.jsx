@@ -43,8 +43,7 @@ export default function Header({ onOpenAuth, onOpenLogin, onOpenRegister, onOpen
   };
 
   const isAdminUser = currentUser?.role === 'super_admin' || 
-                      currentUser?.role === 'admin' || 
-                      currentUser?.email?.toLowerCase().trim() === 'help.apnadigitalservice@gmail.com';
+                      currentUser?.role === 'admin';
 
   const whatsappUrl = "https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20help%20with%20your%20services";
 
@@ -146,6 +145,7 @@ export default function Header({ onOpenAuth, onOpenLogin, onOpenRegister, onOpen
             </a>
           </nav>
 
+          <a href={whatsappUrl} className="mobile-header-help" target="_blank" rel="noopener noreferrer"><MessageCircle size={16} /> WhatsApp Help</a>
           {/* Header Action Buttons */}
           <div className="nav-actions">
             {/* Track Request Button */}
@@ -223,7 +223,7 @@ export default function Header({ onOpenAuth, onOpenLogin, onOpenRegister, onOpen
                   title="Create New Customer Account"
                 >
                   <UserPlus size={14} />
-                  <span>Register</span>
+                  <span>New Registration</span>
                 </Link>
               </div>
             )}
@@ -286,7 +286,7 @@ export default function Header({ onOpenAuth, onOpenLogin, onOpenRegister, onOpen
                   </Link>
                   <Link to="/register" className="btn-header-register" onClick={closeMobile}>
                     <UserPlus size={14} />
-                    <span>Register</span>
+                    <span>New Registration</span>
                   </Link>
                 </div>
               )}

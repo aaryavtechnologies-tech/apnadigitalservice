@@ -3,7 +3,7 @@ import { X, PlusCircle, CheckCircle, Shield, AlertCircle } from 'lucide-react';
 import { addServiceByAdmin } from '../data/servicesData';
 
 export default function AdminAddServiceModal({ isOpen, onClose, onServiceAdded }) {
-  if (!isOpen) return null;
+
 
   const [title, setTitle] = useState('');
   const [hindiTitle, setHindiTitle] = useState('');
@@ -80,6 +80,8 @@ export default function AdminAddServiceModal({ isOpen, onClose, onServiceAdded }
       }, 1500);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>

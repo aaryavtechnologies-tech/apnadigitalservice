@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Mail, Lock, User, Phone, CheckCircle, AlertCircle, ArrowLeft, ShieldCheck, Sparkles, UserPlus } from 'lucide-react';
+import PasswordRecoveryForm from '../components/PasswordRecoveryForm';
+import { isStaffRole, resolveAccountRole } from '../lib/accountRole';
 import { supabase, isSupabaseConfigured, signInWithGoogle } from '../lib/supabaseClient';
 
 export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, currentUser }) {
@@ -23,10 +25,10 @@ export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, curr
 
   // If already logged in, redirect to dashboard
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser && mode !== 'forgot') {
       navigate('/dashboard');
     }
-  }, [currentUser, navigate]);
+  }, [currentUser, mode, navigate]);
 
   useEffect(() => {
     if (location.pathname.includes('register') || location.pathname.includes('signup')) {
@@ -49,55 +51,12 @@ export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, curr
         setLoading(false);
       }
     } else {
-      setTimeout(() => {
-        const mockUser = {
-          id: 'google-user-' + Date.now(),
-          email: email || 'citizen@gmail.com',
-          fullName: 'Google User',
-          phone: '8018246567',
-          provider: 'google'
-        };
-        localStorage.setItem('apna_user', JSON.stringify(mockUser));
-        if (onAuthSuccess) onAuthSuccess(mockUser);
-        setLoading(false);
-        navigate('/dashboard');
-      }, 600);
-    }
-  };
-
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
-    if (!email) {
-      setErrorMessage('Please enter your registered email address.');
-      return;
-    }
-    setLoading(true);
-    setErrorMessage('');
-    setInfoMessage('');
-
-    if (isSupabaseConfigured) {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin
-      });
-      setLoading(false);
-      if (error) {
-        setErrorMessage(error.message);
-      } else {
-        setInfoMessage('Password reset instructions dispatched to your email.');
-      }
-    } else {
-      setTimeout(() => {
-        setLoading(false);
-        setInfoMessage('In production, Supabase sends a secure reset link to your email.');
-      }, 500);
+      setErrorMessage('Sign in is temporarily unavailable. Please contact support.'); setLoading(false);
     }
   };
 
   const handleEmailAuth = async (e) => {
     e.preventDefault();
-    if (mode === 'forgot') {
-      return handleResetPassword(e);
-    }
     setLoading(true);
     setErrorMessage('');
     setInfoMessage('');
@@ -119,7 +78,7 @@ export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, curr
           setErrorMessage(error.message);
         } else {
           setInfoMessage('Account registered successfully! Signing you in...');
-          if (data?.user) {
+          if (data?.session?.user) {
             const userObj = {
               id: data.user.id,
               email: data.user.email,
@@ -131,6 +90,7 @@ export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, curr
             if (onAuthSuccess) onAuthSuccess(userObj);
             navigate('/dashboard');
           } else {
+            setInfoMessage('Check your email to confirm your account, then sign in.');
             setMode('login');
           }
         }
@@ -148,31 +108,20 @@ export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, curr
             email: data.user.email,
             fullName: data.user.user_metadata?.full_name || email.split('@')[0],
             phone: data.user.user_metadata?.phone || '',
-            role: data.user.email?.toLowerCase().trim() === 'help.apnadigitalservice@gmail.com' ? 'super_admin' : 'customer'
+            role: await resolveAccountRole(supabase, data.user.id)
           };
           localStorage.setItem('apna_user', JSON.stringify(userObj));
           if (onAuthSuccess) onAuthSuccess(userObj);
           setLoading(false);
-          navigate(userObj.role === 'super_admin' ? '/admin' : '/dashboard');
+          navigate(isStaffRole(userObj.role) ? '/admin' : '/dashboard');
         }
       }
     } else {
-      // Local fallback simulation
-      setTimeout(() => {
-        setLoading(false);
-        const userObj = {
-          id: 'user-' + Date.now(),
-          email: email.trim(),
-          fullName: mode === 'signup' ? (fullName || email.split('@')[0]) : email.split('@')[0],
-          phone: phone || '8018246567',
-          role: email.toLowerCase().includes('admin') ? 'super_admin' : 'customer'
-        };
-        localStorage.setItem('apna_user', JSON.stringify(userObj));
-        if (onAuthSuccess) onAuthSuccess(userObj);
-        navigate(userObj.role === 'super_admin' ? '/admin' : '/dashboard');
-      }, 600);
+      setErrorMessage('Sign in is temporarily unavailable. Please contact support.'); setLoading(false);
     }
   };
+
+  if (mode === 'forgot') return <div className="recovery-page"><PasswordRecoveryForm initialEmail={email} onBack={() => setMode('login')} /></div>;
 
   return (
     <div style={{
@@ -308,12 +257,12 @@ export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, curr
             {mode === 'signup' && (
               <>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.80rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
+                  <label htmlFor="auth-name" style={{ display: 'block', fontSize: '0.80rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
                     Full Legal Name <span style={{ color: '#EA580C' }}>*</span>
                   </label>
                   <div style={{ position: 'relative' }}>
                     <User size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-                    <input 
+                    <input id="auth-name"
                       type="text"
                       placeholder="e.g. Ramesh Kumar"
                       value={fullName}
@@ -332,12 +281,12 @@ export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, curr
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.80rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
+                  <label htmlFor="auth-phone" style={{ display: 'block', fontSize: '0.80rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
                     Mobile Number (WhatsApp Preferred) <span style={{ color: '#EA580C' }}>*</span>
                   </label>
                   <div style={{ position: 'relative' }}>
                     <Phone size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-                    <input 
+                    <input id="auth-phone"
                       type="tel"
                       placeholder="e.g. 9876543210"
                       value={phone}
@@ -358,12 +307,12 @@ export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, curr
             )}
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.80rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
+              <label htmlFor="auth-email" style={{ display: 'block', fontSize: '0.80rem', fontWeight: 700, color: '#334155', marginBottom: '5px' }}>
                 Email Address <span style={{ color: '#EA580C' }}>*</span>
               </label>
               <div style={{ position: 'relative' }}>
                 <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-                <input 
+                <input id="auth-email"
                   type="email"
                   placeholder="name@example.com"
                   value={email}
@@ -384,7 +333,7 @@ export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, curr
             {mode !== 'forgot' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-                  <label style={{ fontSize: '0.80rem', fontWeight: 700, color: '#334155' }}>
+                  <label htmlFor="auth-password" style={{ fontSize: '0.80rem', fontWeight: 700, color: '#334155' }}>
                     Password <span style={{ color: '#EA580C' }}>*</span>
                   </label>
                   {mode === 'login' && (
@@ -399,7 +348,7 @@ export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, curr
                 </div>
                 <div style={{ position: 'relative' }}>
                   <Lock size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-                  <input 
+                  <input id="auth-password"
                     type="password"
                     placeholder="••••••••"
                     value={password}

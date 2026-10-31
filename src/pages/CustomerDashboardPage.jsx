@@ -186,8 +186,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
   const closeViewer = useCallback(() => setViewerDoc(null), []);
 
   const isSuperAdminOrAdmin = currentUser?.role === 'super_admin' || 
-                              currentUser?.role === 'admin' || 
-                              currentUser?.email?.toLowerCase().trim() === 'help.apnadigitalservice@gmail.com';
+                              currentUser?.role === 'admin';
 
   // Automatically redirect Super Admin or Admin staff to the Admin Operations Portal
   useEffect(() => {

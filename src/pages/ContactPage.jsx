@@ -250,7 +250,7 @@ export default function ContactPage() {
               color: '#78350f',
               lineHeight: '1.55'
             }}>
-              <strong>Security Guidance:</strong> For faster assistance, please keep your order/request ID available. 
+              <strong>Security Guidance:</strong> For faster assistance, please keep your Tracking ID available.
               <strong> Do not share passwords, bank OTPs, or unnecessary sensitive data</strong> through public messages.
             </div>
 

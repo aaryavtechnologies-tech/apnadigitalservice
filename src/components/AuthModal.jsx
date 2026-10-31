@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, User, Phone, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react';
+import PasswordRecoveryForm from '../components/PasswordRecoveryForm';
+import { resolveAccountRole } from '../lib/accountRole';
 import { supabase, isSupabaseConfigured, signInWithGoogle } from '../lib/supabaseClient';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActionNotice, initialMode = 'login' }) {
@@ -34,55 +36,12 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
       }
     } else {
       // Friendly simulation when Supabase keys are pending in .env
-      setTimeout(() => {
-        const mockUser = {
-          id: 'google-user-' + Date.now(),
-          email: email || 'citizen@gmail.com',
-          fullName: 'Google User',
-          phone: '8018246567',
-          provider: 'google'
-        };
-        localStorage.setItem('apna_user', JSON.stringify(mockUser));
-        onAuthSuccess(mockUser);
-        setLoading(false);
-        onClose();
-      }, 600);
-    }
-  };
-
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
-    if (!email) {
-      setErrorMessage('Please enter your email address.');
-      return;
-    }
-    setLoading(true);
-    setErrorMessage('');
-    setInfoMessage('');
-
-    if (isSupabaseConfigured) {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin
-      });
-      setLoading(false);
-      if (error) {
-        setErrorMessage(error.message);
-      } else {
-        setInfoMessage('Password reset link sent! Please check your email inbox.');
-      }
-    } else {
-      setTimeout(() => {
-        setLoading(false);
-        setInfoMessage('In production, Supabase sends a secure reset link to your email.');
-      }, 500);
+      setErrorMessage('Sign in is temporarily unavailable. Please contact support.'); setLoading(false);
     }
   };
 
   const handleEmailAuth = async (e) => {
     e.preventDefault();
-    if (mode === 'forgot') {
-      return handleResetPassword(e);
-    }
     setLoading(true);
     setErrorMessage('');
     setInfoMessage('');
@@ -118,7 +77,8 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
             id: data.user.id,
             email: data.user.email,
             fullName: data.user.user_metadata?.full_name || email.split('@')[0],
-            phone: data.user.user_metadata?.phone || ''
+            phone: data.user.user_metadata?.phone || '',
+            role: await resolveAccountRole(supabase, data.user.id)
           };
           localStorage.setItem('apna_user', JSON.stringify(userObj));
           onAuthSuccess(userObj);
@@ -126,21 +86,11 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
         }
       }
     } else {
-      // Safe local mock flow
-      setTimeout(() => {
-        const userObj = {
-          id: 'user-' + Date.now(),
-          email: email || 'customer@gmail.com',
-          fullName: fullName || email.split('@')[0] || 'Customer',
-          phone: phone || '8018246567'
-        };
-        localStorage.setItem('apna_user', JSON.stringify(userObj));
-        onAuthSuccess(userObj);
-        setLoading(false);
-        onClose();
-      }, 500);
+      setErrorMessage('Sign in is temporarily unavailable. Please contact support.'); setLoading(false);
     }
   };
+
+  if (mode === 'forgot') return <div className="modal-overlay"><div className="modal-dialog" style={{ maxWidth: 460 }}><PasswordRecoveryForm initialEmail={email} onBack={() => setMode('login')} /></div></div>;
 
   return (
     <div className="modal-overlay" onClick={onClose}>

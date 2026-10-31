@@ -275,7 +275,7 @@ export function getHomepageSettings() {
   return DEFAULT_HOMEPAGE_SETTINGS;
 }
 
-export function saveHomepageSettings(newSettings, role) {
+export async function saveHomepageSettings(newSettings, role) {
   if (role !== 'super_admin') {
     return {
       success: false,
@@ -294,20 +294,13 @@ export function saveHomepageSettings(newSettings, role) {
       footer: { ...DEFAULT_HOMEPAGE_SETTINGS.footer, ...(newSettings.footer || {}) }
     };
 
+    if (!supabase) throw new Error('Publishing is unavailable. Please configure the database.');
+    const { error } = await supabase.from('site_settings').upsert({
+      key: 'homepage_config', value: JSON.stringify(merged), updated_at: new Date().toISOString()
+    }, { onConflict: 'key' });
+    if (error) throw error;
     localStorage.setItem('apna_homepage_settings', JSON.stringify(merged));
     window.dispatchEvent(new CustomEvent('apna_settings_changed', { detail: merged }));
-
-    if (isSupabaseConfigured && supabase) {
-      supabase.from('site_settings').upsert([{
-        id: 'homepage_config',
-        key: 'homepage_config',
-        value: merged,
-        updated_at: new Date().toISOString()
-      }]).then(({ error }) => {
-        if (error) console.warn('Supabase site_settings upsert notice:', error.message);
-      }).catch(err => console.warn(err));
-    }
-
     return { success: true, settings: merged };
   } catch (err) {
     return { success: false, error: err.message || 'Failed to save homepage settings' };
@@ -653,3 +646,14 @@ export const FAQ_ITEMS = [
     a: 'Please refer to the Refund and Cancellation Policy for applicable terms and procedures.'
   }
 ];
+
+export async function fetchHomepageSettings() {
+  if (!supabase) return getHomepageSettings();
+  const { data, error } = await supabase.from('site_settings').select('value').eq('key', 'homepage_config').maybeSingle();
+  if (error) throw error;
+  if (!data) return DEFAULT_HOMEPAGE_SETTINGS;
+  const settings = typeof data.value === 'string' ? JSON.parse(data.value) : data.value;
+  if (!settings || typeof settings !== 'object' || Array.isArray(settings)) throw new Error('Invalid homepage settings.');
+  localStorage.setItem('apna_homepage_settings', JSON.stringify(settings));
+  return getHomepageSettings();
+}

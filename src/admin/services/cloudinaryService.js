@@ -43,28 +43,7 @@ export async function uploadDocumentToCloudinary(file, onProgress, folderName = 
 
   // If Cloudinary is not configured in .env, use local offline simulator for instant testing
   if (!isCloudinaryConfigured) {
-    console.warn(
-      'Cloudinary credentials not detected in .env. Using Instant Local Simulator for testing.'
-    );
-
-    if (onProgress) {
-      onProgress(35);
-      await new Promise(r => setTimeout(r, 200));
-      onProgress(75);
-      await new Promise(r => setTimeout(r, 200));
-      onProgress(100);
-    }
-
-    // Convert file to local preview object URL or data URL
-    const fakeUrl = URL.createObjectURL(file);
-    return {
-      success: true,
-      secureUrl: fakeUrl,
-      originalName: file.name,
-      bytes: file.size,
-      format: file.name.split('.').pop() || 'pdf',
-      isLocalSimulation: true
-    };
+    return { success: false, error: 'Document uploads are temporarily unavailable. Please contact support before submitting.' };
   }
 
   // Live Cloudinary REST Upload (Unsigned)

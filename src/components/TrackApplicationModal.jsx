@@ -3,7 +3,7 @@ import { X, Search, Clock, CheckCircle2, AlertCircle, FileText, Download, Messag
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 
 export default function TrackApplicationModal({ isOpen, onClose }) {
-  if (!isOpen) return null;
+
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
@@ -107,6 +107,8 @@ export default function TrackApplicationModal({ isOpen, onClose }) {
     element.click();
     document.body.removeChild(element);
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>

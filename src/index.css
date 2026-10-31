@@ -236,6 +236,8 @@ button {
   min-height: 72px;
   box-sizing: border-box;
   width: 100%;
+  position: relative;
+  z-index: 1060;
 }
 
 .brand-wrapper {
@@ -568,7 +570,7 @@ button {
 .mobile-backdrop {
   position: fixed;
   inset: 0;
-  top: 60px;
+  top: 0;
   background: rgba(15, 23, 42, 0.45);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -577,8 +579,8 @@ button {
 }
 
 .mobile-nav-drawer {
-  position: fixed;
-  top: 60px;
+  position: absolute;
+  top: 100%;
   left: 0;
   right: 0;
   background: #ffffff;
@@ -589,7 +591,7 @@ button {
   flex-direction: column;
   gap: 8px;
   z-index: 1050;
-  max-height: calc(100dvh - 60px);
+  max-height: calc(100dvh - 80px);
   overflow-y: auto;
   animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
@@ -3283,11 +3285,12 @@ button {
     border-radius: 6px !important;
   }
   .mobile-backdrop {
-    top: 56px !important;
+    top: 0 !important;
   }
   .mobile-nav-drawer {
-    top: 56px !important;
-    max-height: calc(100dvh - 56px) !important;
+    position: absolute !important;
+    top: 100% !important;
+    max-height: calc(100dvh - 70px) !important;
   }
 
   .mobile-auth-actions {
@@ -4691,11 +4694,11 @@ button {
 
 .custom-home-section { max-width: 1120px; margin: auto; padding: 32px 20px; overflow-wrap: anywhere; }
 @media(max-width:768px) {
-  .navbar-header .nav-container { height: auto !important; }
+  .navbar-header .nav-container { height: auto !important; position: relative; z-index: 1060; }
   .navbar-header .brand-title { white-space: normal !important; flex-wrap: wrap; gap: 2px 4px; }
-  .navbar-header .mobile-hamburger { width:44px !important; height:44px !important; }
-  .mobile-nav-drawer, .mobile-backdrop { top: 100% !important; }
-  .mobile-nav-drawer { max-height: calc(100dvh - 160px) !important; }
+  .navbar-header .mobile-hamburger { width: 44px !important; height: 44px !important; }
+  .mobile-nav-drawer { position: absolute !important; top: 100% !important; left: 0 !important; right: 0 !important; width: 100% !important; max-height: calc(100dvh - 120px) !important; z-index: 1050 !important; }
+  .mobile-backdrop { position: fixed !important; inset: 0 !important; top: 0 !important; z-index: 1040 !important; }
   .hero-banner-image-wrapper { display: block; }
 }
 

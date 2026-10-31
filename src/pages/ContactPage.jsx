@@ -271,6 +271,24 @@ export default function ContactPage() {
               Fill out this quick form to connect with our WhatsApp support desk instantly.
             </p>
 
+            {dispatched && (
+              <div style={{
+                background: '#DCFCE7',
+                border: '1px solid #BBF7D0',
+                color: '#15803D',
+                padding: '12px 14px',
+                borderRadius: '8px',
+                marginBottom: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '0.88rem'
+              }}>
+                <CheckCircle size={18} style={{ flexShrink: 0 }} />
+                <span>Thank you! Your inquiry has been submitted. Our support operators will connect with you shortly.</span>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit}>
               <div className="form-field">
                 <label className="form-label">Your Name *</label>

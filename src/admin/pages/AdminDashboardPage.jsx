@@ -14,7 +14,8 @@ import {
   Eye, 
   Crown, 
   Lock,
-  FileSpreadsheet,
+  MessageSquare,
+  UserPlus,
   ArrowUpRight,
   Layers,
   Inbox,
@@ -32,8 +33,10 @@ import AdminApplicationModal from '../components/AdminApplicationModal';
 import AdminServicesManager from '../components/AdminServicesManager';
 import AdminServiceModal from '../components/AdminServiceModal';
 import AdminWebsiteCMS from '../components/AdminWebsiteCMS';
+import AdminInquiriesManager from '../components/AdminInquiriesManager';
+import AdminStaffManagerModal from '../components/AdminStaffManagerModal';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { fetchAllAdminApplications } from '../services/adminDataService';
+import { fetchAllAdminApplications, fetchContactInquiries } from '../services/adminDataService';
 import { getActiveServices, getAllServices, getHomepageSettings, fetchHomepageSettings, saveHomepageSettings } from '../../data/servicesData';
 
 export default function AdminDashboardPage() {
@@ -58,6 +61,19 @@ export default function AdminDashboardPage() {
 
   // Quick Add Service Modal state from top header
   const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false);
+  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
+  const [inquiryBadgeCount, setInquiryBadgeCount] = useState(0);
+
+  useEffect(() => {
+    if (role === 'super_admin' || role === 'admin') {
+      fetchContactInquiries()
+        .then(data => {
+          const count = (data || []).filter(i => (i.status || 'New') === 'New').length;
+          setInquiryBadgeCount(count);
+        })
+        .catch(() => {});
+    }
+  }, [role, activeTab]);
 
   // Filters & Search for Queue
   const [searchTerm, setSearchTerm] = useState('');
@@ -183,6 +199,20 @@ export default function AdminDashboardPage() {
 
           <button 
             type="button" 
+            className={`admin-tab-btn ${activeTab === 'inquiries' ? 'active' : ''}`}
+            onClick={() => setActiveTab('inquiries')}
+          >
+            <MessageSquare size={18} />
+            <span>Website Inquiries</span>
+            {inquiryBadgeCount > 0 && (
+              <span className="admin-tab-count" style={{ background: '#EA580C', color: '#FFFFFF' }}>
+                {inquiryBadgeCount}
+              </span>
+            )}
+          </button>
+
+          <button 
+            type="button" 
             className={`admin-tab-btn ${activeTab === 'services' ? 'active' : ''}`}
             onClick={() => setActiveTab('services')}
           >
@@ -201,24 +231,47 @@ export default function AdminDashboardPage() {
           </button>
         </div>
 
-        {/* Quick Action Button */}
-        <div>
+        {/* Quick Action Buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {isSuperAdmin ? (
-            <button 
-              type="button"
-              className="admin-btn"
-              style={{
-                background: 'linear-gradient(90deg, #F97316 0%, #16A34A 100%)',
-                color: '#FFFFFF',
-                fontWeight: 700,
-                boxShadow: '0 4px 14px rgba(249, 115, 22, 0.35)',
-                padding: '8px 16px'
-              }}
-              onClick={() => setIsAddServiceModalOpen(true)}
-            >
-              <Plus size={16} />
-              <span>+ Add Service</span>
-            </button>
+            <>
+              <button 
+                type="button"
+                className="admin-btn"
+                style={{
+                  background: '#FFFFFF',
+                  color: '#0F172A',
+                  border: '1.5px solid #CBD5E1',
+                  fontWeight: 700,
+                  padding: '8px 14px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '0.88rem'
+                }}
+                onClick={() => setIsStaffModalOpen(true)}
+                title="Create New Admin Credentials & Manage Staff"
+              >
+                <UserPlus size={16} style={{ color: '#F97316' }} />
+                <span>+ Add Admin</span>
+              </button>
+
+              <button 
+                type="button"
+                className="admin-btn"
+                style={{
+                  background: 'linear-gradient(90deg, #F97316 0%, #16A34A 100%)',
+                  color: '#FFFFFF',
+                  fontWeight: 700,
+                  boxShadow: '0 4px 14px rgba(249, 115, 22, 0.35)',
+                  padding: '8px 16px'
+                }}
+                onClick={() => setIsAddServiceModalOpen(true)}
+              >
+                <Plus size={16} />
+                <span>+ Add Service</span>
+              </button>
+            </>
           ) : (
             <div 
               style={{
@@ -241,7 +294,10 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* 2. TAB CONTENT */}
-      {activeTab === 'services' ? (
+      {activeTab === 'inquiries' ? (
+        /* Website Contact Inquiries Manager */
+        <AdminInquiriesManager />
+      ) : activeTab === 'services' ? (
         /* Services Catalog Manager Component */
         <AdminServicesManager />
       ) : activeTab === 'homepage' ? (
@@ -449,37 +505,6 @@ export default function AdminDashboardPage() {
                 <div className="admin-stat-value">{completedCount}</div>
                 <div className="admin-stat-label">Delivered & Ready</div>
               </div>
-            </div>
-          </div>
-
-          {/* Rapid Google Sheets Quick Strip */}
-          <div className="admin-sheets-strip">
-            <div className="admin-sheets-info">
-              <FileSpreadsheet size={22} style={{ color: '#16A34A' }} />
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0F172A' }}>
-                  Authorized Google Sheets Responses
-                </div>
-                <div style={{ fontSize: '0.78rem', color: '#475569' }}>
-                  1-Click direct links to match website requests against customer form submissions
-                </div>
-              </div>
-            </div>
-
-            <div className="admin-sheets-links">
-              {liveServices.filter(s => s.spreadsheetUrl).map((srv) => (
-                <a 
-                  key={srv.id} 
-                  href={srv.spreadsheetUrl} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="admin-sheet-chip"
-                  title={`Open Google Sheets responses for ${srv.title}`}
-                >
-                  <span>{srv.shortName}</span>
-                  <ArrowUpRight size={13} />
-                </a>
-              ))}
             </div>
           </div>
 
@@ -774,6 +799,14 @@ export default function AdminDashboardPage() {
           setAllServicesList(getAllServices());
         }}
       />
+
+      {/* Modal: Super Admin Staff Credential Creator */}
+      {isSuperAdmin && (
+        <AdminStaffManagerModal 
+          isOpen={isStaffModalOpen}
+          onClose={() => setIsStaffModalOpen(false)}
+        />
+      )}
     </AdminLayout>
   );
 }

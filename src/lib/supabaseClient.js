@@ -20,6 +20,12 @@ export function createRecoveryClient() {
   }) : null;
 }
 
+export function createIsolatedAuthClient(storageKey = 'apna-isolated-auth') {
+  return isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey }
+  }) : null;
+}
+
 /**
  * Trigger Google OAuth Sign-in with Supabase
  */

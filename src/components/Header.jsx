@@ -231,7 +231,7 @@ export default function Header({ onOpenAuth, onOpenLogin, onOpenRegister, onOpen
             {/* Mobile Hamburger Button */}
             <button 
               type="button" 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => setMobileMenuOpen(prev => !prev)}
               className="mobile-hamburger"
               aria-label="Toggle navigation menu"
               aria-expanded={mobileMenuOpen}

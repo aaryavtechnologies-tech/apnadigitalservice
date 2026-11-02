@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  ShieldCheck, 
-  Zap, 
-  ArrowRight, 
-  CheckCircle2, 
-  Sparkles, 
-  FileCheck, 
-  Lock, 
-  MessageCircle, 
-  Clock 
+import {
+  ShieldCheck,
+  Zap,
+  ArrowRight,
+  CheckCircle2,
+  Sparkles,
+  FileCheck,
+  Lock,
+  MessageCircle,
+  Clock
 } from 'lucide-react';
 import ServiceIcon from './ServiceIcon';
 import { useWebsiteContent } from '../services/websiteContentService';
@@ -65,6 +65,242 @@ const SERVICE_HIGHLIGHTS = {
   'ayushman-ekyc': '⚡ Biometric & Aadhaar e-KYC'
 };
 
+export function ServiceCard({ service, index = 0, onInitiateService }) {
+          const themeKey = resolveCardTheme(service.cardTheme, index);
+          const theme = THEME_CONFIG[themeKey] || THEME_CONFIG.saffron;
+          const title = service.cardTitle || service.shortName || service.title;
+          const subtitle = service.cardSubtitle || service.description?.slice(0, 72) || 'Assistance for customers who need official digital copy';
+          const buttonText = service.cardButtonText || 'DOWNLOAD →';
+          const fee = service.serviceCharge || '100';
+          const highlightTag = SERVICE_HIGHLIGHTS[service.id] || SERVICE_HIGHLIGHTS[service.slug] || '⚡ FAST ASSISTANCE';
+
+          return (
+            <Link
+              key={service.id || service.slug}
+              to={`/service/${service.slug}`}
+              onClick={onInitiateService ? event => { event.preventDefault(); onInitiateService(service); } : undefined}
+              id={`service-card-${service.slug}`}
+              className="creative-service-card"
+              style={{
+                flex: '1 1 270px',
+                maxWidth: '286px',
+                minWidth: '260px',
+                background: theme.bg,
+                borderRadius: '24px',
+                padding: '22px 20px 20px',
+                position: 'relative',
+                overflow: 'hidden',
+                textDecoration: 'none',
+                color: '#FFFFFF',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                minHeight: '230px',
+                boxShadow: theme.cardShadow,
+                border: '1.2px solid rgba(255, 255, 255, 0.22)',
+                transition: 'all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                cursor: 'pointer'
+              }}
+            >
+              {/* Luminous Radiant Orb Light Reflection */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 0,
+                  width: '100%',
+                  height: '100%',
+                  background: theme.ambientGlow,
+                  pointerEvents: 'none',
+                  zIndex: 1
+                }}
+              />
+
+              {/* Glass Specular Top Highlight */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '45%',
+                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 100%)',
+                  pointerEvents: 'none',
+                  zIndex: 1
+                }}
+              />
+
+              {/* Translucent Watermark Icon in Corner for Depth */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  right: '-16px',
+                  bottom: '-22px',
+                  opacity: 0.11,
+                  transform: 'rotate(-12deg) scale(1.6)',
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                  color: '#FFFFFF'
+                }}
+              >
+                <ServiceIcon name={service.iconName} size={110} color="#FFFFFF" />
+              </div>
+
+              {/* Top Row: 3D Squircle Icon Badge + Frosted Fee Pill */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  position: 'relative',
+                  zIndex: 2,
+                  marginBottom: '14px'
+                }}
+              >
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '16px',
+                    background: 'rgba(255, 255, 255, 0.18)',
+                    backdropFilter: 'blur(12px)',
+                    WebkitBackdropFilter: 'blur(12px)',
+                    border: '1.5px solid rgba(255, 255, 255, 0.35)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.16)',
+                    color: '#FFFFFF',
+                    flexShrink: 0
+                  }}
+                >
+                  <ServiceIcon name={service.iconName} size={24} color="#FFFFFF" />
+                </div>
+
+                {/* Frosted Dual-Shimmer Price Pill */}
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.20)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.32)',
+                    color: '#FFFFFF',
+                    fontSize: '0.90rem',
+                    fontWeight: 800,
+                    padding: '4px 14px',
+                    borderRadius: '9999px',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
+                    letterSpacing: '0.02em',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <span>₹{fee}</span>
+                </div>
+              </div>
+
+              {/* Card Body: Feature Micro-Tag, Crisp Title, Subtitle */}
+              <div
+                style={{
+                  position: 'relative',
+                  zIndex: 2,
+                  flex: 1
+                }}
+              >
+                {/* Micro Highlight Tag */}
+                <div style={{ marginBottom: '6px' }}>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      background: 'rgba(255, 255, 255, 0.16)',
+                      border: '1px solid rgba(255, 255, 255, 0.22)',
+                      borderRadius: '6px',
+                      padding: '2px 8px',
+                      fontSize: '0.68rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.03em',
+                      textTransform: 'uppercase',
+                      color: 'rgba(255, 255, 255, 0.95)'
+                    }}
+                  >
+                    {highlightTag}
+                  </span>
+                </div>
+
+                <h3
+                  style={{
+                    fontSize: '1.24rem',
+                    fontWeight: 800,
+                    color: '#FFFFFF',
+                    margin: '0 0 6px',
+                    lineHeight: 1.25,
+                    letterSpacing: '-0.015em',
+                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.18)'
+                  }}
+                >
+                  {title}
+                </h3>
+
+                <p
+                  style={{
+                    fontSize: '0.82rem',
+                    color: 'rgba(255, 255, 255, 0.88)',
+                    lineHeight: 1.42,
+                    margin: '0 0 16px',
+                    fontWeight: 500,
+                    minHeight: '38px'
+                  }}
+                >
+                  {subtitle}
+                </p>
+              </div>
+
+              {/* Bottom Row: Pill Button with Hover Glide Animation */}
+              <div
+                style={{
+                  position: 'relative',
+                  zIndex: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingTop: '6px'
+                }}
+              >
+                <span
+                  className="card-action-btn"
+                  style={{
+                    background: theme.btnBg,
+                    boxShadow: theme.btnGlow,
+                    border: `1px solid ${theme.btnBorder}`,
+                    color: '#FFFFFF',
+                    fontSize: '0.74rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    padding: '8px 18px',
+                    borderRadius: '9999px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <span>{buttonText}</span>
+                  <ArrowRight size={13} className="btn-arrow" />
+                </span>
+
+                <span style={{ fontSize: '0.70rem', color: 'rgba(255, 255, 255, 0.75)', fontWeight: 600 }}>
+                  Assisted PDF ⚡
+                </span>
+              </div>
+            </Link>
+          );
+}
+
 export default function ServicesSection({ services = [] }) {
   const { content } = useWebsiteContent();
   const srvContent = content.homepage_services || {};
@@ -98,20 +334,20 @@ export default function ServicesSection({ services = [] }) {
   });
 
   return (
-    <section 
-      id="services" 
-      className="services-section-wrapper" 
-      style={{ 
-        padding: '56px 0 76px', 
-        background: '#FAFBFD', 
+    <section
+      id="services"
+      className="services-section-wrapper"
+      style={{
+        padding: '56px 0 76px',
+        background: '#FAFBFD',
         position: 'relative',
         overflow: 'hidden',
         scrollMarginTop: '80px'
       }}
     >
       {/* Decorative Subtle Background Circuit Graphic */}
-      <svg 
-        aria-hidden="true" 
+      <svg
+        aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
         style={{
           position: 'absolute',
@@ -131,30 +367,30 @@ export default function ServicesSection({ services = [] }) {
             <stop offset="100%" stopColor="#16A34A" stopOpacity="0.5" />
           </linearGradient>
         </defs>
-        <path 
-          d="M 60 180 C 140 260, 40 380, 100 520 S 140 700, 80 880" 
-          stroke="url(#creativeTrackGrad)" 
-          strokeWidth="2.5" 
-          fill="none" 
-          strokeDasharray="5 4" 
+        <path
+          d="M 60 180 C 140 260, 40 380, 100 520 S 140 700, 80 880"
+          stroke="url(#creativeTrackGrad)"
+          strokeWidth="2.5"
+          fill="none"
+          strokeDasharray="5 4"
         />
-        <path 
-          d="M 96% 160 C 90% 320, 98% 460, 92% 620 S 96% 760, 90% 900" 
-          stroke="url(#creativeTrackGrad)" 
-          strokeWidth="2.5" 
-          fill="none" 
-          strokeDasharray="5 4" 
+        <path
+          d="M 96% 160 C 90% 320, 98% 460, 92% 620 S 96% 760, 90% 900"
+          stroke="url(#creativeTrackGrad)"
+          strokeWidth="2.5"
+          fill="none"
+          strokeDasharray="5 4"
         />
       </svg>
 
       {/* Header with Title and Creative Category Chips */}
-      <div 
-        style={{ 
-          textAlign: 'center', 
-          marginBottom: '32px', 
-          padding: '0 20px', 
-          position: 'relative', 
-          zIndex: 2 
+      <div
+        style={{
+          textAlign: 'center',
+          marginBottom: '32px',
+          padding: '0 20px',
+          position: 'relative',
+          zIndex: 2
         }}
       >
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#FFF7ED', color: '#C2410C', border: '1px solid #FED7AA', padding: '5px 16px', borderRadius: '9999px', fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: '12px' }}>
@@ -162,11 +398,11 @@ export default function ServicesSection({ services = [] }) {
           <span>{srvContent.tag || 'Official Document Downloads & Services'}</span>
         </div>
 
-        <h2 
-          style={{ 
-            fontSize: 'clamp(1.8rem, 3.2vw, 2.4rem)', 
-            fontWeight: 800, 
-            color: '#0F172A', 
+        <h2
+          style={{
+            fontSize: 'clamp(1.8rem, 3.2vw, 2.4rem)',
+            fontWeight: 800,
+            color: '#0F172A',
             margin: '0 0 10px',
             letterSpacing: '-0.025em'
           }}
@@ -174,11 +410,11 @@ export default function ServicesSection({ services = [] }) {
           {srvContent.title || 'Explore Our Available Services'}
         </h2>
 
-        <p 
-          style={{ 
-            fontSize: '0.96rem', 
-            color: '#64748B', 
-            maxWidth: '640px', 
+        <p
+          style={{
+            fontSize: '0.96rem',
+            color: '#64748B',
+            maxWidth: '640px',
             margin: '0 auto 24px',
             lineHeight: 1.55
           }}
@@ -187,7 +423,7 @@ export default function ServicesSection({ services = [] }) {
         </p>
 
         {/* Creative Filter Chips Bar */}
-        <div 
+        <div
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -276,7 +512,7 @@ export default function ServicesSection({ services = [] }) {
       </div>
 
       {/* Balanced 7-Service Creative Layout (4 on top row, 3 centered below) */}
-      <div 
+      <div
         style={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -290,243 +526,12 @@ export default function ServicesSection({ services = [] }) {
         }}
       >
         {filteredServices.map((service, index) => {
-          const themeKey = resolveCardTheme(service.cardTheme, index);
-          const theme = THEME_CONFIG[themeKey] || THEME_CONFIG.saffron;
-          const title = service.cardTitle || service.shortName || service.title;
-          const subtitle = service.cardSubtitle || service.description?.slice(0, 72) || 'Assistance for customers who need official digital copy';
-          const buttonText = service.cardButtonText || 'DOWNLOAD →';
-          const fee = service.serviceCharge || '100';
-          const highlightTag = SERVICE_HIGHLIGHTS[service.id] || SERVICE_HIGHLIGHTS[service.slug] || '⚡ FAST ASSISTANCE';
-
-          return (
-            <Link 
-              key={service.id || service.slug} 
-              to={`/service/${service.slug}`}
-              id={`service-card-${service.slug}`}
-              className="creative-service-card"
-              style={{
-                flex: '1 1 270px',
-                maxWidth: '286px',
-                minWidth: '260px',
-                background: theme.bg,
-                borderRadius: '24px',
-                padding: '22px 20px 20px',
-                position: 'relative',
-                overflow: 'hidden',
-                textDecoration: 'none',
-                color: '#FFFFFF',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                minHeight: '230px',
-                boxShadow: theme.cardShadow,
-                border: '1.2px solid rgba(255, 255, 255, 0.22)',
-                transition: 'all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                cursor: 'pointer'
-              }}
-            >
-              {/* Luminous Radiant Orb Light Reflection */}
-              <div 
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  right: 0,
-                  width: '100%',
-                  height: '100%',
-                  background: theme.ambientGlow,
-                  pointerEvents: 'none',
-                  zIndex: 1
-                }}
-              />
-
-              {/* Glass Specular Top Highlight */}
-              <div 
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '45%',
-                  background: 'linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 100%)',
-                  pointerEvents: 'none',
-                  zIndex: 1
-                }}
-              />
-
-              {/* Translucent Watermark Icon in Corner for Depth */}
-              <div 
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  right: '-16px',
-                  bottom: '-22px',
-                  opacity: 0.11,
-                  transform: 'rotate(-12deg) scale(1.6)',
-                  pointerEvents: 'none',
-                  zIndex: 1,
-                  color: '#FFFFFF'
-                }}
-              >
-                <ServiceIcon name={service.iconName} size={110} color="#FFFFFF" />
-              </div>
-
-              {/* Top Row: 3D Squircle Icon Badge + Frosted Fee Pill */}
-              <div 
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  position: 'relative',
-                  zIndex: 2,
-                  marginBottom: '14px'
-                }}
-              >
-                <div 
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '16px',
-                    background: 'rgba(255, 255, 255, 0.18)',
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
-                    border: '1.5px solid rgba(255, 255, 255, 0.35)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.16)',
-                    color: '#FFFFFF',
-                    flexShrink: 0
-                  }}
-                >
-                  <ServiceIcon name={service.iconName} size={24} color="#FFFFFF" />
-                </div>
-
-                {/* Frosted Dual-Shimmer Price Pill */}
-                <div 
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.20)',
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.32)',
-                    color: '#FFFFFF',
-                    fontSize: '0.90rem',
-                    fontWeight: 800,
-                    padding: '4px 14px',
-                    borderRadius: '9999px',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
-                    letterSpacing: '0.02em',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px'
-                  }}
-                >
-                  <span>₹{fee}</span>
-                </div>
-              </div>
-
-              {/* Card Body: Feature Micro-Tag, Crisp Title, Subtitle */}
-              <div 
-                style={{
-                  position: 'relative',
-                  zIndex: 2,
-                  flex: 1
-                }}
-              >
-                {/* Micro Highlight Tag */}
-                <div style={{ marginBottom: '6px' }}>
-                  <span 
-                    style={{
-                      display: 'inline-block',
-                      background: 'rgba(255, 255, 255, 0.16)',
-                      border: '1px solid rgba(255, 255, 255, 0.22)',
-                      borderRadius: '6px',
-                      padding: '2px 8px',
-                      fontSize: '0.68rem',
-                      fontWeight: 700,
-                      letterSpacing: '0.03em',
-                      textTransform: 'uppercase',
-                      color: 'rgba(255, 255, 255, 0.95)'
-                    }}
-                  >
-                    {highlightTag}
-                  </span>
-                </div>
-
-                <h3 
-                  style={{
-                    fontSize: '1.24rem',
-                    fontWeight: 800,
-                    color: '#FFFFFF',
-                    margin: '0 0 6px',
-                    lineHeight: 1.25,
-                    letterSpacing: '-0.015em',
-                    textShadow: '0 1px 2px rgba(0, 0, 0, 0.18)'
-                  }}
-                >
-                  {title}
-                </h3>
-
-                <p 
-                  style={{
-                    fontSize: '0.82rem',
-                    color: 'rgba(255, 255, 255, 0.88)',
-                    lineHeight: 1.42,
-                    margin: '0 0 16px',
-                    fontWeight: 500,
-                    minHeight: '38px'
-                  }}
-                >
-                  {subtitle}
-                </p>
-              </div>
-
-              {/* Bottom Row: Pill Button with Hover Glide Animation */}
-              <div 
-                style={{
-                  position: 'relative',
-                  zIndex: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingTop: '6px'
-                }}
-              >
-                <span 
-                  className="card-action-btn"
-                  style={{
-                    background: theme.btnBg,
-                    boxShadow: theme.btnGlow,
-                    border: `1px solid ${theme.btnBorder}`,
-                    color: '#FFFFFF',
-                    fontSize: '0.74rem',
-                    fontWeight: 800,
-                    letterSpacing: '0.06em',
-                    textTransform: 'uppercase',
-                    padding: '8px 18px',
-                    borderRadius: '9999px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <span>{buttonText}</span>
-                  <ArrowRight size={13} className="btn-arrow" />
-                </span>
-
-                <span style={{ fontSize: '0.70rem', color: 'rgba(255, 255, 255, 0.75)', fontWeight: 600 }}>
-                  Assisted PDF ⚡
-                </span>
-              </div>
-            </Link>
-          );
+          return <ServiceCard key={service.id || service.slug} service={service} index={index} />;
         })}
       </div>
 
       {/* Creative Trust & Assurance Ribbon Bar */}
-      <div 
+      <div
         style={{
           maxWidth: '1080px',
           margin: '40px auto 0',
@@ -535,7 +540,7 @@ export default function ServicesSection({ services = [] }) {
           zIndex: 2
         }}
       >
-        <div 
+        <div
           style={{
             background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.90) 0%, rgba(248, 250, 252, 0.90) 100%)',
             border: '1.5px solid #E2E8F0',

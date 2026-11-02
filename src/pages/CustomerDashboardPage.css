@@ -38,14 +38,6 @@
 .customer-services-heading p { color: var(--slate-500); font-size: 12px; }
 .customer-secure-label { display: inline-flex; align-items: center; gap: 6px; color: var(--green-700); font-size: 11px; white-space: nowrap; }
 .customer-services-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-.customer-service-card { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 84px; padding: 16px 12px; border: 1px solid rgba(255,255,255,.95); border-radius: 12px; text-align: left; color: var(--navy-900); background: rgba(255,255,255,.88); box-shadow: 0 3px 12px #62381c06; cursor: pointer; font-family: var(--font-sans); transition: transform .18s, box-shadow .18s, border-color .18s; }
-.customer-service-card:hover { transform: translateY(-2px); border-color: var(--saffron-200); box-shadow: 0 6px 18px #62381c12; }
-.customer-service-icon { display: grid; place-items: center; flex: 0 0 36px; height: 40px; border: 1px solid #ffdfcf; border-radius: 9px; color: var(--saffron-700); background: #fff0e9; }
-.customer-service-icon svg { width: 20px; height: 20px; }
-.customer-service-copy { flex: 1; min-width: 0; }
-.customer-service-copy strong { display: block; font-size: 12px; line-height: 1.5; font-weight: 700; overflow-wrap: anywhere; }
-.customer-service-copy small { display: block; color: var(--slate-500); font-size: 10px; line-height: 1.6; margin-top: 3px; overflow-wrap: anywhere; }
-.customer-service-card > svg { flex: 0 0 12px; width: 12px; color: var(--slate-400); }
 .customer-service-help { display: flex; align-items: center; gap: 8px; margin-top: 24px; font-size: 11px; line-height: 1.7; color: var(--slate-500); }
 .customer-service-help > svg { flex-shrink: 0; color: var(--green-600); }
 .customer-service-help button { font: inherit; font-weight: 600; color: var(--saffron-700); background: none; border: 0; text-decoration: underline; cursor: pointer; }
@@ -72,3 +64,10 @@
 }
 @media (max-width: 359px) { .customer-services-grid { grid-template-columns: minmax(0,1fr); } }
 @media (prefers-reduced-motion: reduce) { .customer-service-card { transition: none; } .customer-service-card:hover { transform: none; } }
+
+/* Same shared cards as the home page; wrap and center the final row. */
+.customer-services-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 22px; }
+.customer-services-grid .creative-service-card { flex: 1 1 240px !important; min-width: 0 !important; max-width: 286px !important; }
+@media (max-width: 640px) {
+  .customer-services-grid .creative-service-card { flex-basis: 100% !important; max-width: 360px !important; }
+}

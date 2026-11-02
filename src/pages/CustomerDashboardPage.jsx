@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import './CustomerDashboardPage.css';
 import ServiceIcon from '../components/ServiceIcon';
+import { ServiceCard } from '../components/ServicesSection';
 import { fetchCustomerApplications, supabase } from '../lib/supabaseClient';
 
 // ── In-page Document Viewer ──────────────────────────────────────────────────
@@ -426,11 +427,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
             <span className="customer-secure-label"><ShieldCheck size={16} /> Secure submissions</span>
           </header>
           <div className="customer-services-grid">
-            {services.map(service => <button key={service.id} type="button" className="customer-service-card" onClick={() => onInitiateService(service)}>
-              <span className="customer-service-icon"><ServiceIcon name={service.iconName} size={24} /></span>
-              <span className="customer-service-copy"><strong>{service.cardTitle || service.shortName || service.title}</strong><small>{service.hindiTitle || 'Start application'}</small></span>
-              <ArrowRight size={16} />
-            </button>)}
+            {services.map((service, index) => <ServiceCard key={service.id} service={service} index={index} onInitiateService={onInitiateService} />)}
           </div>
           {services.length === 0 && <div className="customer-services-empty"><FolderOpen size={28} /><h2>Services are being updated</h2><p>Please check back shortly or <Link to="/contact">contact support</Link>.</p></div>}
           <div className="customer-service-help"><ShieldCheck size={18} /><span>Your applications and documents are available in <button type="button" onClick={() => setActivePanel('applications')}>My Applications</button>.</span></div>

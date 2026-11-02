@@ -241,6 +241,8 @@ export async function fetchAdminTeam(role) {
       supabase.from('admin_invitations').select('*').order('created_at', { ascending: false })
     ]);
 
+    if (profilesRes.error) throw profilesRes.error;
+    if (invitesRes.error) throw invitesRes.error;
     return {
       success: true,
       activeStaff: profilesRes.data || [],
@@ -265,5 +267,19 @@ export async function revokeAdminInvitation(invitationId, role) {
     return { success: true };
   } catch (err) {
     return { success: false, error: err.message || 'Failed to revoke invitation.' };
+  }
+}
+export async function deleteAdminAccess(staffId, role) {
+  const denied = requireSuperAdmin(role);
+  if (denied) return { success: false, error: denied };
+  if (databaseUnavailable()) return { success: false, error: 'Database is not configured.' };
+  if (!staffId) return { success: false, error: 'Select an admin to delete.' };
+  try {
+    const { data, error } = await supabase.rpc('remove_admin_access', { target_id: staffId });
+    if (error) return { success: false, error: error.message };
+    if (data !== staffId) return { success: false, error: 'The database did not confirm deletion. Refresh the team list.' };
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message || 'Could not delete admin access.' };
   }
 }

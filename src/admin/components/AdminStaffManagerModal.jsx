@@ -16,7 +16,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { createAdminCredentials, fetchAdminTeam, revokeAdminInvitation } from '../services/adminDataService';
+import { createAdminCredentials, fetchAdminTeam, revokeAdminInvitation, deleteAdminAccess } from '../services/adminDataService';
 
 export default function AdminStaffManagerModal({ isOpen, onClose }) {
   const { adminUser, role, isSuperAdmin } = useAdminAuth();
@@ -32,6 +32,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
 
   // Team list
   const [teamLoading, setTeamLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
   const [activeStaff, setActiveStaff] = useState([]);
   const [invitations, setInvitations] = useState([]);
 
@@ -43,6 +44,8 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
     if (res.success) {
       setActiveStaff(res.activeStaff || []);
       setInvitations(res.invitations || []);
+    } else {
+      setStatusMessage({ type: 'error', text: res.error || 'Failed to load the admin team.' });
     }
   };
 
@@ -53,7 +56,23 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  const handleDeleteAdmin = async staff => {
+    if (!isSuperAdmin || deletingId || staff.role !== 'admin' || staff.id === adminUser?.id) return;
+    if (!window.confirm(`Delete admin access for ${staff.email}? They will lose access to the admin panel. Their customer account and application history will be preserved.`)) return;
+    setDeletingId(staff.id);
+    setStatusMessage(null);
+    const res = await deleteAdminAccess(staff.id, role);
+    setDeletingId(null);
+    if (res.success) {
+      setActiveStaff(prev => prev.filter(item => item.id !== staff.id));
+      setInvitations(prev => prev.filter(item => item.email?.toLowerCase() !== staff.email?.toLowerCase()));
+      setStatusMessage({ type: 'success', text: `Admin access for ${staff.email} was deleted.` });
+    } else {
+      setStatusMessage({ type: 'error', text: res.error || 'Failed to delete admin access.' });
+    }
+  };
+
+  if (!isOpen || !isSuperAdmin) return null;
 
   const handleCreateAdmin = async (e) => {
     e.preventDefault();
@@ -432,7 +451,8 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
                         </div>
                       </div>
 
-                      <span 
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span
                         style={{
                           fontSize: '0.72rem',
                           padding: '4px 10px',
@@ -446,6 +466,15 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
                       >
                         {staff.role === 'super_admin' ? 'Super Admin' : 'Admin'}
                       </span>
+                      {staff.role === 'admin' && staff.id !== adminUser?.id && <button
+                        type="button" className="admin-btn admin-btn-danger"
+                        disabled={!!deletingId} onClick={() => handleDeleteAdmin(staff)}
+                        aria-label={`Delete admin access for ${staff.email}`}
+                      >
+                        {deletingId === staff.id ? <Loader2 size={14} className="spinner" /> : <Trash2 size={14} />}
+                        {deletingId === staff.id ? 'Deleting…' : 'Delete Admin'}
+                      </button>}
+                      </div>
                     </div>
                   ))}
                 </div>

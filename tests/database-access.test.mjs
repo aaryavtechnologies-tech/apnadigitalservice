@@ -99,6 +99,27 @@ test('database policies enforce customer isolation, view-only admin and super-ad
     assert.equal(profile.role, 'admin');
     assert.equal(profile.full_name, 'New Admin');
 
+    // Removing admin access is authorized in the database, including existing sessions.
+    await db.exec(await readFile(new URL('../supabase/migrations/20261102_remove_admin_access.sql', import.meta.url), 'utf8'));
+    await asUser(customer);
+    await assert.rejects(db.query('SELECT remove_admin_access($1)', [newAdminId]), /Only a super admin/);
+    await asUser(admin);
+    await assert.rejects(db.query('SELECT remove_admin_access($1)', [newAdminId]), /Only a super admin/);
+    await asUser(superAdmin);
+    await assert.rejects(db.query('SELECT remove_admin_access($1)', [superAdmin]), /own admin access/);
+    await assert.rejects(db.query('SELECT remove_admin_access($1)', [customer]), /protected/);
+    await asUser(newAdminId);
+    await db.exec(`INSERT INTO service_requests(application_id,user_id) VALUES ('retained','${newAdminId}')`);
+    await asUser(superAdmin);
+    assert.equal((await db.query('SELECT remove_admin_access($1) AS id', [newAdminId])).rows[0].id, newAdminId);
+    assert.equal((await db.query('SELECT role FROM profiles WHERE id=$1', [newAdminId])).rows[0].role, 'customer');
+    assert.equal((await db.query('SELECT * FROM admin_invitations WHERE email=$1', [newAdminEmail])).rows.length, 0);
+    await asUser(newAdminId);
+    assert.deepEqual((await db.query('SELECT application_id FROM service_requests')).rows, [{ application_id: 'retained' }]);
+    await assert.rejects(db.exec("INSERT INTO admin_invitations(email) VALUES ('blocked@example.com')"), /row-level security/);
+    await assert.rejects(db.query('SELECT remove_admin_access($1)', [admin]), /Only a super admin/);
+    await db.exec('RESET ROLE');
+
     // Normal customer signup -> only gets 'customer'
     const regCustomerId = '88888888-8888-4888-8888-888888888888';
     await db.exec(`INSERT INTO auth.users (id, email, email_confirmed_at) VALUES ('${regCustomerId}', 'random@example.com', now())`);

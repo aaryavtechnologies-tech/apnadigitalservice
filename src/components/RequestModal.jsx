@@ -38,6 +38,8 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
   
   // Dynamic Service Fields Answers: { [fieldId]: value }
   const [formData, setFormData] = useState({});
+  const [consent, setConsent] = useState(false);
+  useEffect(() => { setConsent(false); }, [isOpen, selectedServiceId]);
   // Selected files from device (Uploads to Cloudinary ONLY when Submit is clicked)
   const [selectedDynamicFiles, setSelectedDynamicFiles] = useState({}); // { [fieldId]: { file, name, size, previewUrl } }
   const [selectedPaymentFile, setSelectedPaymentFile] = useState(null); // { file, name, size, previewUrl }
@@ -157,6 +159,7 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitError(null);
+    if (!consent) { setSubmitError('Please confirm your consent before submitting.'); return; }
     if (!currentUser?.id) { setSubmitError('Please sign in before submitting your request.'); return; }
 
     // 1. Verify payment screenshot is selected
@@ -286,6 +289,9 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
         userDocuments: userDocuments,
         formData: {
           ...updatedFormData,
+          submissionConsent: true,
+          submissionConsentText: 'I am submitting this document with my consent.',
+          submissionConsentAt: new Date().toISOString(),
           serviceCharge: `₹${serviceCharge}`
         },
         createdAt: new Date().toISOString(),
@@ -1132,6 +1138,10 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
                 </div>
               </div>
 
+              <label className="submission-consent">
+                <input type="checkbox" required checked={consent} onChange={e => setConsent(e.target.checked)} />
+                <span>I am submitting this document with my consent.</span>
+              </label>
               {/* Submit CTA */}
               <button 
                 type="submit" 

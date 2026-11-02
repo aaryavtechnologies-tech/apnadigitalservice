@@ -359,7 +359,9 @@ CREATE TABLE IF NOT EXISTS public.service_requests (
     'Additional Information Required',
     'Processing',
     'Completed',
-    'Unable to Process'
+    'Unable to Process',
+  'Rejected',
+  'Refunded'
   )),
   operator_note TEXT DEFAULT 'Website request registered. Awaiting Google Form verification.',
   document_url TEXT,

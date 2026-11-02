@@ -173,8 +173,9 @@ function DocumentViewer({ doc, onClose }) {
   );
 }
 
-export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAuth }) {
+export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAuth, services = [], onInitiateService }) {
   const navigate = useNavigate();
+  const [activePanel, setActivePanel] = useState('services');
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewerDoc, setViewerDoc] = useState(null);
@@ -246,6 +247,8 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
   const getStatusBadge = (status = 'Submitted', paymentStatus = 'pending') => {
     const isPayReceived = (paymentStatus || '').toLowerCase() === 'received';
     const isPayFailed = (paymentStatus || '').toLowerCase() === 'failed';
+
+    if (status === 'Refunded') return { bg: '#e0f2fe', color: '#0369a1', border: '#7dd3fc', icon: RefreshCw, step: 0, label: 'Refunded' };
 
     if (isPayFailed || status === 'Unable to Process' || status === 'Rejected' || status === 'Action Required') {
       return {
@@ -397,7 +400,30 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
       {/* In-page Document Viewer (image/PDF modal) */}
       <DocumentViewer doc={viewerDoc} onClose={closeViewer} />
 
-      <div className="dashboard-container">
+      <div className="customer-workspace">
+        <aside className="customer-sidebar">
+          <img src="/logo.png" alt="Apna Digital Service" width="64" height="64" />
+          <strong>{currentUser.fullName || 'My Account'}</strong>
+          <nav aria-label="Customer dashboard">
+            <button className={activePanel === 'services' ? 'active' : ''} onClick={() => setActivePanel('services')}><FolderOpen size={18} /> Dashboard</button>
+            <button className={activePanel === 'applications' ? 'active' : ''} onClick={() => setActivePanel('applications')}><FileText size={18} /> My Applications</button>
+            <Link to="/contact"><HelpCircle size={18} /> Support</Link>
+            <button onClick={onSignOut}><LogOut size={18} /> Logout</button>
+          </nav>
+        </aside>
+        <div className="customer-workspace-main">
+        {activePanel === 'services' && <section aria-label="Available services">
+          <h1>Welcome, {currentUser.fullName || 'Customer'}</h1>
+          <p>Select a service to start your application.</p>
+          <div className="customer-services-grid">
+            {services.map(service => <button key={service.id} className="customer-service-card" onClick={() => onInitiateService(service)}>
+              <span className="customer-service-icon"><ServiceIcon name={service.iconName} size={24} /></span>
+              <span><strong>{service.title}</strong><small>{service.hindiTitle || 'Start application'}</small></span>
+              <ArrowRight size={16} />
+            </button>)}
+          </div>
+        </section>}
+      <div className="dashboard-container" hidden={activePanel !== 'applications'}>
         
 
         {/* Super Admin Notice Banner if viewing Customer Dashboard */}
@@ -485,7 +511,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
           {/* Quick Header Actions */}
           <div className="profile-actions-group">
             <Link 
-              to="/#services" 
+              to="/dashboard" onClick={() => setActivePanel('services')}
               className="btn-primary"
               style={{ padding: '10px 18px', fontSize: '0.88rem' }}
             >
@@ -607,7 +633,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
 
               <div className="empty-state-actions">
                 <Link 
-                  to="/#services" 
+                  to="/dashboard" onClick={() => setActivePanel('services')}
                   className="btn-primary"
                   style={{ padding: '12px 24px', fontSize: '0.95rem' }}
                 >
@@ -926,7 +952,8 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                       const isUnderReview = app.status === 'Under Review' || app.status === 'Under Verification';
                       const isCompletedStatus = app.status === 'Completed' || (isCompleted && hasUploadedDoc);
 
-                      // 1. Payment Failed or Unable to Process (Red Box)
+                      if (app.status === 'Refunded' || app.status === 'Rejected') return <div role="status" style={{ padding: '16px', margin: '14px 0', borderRadius: '12px', background: app.status === 'Refunded' ? '#e0f2fe' : '#fee2e2' }}><strong>{app.status}</strong><p>{app.operatorNote}</p></div>;
+                          // 1. Payment Failed or Unable to Process (Red Box)
                       if (isPayFailed || isUnableToProcess) {
                         return (
                           <div 
@@ -1206,6 +1233,8 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
 
         </div>
 
+      </div>
+      </div>
       </div>
     </div>
   );

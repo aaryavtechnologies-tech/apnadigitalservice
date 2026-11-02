@@ -38,7 +38,9 @@ const STATUS_OPTIONS = [
   'Additional Information Required',
   'Processing',
   'Completed',
-  'Unable to Process'
+  'Unable to Process',
+  'Rejected',
+  'Refunded'
 ];
 
 export default function AdminApplicationModal({ app, onClose, onUpdated }) {

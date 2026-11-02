@@ -220,6 +220,7 @@ export default function TrackApplicationModal({ isOpen, onClose }) {
                           const isUnderReview = result.status === 'Under Review' || result.status === 'Under Verification';
                           const isCompletedStatus = result.status === 'Completed' || !!result.documentUrl;
 
+                          if (result.status === 'Refunded' || result.status === 'Rejected') return <div role="status" style={{ padding: '16px', margin: '14px 0', borderRadius: '12px', background: result.status === 'Refunded' ? '#e0f2fe' : '#fee2e2' }}><strong>{result.status}</strong><p>{result.operatorNote}</p></div>;
                           // 1. Payment Failed or Unable to Process (Red Box)
                           if (isPayFailed || isUnableToProcess) {
                             return (

@@ -118,6 +118,8 @@ function AppContent() {
             if (isAuthCallback || location.pathname === '/' || location.pathname === '/dashboard') {
               navigate('/admin');
             }
+          } else if (isAuthCallback || location.pathname === '/') {
+            navigate('/dashboard', { replace: true });
           }
         } else {
           setCurrentUser(null);
@@ -171,6 +173,7 @@ function AppContent() {
 
   const handleAuthSuccess = (user) => {
     setCurrentUser(user);
+    navigate(user.role === 'admin' || user.role === 'super_admin' ? '/admin' : '/dashboard');
     if (pendingServiceAction) {
       setSelectedServiceForRequest(pendingServiceAction.service);
       setIsRequestModalOpen(true);
@@ -246,6 +249,8 @@ function AppContent() {
             element={
               <CustomerDashboardPage 
                 currentUser={currentUser}
+                services={services}
+                onInitiateService={handleInitiateService}
                 onSignOut={handleSignOut}
                 onOpenAuth={() => setIsAuthModalOpen(true)}
               />

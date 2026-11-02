@@ -157,6 +157,8 @@ export default function AdminDashboardPage() {
       case 'Under Review': return 'status-review';
       case 'Processing': return 'status-processing';
       case 'Completed': return 'status-completed';
+      case 'Refunded': return 'status-completed';
+      case 'Rejected':
       case 'Unable to Process': return 'status-rejected';
       default: return 'status-received';
     }
@@ -551,6 +553,8 @@ export default function AdminDashboardPage() {
                   <option value="Under Review">Under Review</option>
                   <option value="Processing">Processing</option>
                   <option value="Completed">Completed</option>
+                  <option value="Rejected">Rejected</option>
+                  <option value="Refunded">Refunded</option>
                   <option value="Unable to Process">Unable to Process</option>
                 </select>
 

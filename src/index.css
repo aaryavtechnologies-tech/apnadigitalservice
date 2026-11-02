@@ -4715,3 +4715,6 @@ button {
 .recovery-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:16px; }
 .recovery-actions button, .recovery-back { background:none; border:0; color:#9a3412; min-height:44px; cursor:pointer; font:inherit; }
 .recovery-back { margin-top:12px; }
+
+.submission-consent { display:flex; align-items:flex-start; gap:12px; padding:16px; margin:20px 0; border:1px solid var(--border-subtle); border-radius:12px; color:var(--navy-900); background:var(--saffron-50); cursor:pointer; }
+.submission-consent input { width:18px; height:18px; flex-shrink:0; margin-top:2px; accent-color:var(--saffron-600); }

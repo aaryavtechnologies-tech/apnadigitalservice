@@ -26,6 +26,7 @@ import {
   ZoomIn,
   Maximize2
 } from 'lucide-react';
+import './CustomerDashboardPage.css';
 import ServiceIcon from '../components/ServiceIcon';
 import { fetchCustomerApplications, supabase } from '../lib/supabaseClient';
 
@@ -402,26 +403,37 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
 
       <div className="customer-workspace">
         <aside className="customer-sidebar">
-          <img src="/logo.png" alt="Apna Digital Service" width="64" height="64" />
-          <strong>{currentUser.fullName || 'My Account'}</strong>
+          <Link to="/dashboard" className="customer-sidebar-brand" onClick={() => setActivePanel('services')}>
+            <img src="/logo.png" alt="Apna Digital Service" width="60" height="60" />
+            <span>APNA <em>DIGITAL SERVICE</em><small>Online documentation assistance</small></span>
+          </Link>
+          <div className="customer-sidebar-profile">
+            <span className="customer-sidebar-avatar">{(currentUser.fullName || 'U').charAt(0).toUpperCase()}</span>
+            <div><strong>{currentUser.fullName || 'My Account'}</strong><small><span /> Customer account</small></div>
+          </div>
           <nav aria-label="Customer dashboard">
-            <button className={activePanel === 'services' ? 'active' : ''} onClick={() => setActivePanel('services')}><FolderOpen size={18} /> Dashboard</button>
-            <button className={activePanel === 'applications' ? 'active' : ''} onClick={() => setActivePanel('applications')}><FileText size={18} /> My Applications</button>
+            <button type="button" aria-current={activePanel === 'services' ? 'page' : undefined} className={activePanel === 'services' ? 'active' : ''} onClick={() => setActivePanel('services')}><FolderOpen size={18} /> Dashboard</button>
+            <button type="button" aria-current={activePanel === 'applications' ? 'page' : undefined} className={activePanel === 'applications' ? 'active' : ''} onClick={() => setActivePanel('applications')}><FileText size={18} /> My Applications</button>
             <Link to="/contact"><HelpCircle size={18} /> Support</Link>
-            <button onClick={onSignOut}><LogOut size={18} /> Logout</button>
+            <button type="button" className="customer-sidebar-logout" onClick={onSignOut}><LogOut size={18} /> Logout</button>
           </nav>
         </aside>
         <div className="customer-workspace-main">
         {activePanel === 'services' && <section aria-label="Available services">
-          <h1>Welcome, {currentUser.fullName || 'Customer'}</h1>
-          <p>Select a service to start your application.</p>
+          <header className="customer-services-heading">
+            <div><span className="customer-eyebrow">YOUR SERVICE DESK</span><h1>Welcome, {currentUser.fullName || 'Customer'}</h1>
+            <p>Select a service to start your application.</p></div>
+            <span className="customer-secure-label"><ShieldCheck size={16} /> Secure submissions</span>
+          </header>
           <div className="customer-services-grid">
-            {services.map(service => <button key={service.id} className="customer-service-card" onClick={() => onInitiateService(service)}>
+            {services.map(service => <button key={service.id} type="button" className="customer-service-card" onClick={() => onInitiateService(service)}>
               <span className="customer-service-icon"><ServiceIcon name={service.iconName} size={24} /></span>
-              <span><strong>{service.title}</strong><small>{service.hindiTitle || 'Start application'}</small></span>
+              <span className="customer-service-copy"><strong>{service.cardTitle || service.shortName || service.title}</strong><small>{service.hindiTitle || 'Start application'}</small></span>
               <ArrowRight size={16} />
             </button>)}
           </div>
+          {services.length === 0 && <div className="customer-services-empty"><FolderOpen size={28} /><h2>Services are being updated</h2><p>Please check back shortly or <Link to="/contact">contact support</Link>.</p></div>}
+          <div className="customer-service-help"><ShieldCheck size={18} /><span>Your applications and documents are available in <button type="button" onClick={() => setActivePanel('applications')}>My Applications</button>.</span></div>
         </section>}
       <div className="dashboard-container" hidden={activePanel !== 'applications'}>
         

@@ -311,11 +311,6 @@ export async function saveHomepageSettings(newSettings, role) {
  * Global Site Settings Helper for Payment QR Code
  */
 export async function getMasterQrCodeUrl() {
-  try {
-    const local = localStorage.getItem('apna_master_qr');
-    if (local) return local;
-  } catch (e) {}
-
   if (isSupabaseConfigured && supabase) {
     try {
       const { data } = await supabase
@@ -324,9 +319,6 @@ export async function getMasterQrCodeUrl() {
         .eq('key', 'master_qr_code_url')
         .single();
       if (data?.value) {
-        try {
-          localStorage.setItem('apna_master_qr', data.value);
-        } catch (e) {}
         return data.value;
       }
     } catch (e) {}
@@ -335,80 +327,59 @@ export async function getMasterQrCodeUrl() {
 }
 
 export async function updateMasterQrCodeUrl(newUrl, role) {
-  if (role !== 'super_admin' && role !== 'admin') {
-    return {
-      success: false,
-      error: 'Permission Denied: Only administrators can update the Master Payment QR code.'
-    };
-  }
-
+  if (role !== 'super_admin') return { success: false, error: 'Only Super Admin can update the payment QR.' };
   try {
-    localStorage.setItem('apna_master_qr', newUrl);
+    if (!supabase) throw new Error('Publishing is unavailable. Please configure the database.');
+    const { error } = await supabase.from('site_settings').upsert({
+      key: 'master_qr_code_url', value: newUrl, updated_at: new Date().toISOString()
+    });
+    if (error) throw error;
     window.dispatchEvent(new Event('apna_settings_changed'));
-  } catch (e) {}
-
-  if (isSupabaseConfigured && supabase) {
-    try {
-      await supabase
-        .from('site_settings')
-        .upsert({ 
-          key: 'master_qr_code_url', 
-          value: newUrl, 
-          updated_at: new Date().toISOString() 
-        });
-    } catch (err) {
-      console.warn('Supabase site_settings update error:', err);
-    }
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
   }
-
-  return { success: true };
 }
 
 /**
  * Retrieve ALL services (including active, phase2, and inactive)
- * Reads from localStorage 'apna_master_services', merging missing fields with DEFAULT_SERVICES.
+ * Uses the published catalog with bundled defaults for unconfigured services.
  */
-const SERVICES_VERSION = 'v4_exact_7_services_creative';
+let catalog = DEFAULT_SERVICES;
+let catalogRevision = 0;
 
 export function getAllServices() {
-  try {
-    // Migration: If user has old cache, refresh to new mockup cards & Indian Tri-colour
-    if (localStorage.getItem('apna_services_version') !== SERVICES_VERSION) {
-      localStorage.setItem('apna_services_version', SERVICES_VERSION);
-      localStorage.setItem('apna_master_services', JSON.stringify(DEFAULT_SERVICES));
-      return DEFAULT_SERVICES;
-    }
+  return catalog;
+}
 
-    const stored = localStorage.getItem('apna_master_services');
-    if (stored) {
-      const list = JSON.parse(stored);
-      if (Array.isArray(list) && list.length > 0) {
-        return list.map(item => {
-          const def = DEFAULT_SERVICES.find(d => d.id === item.id || d.slug === item.slug);
-          const isOldTitle = ['Voter Link', 'PAN Find', 'DL Download', 'RC Download', 'Ayushman Member', 'Ayushman Edit'].includes(item.cardTitle);
-          return {
-            ...def,
-            ...item,
-            cardTitle: (isOldTitle || !item.cardTitle) ? (def?.cardTitle || item.title) : item.cardTitle,
-            cardSubtitle: (isOldTitle || !item.cardSubtitle) ? (def?.cardSubtitle || item.description?.slice(0, 68)) : item.cardSubtitle,
-            cardButtonText: item.cardButtonText || def?.cardButtonText || 'DOWNLOAD →',
-            cardTheme: (isOldTitle || !item.cardTheme) ? (def?.cardTheme || 'tricolour') : item.cardTheme
-          };
-        });
-      }
-    }
-  } catch (err) {
-    console.error('Error reading apna_master_services:', err);
-  }
-
-  // Initialize with DEFAULT_SERVICES
+export async function refreshServices() {
+  if (!supabase) return;
+  const revision = ++catalogRevision;
   try {
-    localStorage.setItem('apna_services_version', SERVICES_VERSION);
-    localStorage.setItem('apna_master_services', JSON.stringify(DEFAULT_SERVICES));
-  } catch (e) {
-    console.error(e);
+    const [{ data, error }, inactive] = await Promise.all([
+      supabase.from('services').select('*').order('display_order').order('id'),
+      supabase.rpc('inactive_default_service_ids', { default_ids: DEFAULT_SERVICES.map(service => service.id) })
+    ]);
+    if (revision !== catalogRevision) return;
+    if (error) throw error;
+    if (inactive.error) console.warn('Could not read inactive default services:', inactive.error.message);
+    const inactiveIds = new Set(inactive.data || []);
+    const remote = data.map(row => Object.fromEntries(
+      Object.entries(row).filter(([, value]) => value !== null)
+        .map(([key, value]) => [key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase()), value])
+    ));
+    const defaults = DEFAULT_SERVICES.map(service => {
+      const override = remote.find(item => item.id === service.id || item.slug === service.slug);
+      return override ? { ...service, ...override } :
+        inactiveIds.has(service.id) ? { ...service, status: 'inactive' } : service;
+    });
+    catalog = [...defaults, ...remote.filter(item => !DEFAULT_SERVICES.some(service =>
+      service.id === item.id || service.slug === item.slug
+    ))];
+    window.dispatchEvent(new Event('apna_services_changed'));
+  } catch (error) {
+    console.warn('Could not refresh the service catalog:', error.message);
   }
-  return DEFAULT_SERVICES;
 }
 
 /**
@@ -432,7 +403,7 @@ export function getServiceBySlug(slug) {
  * Save Service (Create new OR Update existing)
  * Strict Role Guard: Only 'super_admin' can save
  */
-export function saveServiceByAdmin(serviceData, role) {
+export async function saveServiceByAdmin(serviceData, role) {
   if (role !== 'super_admin') {
     return {
       success: false,
@@ -441,7 +412,7 @@ export function saveServiceByAdmin(serviceData, role) {
   }
 
   try {
-    const list = [...getAllServices()];
+    if (!supabase) throw new Error('Publishing is unavailable. Please configure the database.');
     const phone = serviceData.supportPhone || '8018246567';
     const title = serviceData.title || 'Untitled Service';
 
@@ -491,51 +462,34 @@ export function saveServiceByAdmin(serviceData, role) {
       disclaimer: serviceData.disclaimer || 'Apna Digital Service is a privately operated assistance platform and is not a government portal.'
     };
 
-    const existingIdx = list.findIndex(s => s.id === normalizedService.id || s.slug === normalizedService.slug);
-    if (existingIdx !== -1) {
-      list[existingIdx] = normalizedService;
-    } else {
-      list.push(normalizedService);
-    }
-
-    localStorage.setItem('apna_master_services', JSON.stringify(list));
-    window.dispatchEvent(new Event('apna_services_changed'));
-
-    // Asynchronously sync to Supabase public.services table if available
-    if (isSupabaseConfigured && supabase) {
-      try {
-        supabase.from('services').upsert([{
-          id: normalizedService.id,
-          slug: normalizedService.slug,
-          title: normalizedService.title,
-          hindi_title: normalizedService.hindiTitle,
-          short_name: normalizedService.shortName,
-          card_title: normalizedService.cardTitle,
-          card_subtitle: normalizedService.cardSubtitle,
-          card_button_text: normalizedService.cardButtonText,
-          card_theme: normalizedService.cardTheme,
-          badge: normalizedService.badge,
-          badge_color: normalizedService.badgeColor,
-          icon_name: normalizedService.iconName,
-          service_charge: normalizedService.serviceCharge,
-          qr_code_url: normalizedService.qrCodeUrl,
-          form_fields: normalizedService.formFields,
-          description: normalizedService.description,
-          status: normalizedService.status,
-          support_phone: normalizedService.supportPhone,
-          support_whatsapp: normalizedService.supportWhatsapp,
-          features: normalizedService.features,
-          workflow: normalizedService.workflow,
-          requirements: normalizedService.requirements,
-          disclaimer: normalizedService.disclaimer,
-          updated_at: new Date().toISOString()
-        }]).then(({ error }) => {
-          if (error) console.warn('Supabase services upsert notice:', error.message);
-        });
-      } catch (err) {
-        console.warn('Supabase services sync exception:', err);
-      }
-    }
+    const { error } = await supabase.from('services').upsert([{
+      id: normalizedService.id,
+      slug: normalizedService.slug,
+      title: normalizedService.title,
+      hindi_title: normalizedService.hindiTitle,
+      short_name: normalizedService.shortName,
+      card_title: normalizedService.cardTitle,
+      card_subtitle: normalizedService.cardSubtitle,
+      card_button_text: normalizedService.cardButtonText,
+      card_theme: normalizedService.cardTheme,
+      badge: normalizedService.badge,
+      badge_color: normalizedService.badgeColor,
+      icon_name: normalizedService.iconName,
+      service_charge: normalizedService.serviceCharge,
+      qr_code_url: normalizedService.qrCodeUrl,
+      form_fields: normalizedService.formFields,
+      description: normalizedService.description,
+      status: normalizedService.status,
+      support_phone: normalizedService.supportPhone,
+      support_whatsapp: normalizedService.supportWhatsapp,
+      features: normalizedService.features,
+      workflow: normalizedService.workflow,
+      requirements: normalizedService.requirements,
+      disclaimer: normalizedService.disclaimer,
+      updated_at: new Date().toISOString()
+    }]);
+    if (error) throw error;
+    await refreshServices();
 
     return { success: true, service: normalizedService };
   } catch (err) {
@@ -547,7 +501,7 @@ export function saveServiceByAdmin(serviceData, role) {
  * Delete or Deactivate Service
  * Strict Role Guard: Only 'super_admin' can delete
  */
-export function deleteServiceByAdmin(serviceId, role) {
+export async function deleteServiceByAdmin(serviceId, role) {
   if (role !== 'super_admin') {
     return {
       success: false,
@@ -556,30 +510,15 @@ export function deleteServiceByAdmin(serviceId, role) {
   }
 
   try {
-    let list = getAllServices();
-    const isDefault = DEFAULT_SERVICES.some(d => d.id === serviceId);
-    if (isDefault) {
-      list = list.map(s => s.id === serviceId ? { ...s, status: 'inactive' } : s);
-    } else {
-      list = list.filter(s => s.id !== serviceId);
+    if (!supabase) throw new Error('Publishing is unavailable. Please configure the database.');
+    const service = getAllServices().find(item => item.id === serviceId);
+    if (!service) throw new Error('Service not found.');
+    if (DEFAULT_SERVICES.some(item => item.id === serviceId || item.slug === service.slug)) {
+      return await saveServiceByAdmin({ ...service, status: 'inactive' }, role);
     }
-
-    localStorage.setItem('apna_master_services', JSON.stringify(list));
-    window.dispatchEvent(new Event('apna_services_changed'));
-
-    // Sync to Supabase public.services
-    if (isSupabaseConfigured && supabase) {
-      try {
-        if (isDefault) {
-          supabase.from('services').update({ status: 'inactive', updated_at: new Date().toISOString() }).eq('id', serviceId);
-        } else {
-          supabase.from('services').delete().eq('id', serviceId);
-        }
-      } catch (err) {
-        console.warn('Supabase service delete exception:', err);
-      }
-    }
-
+    const { error } = await supabase.from('services').delete().eq('id', serviceId).select('id').single();
+    if (error) throw error;
+    await refreshServices();
     return { success: true };
   } catch (err) {
     return { success: false, error: err.message || 'Failed to delete service' };
@@ -587,8 +526,8 @@ export function deleteServiceByAdmin(serviceId, role) {
 }
 
 // Backward compatibility alias
-export function addServiceByAdmin(newService) {
-  const res = saveServiceByAdmin(newService, 'super_admin');
+export async function addServiceByAdmin(newService) {
+  const res = await saveServiceByAdmin(newService, 'super_admin');
   return res.success;
 }
 

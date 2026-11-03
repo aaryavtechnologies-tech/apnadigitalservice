@@ -70,7 +70,7 @@ export async function syncRemoteWebsiteContent() {
         }
       });
 
-      const merged = deepMerge(local, remoteObject);
+      const merged = deepMerge(DEFAULT_WEBSITE_CONTENT, remoteObject);
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
       } catch (e) {
@@ -108,6 +108,8 @@ export async function saveWebsiteSectionContent(sectionKey, sectionData, role) {
         ...sectionData
       }
     };
+
+    if (!isSupabaseConfigured || !supabase) throw new Error('Publishing is unavailable. Please configure the database.');
 
     // Sync to Supabase FIRST — it is the source of truth
     if (isSupabaseConfigured && supabase) {
@@ -168,6 +170,8 @@ export async function saveWebsiteSectionsBatch(sectionsMap, role) {
         updated_at: now
       });
     }
+
+    if (!isSupabaseConfigured || !supabase) throw new Error('Publishing is unavailable. Please configure the database.');
 
     // Sync to Supabase FIRST
     if (isSupabaseConfigured && supabase && upsertRows.length > 0) {

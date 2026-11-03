@@ -77,7 +77,8 @@ export default function RequestModal({ isOpen, onClose, initialService, currentU
   const selectedService = allServices.find(s => s.id === selectedServiceId) || allServices[0] || {};
   const serviceFields = Array.isArray(selectedService.formFields) ? selectedService.formFields : [];
   const serviceCharge = selectedService.serviceCharge || '100';
-  const qrCodeUrl = selectedService.qrCodeUrl || masterQr || '/default-payment-qr.png';
+  const serviceQr = selectedService.qrCodeUrl;
+  const qrCodeUrl = serviceQr && serviceQr !== '/default-payment-qr.png' ? serviceQr : masterQr;
 
   // Helper to format file size
   const formatFileSize = (bytes) => {

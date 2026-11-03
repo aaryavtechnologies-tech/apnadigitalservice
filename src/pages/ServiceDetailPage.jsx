@@ -13,12 +13,11 @@ import {
   FileCheck2,
   ChevronRight
 } from 'lucide-react';
-import { getServiceBySlug } from '../data/servicesData';
 import ServiceIcon from '../components/ServiceIcon';
 
-export default function ServiceDetailPage({ onInitiateService }) {
+export default function ServiceDetailPage({ onInitiateService, services }) {
   const { slug } = useParams();
-  const service = getServiceBySlug(slug);
+  const service = services.find(item => item.slug === slug);
 
   if (!service) {
     return (

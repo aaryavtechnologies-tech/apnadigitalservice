@@ -17,7 +17,7 @@ import RequestModal from './components/RequestModal';
 import AuthModal from './components/AuthModal';
 import TrackApplicationModal from './components/TrackApplicationModal';
 import SiteLoader from './components/SiteLoader';
-import { getActiveServices } from './data/servicesData';
+import { getActiveServices, refreshServices } from './data/servicesData';
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
 
 // Admin Portal Imports
@@ -68,10 +68,20 @@ function AppContent() {
       setServices(getActiveServices());
     };
     window.addEventListener('apna_services_changed', handleServicesChanged);
-    return () => window.removeEventListener('apna_services_changed', handleServicesChanged);
+    window.addEventListener('focus', refreshServices);
+    const timer = window.setInterval(refreshServices, 60_000);
+    return () => {
+      window.removeEventListener('apna_services_changed', handleServicesChanged);
+      window.removeEventListener('focus', refreshServices);
+      window.clearInterval(timer);
+    };
   }, []);
 
   const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    void refreshServices();
+  }, [currentUser?.id, isAdminRoute]);
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState('login');
@@ -227,7 +237,7 @@ function AppContent() {
           <Route 
             path="/service/:slug" 
             element={
-              <ServiceDetailPage 
+              <ServiceDetailPage services={services}
                 onInitiateService={handleInitiateService}
               />
             } 

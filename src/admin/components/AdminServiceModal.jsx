@@ -251,7 +251,7 @@ export default function AdminServiceModal({ service, isOpen, onClose, onSaved })
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     if (isViewOnly) return;
 
@@ -288,7 +288,7 @@ export default function AdminServiceModal({ service, isOpen, onClose, onSaved })
       requirements: requirementsText.trim() ? requirementsText.split('\n').map(s => s.trim()).filter(Boolean) : []
     };
 
-    const res = saveServiceByAdmin(payload, role);
+    const res = await saveServiceByAdmin(payload, role);
     setSaving(false);
 
     if (res.success) {
@@ -302,12 +302,12 @@ export default function AdminServiceModal({ service, isOpen, onClose, onSaved })
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (isViewOnly || !isEditing) return;
     const confirmed = window.confirm(`Are you sure you want to delete or deactivate service "${title}"?`);
     if (!confirmed) return;
 
-    const res = deleteServiceByAdmin(service.id, role);
+    const res = await deleteServiceByAdmin(service.id, role);
     if (res.success) {
       if (onSaved) onSaved();
       onClose();

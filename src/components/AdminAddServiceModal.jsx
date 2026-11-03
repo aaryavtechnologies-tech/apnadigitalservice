@@ -29,7 +29,7 @@ export default function AdminAddServiceModal({ isOpen, onClose, onServiceAdded }
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const newService = {
@@ -70,7 +70,7 @@ export default function AdminAddServiceModal({ isOpen, onClose, onServiceAdded }
       disclaimer: `Apna Digital Service assists customers in official document retrieval. We do not claim official authority for ${title}.`
     };
 
-    const ok = addServiceByAdmin(newService);
+    const ok = await addServiceByAdmin(newService);
     if (ok) {
       setSuccess(true);
       if (onServiceAdded) onServiceAdded(newService);

@@ -304,6 +304,28 @@ export function ServiceCard({ service, index = 0, onInitiateService }) {
           );
 }
 
+export function ServiceCardGrid({ services, onInitiateService }) {
+  return (
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: '22px',
+          maxWidth: '1240px',
+          margin: '0 auto',
+          padding: '0 20px',
+          position: 'relative',
+          zIndex: 2
+        }}
+      >
+        {services.map((service, index) => {
+          return <ServiceCard key={service.id || service.slug} service={service} index={index} onInitiateService={onInitiateService} />;
+        })}
+      </div>
+  );
+}
+
 export default function ServicesSection({ services = [] }) {
   const { content } = useWebsiteContent();
   const srvContent = content.homepage_services || {};
@@ -515,23 +537,7 @@ export default function ServicesSection({ services = [] }) {
       </div>
 
       {/* Balanced 7-Service Creative Layout (4 on top row, 3 centered below) */}
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          gap: '22px',
-          maxWidth: '1240px',
-          margin: '0 auto',
-          padding: '0 20px',
-          position: 'relative',
-          zIndex: 2
-        }}
-      >
-        {filteredServices.map((service, index) => {
-          return <ServiceCard key={service.id || service.slug} service={service} index={index} />;
-        })}
-      </div>
+      <ServiceCardGrid services={filteredServices} />
 
       {/* Creative Trust & Assurance Ribbon Bar */}
       <div

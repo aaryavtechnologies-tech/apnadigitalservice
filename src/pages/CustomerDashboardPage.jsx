@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import './CustomerDashboardPage.css';
 import ServiceIcon from '../components/ServiceIcon';
-import { ServiceCard } from '../components/ServicesSection';
+import { ServiceCardGrid } from '../components/ServicesSection';
 import { fetchCustomerApplications, supabase } from '../lib/supabaseClient';
 
 // ── In-page Document Viewer ──────────────────────────────────────────────────
@@ -177,6 +177,7 @@ function DocumentViewer({ doc, onClose }) {
 export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAuth, services = [], onInitiateService }) {
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState('services');
+  const [expandedApplication, setExpandedApplication] = useState(null);
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewerDoc, setViewerDoc] = useState(null);
@@ -425,9 +426,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
             <p>Select a service to start your application.</p></div>
             <span className="customer-secure-label"><ShieldCheck size={16} /> Secure submissions</span>
           </header>
-          <div className="customer-services-grid">
-            {services.map((service, index) => <ServiceCard key={service.id} service={service} index={index} onInitiateService={onInitiateService} />)}
-          </div>
+          <ServiceCardGrid services={services} onInitiateService={onInitiateService} />
           {services.length === 0 && <div className="customer-services-empty"><FolderOpen size={28} /><h2>Services are being updated</h2><p>Please check back shortly or <a href="https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20help%20with%20your%20services" target="_blank" rel="noopener noreferrer">open WhatsApp Help</a>.</p></div>}
           <div className="customer-service-help"><ShieldCheck size={18} /><span>Your applications and documents are available in <button type="button" onClick={() => setActivePanel('applications')}>My Applications</button>.</span></div>
         </section>}
@@ -663,48 +662,85 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
             </div>
           ) : (
             /* Cards for Real Customer Applications */
-            <div className="applications-stack">
+            <div className="customer-application-table-wrap">
+              <table className="customer-application-table" aria-label="My applications">
+                <thead><tr>
+                  <th scope="col">Tracking ID &amp; Date</th>
+                  <th scope="col">Service</th>
+                  <th scope="col">Payment Proof</th>
+                  <th scope="col">Uploaded Documents</th>
+                  <th scope="col">Live Status</th>
+                  <th scope="col">Actions</th>
+                </tr></thead>
+                <tbody>
               {applications.map((app, idx) => {
                 const badge = getStatusBadge(app.status, app.paymentStatus);
                 const StatusIcon = badge.icon;
                 const isCompleted = app.status === 'Completed';
                 const hasUploadedDoc = Boolean(app.documentUrl);
 
+                const customerDocs = [];
+                if (Array.isArray(app.userDocuments) && app.userDocuments.length > 0) {
+                  app.userDocuments.forEach((doc, dIdx) => {
+                    if (typeof doc === 'string') {
+                      customerDocs.push({ name: `Document ${dIdx + 1}`, url: doc });
+                    } else if (doc && doc.url) {
+                      customerDocs.push({ name: doc.name || `Document ${dIdx + 1}`, url: doc.url });
+                    }
+                  });
+                } else if (app.userDocumentUrl) {
+                  customerDocs.push({ name: 'Uploaded Document', url: app.userDocumentUrl });
+                }
+
+                const formatLabel = (key) => key.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, c => c.toUpperCase());
+                const formData = app.formData || {};
+                const documentFields = new Set();
+
+                for (const [key, value] of Object.entries(formData)) {
+                  if (typeof value !== 'string' || !/^(https?:|blob:)/i.test(value)) continue;
+                  if (value === app.paymentScreenshotUrl || customerDocs.some(doc => doc.url === value)) {
+                    documentFields.add(key);
+                  } else if (formData[`${key}_name`] || /cloudinary|\.(pdf|png|jpe?g|webp)(\?|$)/i.test(value)) {
+                    customerDocs.push({ name: formData[`${key}_name`] || formatLabel(key), url: value });
+                    documentFields.add(key);
+                  }
+                }
+
+                const formEntries = Object.entries(formData).filter(([key, value]) =>
+                  value !== undefined && value !== null && value !== '' &&
+                  !documentFields.has(key) && !documentFields.has(key.replace(/_name$/, ''))
+                );
+
+                const rowId = app.appId || idx;
+                const expanded = expandedApplication === rowId;
+
                 return (
-                  <details
-                    key={app.appId || idx}
-                    className={`app-card ${isCompleted ? 'app-card-completed' : ''}`}
-                  >
-                    {/* Header Row: ID, Service Name, and Admin Status Badge */}
-                    <summary className="app-card-top-row customer-application-summary">
-                      <div className="app-service-info">
-                        <div className="app-icon-badge">
-                          <FileText size={20} />
-                        </div>
-                        <div>
-                          <div className="app-id-label">
-                            TRACKING ID: <span className="app-id-number">{app.appId}</span>
-                          </div>
-                          <h3 className="app-service-title">
-                            {app.serviceName}
-                          </h3>
-                        </div>
-                      </div>
-
-                      {/* Admin Live Status Badge */}
-                      <span 
-                        className="app-status-badge"
-                        style={{
-                          background: badge.bg,
-                          color: badge.color,
-                          border: `1px solid ${badge.border}`
-                        }}
-                      >
-                        <StatusIcon size={14} />
-                        <span>{badge.label}</span>
-                      </span>
-                    </summary>
-
+                  <React.Fragment key={rowId}>
+                    <tr>
+                      <td><strong>{app.appId}</strong><small>{app.createdAt && new Date(app.createdAt).toLocaleDateString('en-IN')}</small></td>
+                      <td><strong>{app.serviceName}</strong></td>
+                      <td>{app.paymentScreenshotUrl ? (
+                        <button type="button" onClick={() => openViewer(app.paymentScreenshotUrl, 'Payment Proof')}>View Proof</button>
+                      ) : 'Not attached'}</td>
+                      <td>{customerDocs.length > 0 ? (
+                        <details className="customer-document-list">
+                          <summary><FileText size={14} /> View Documents ({customerDocs.length})</summary>
+                          <ul>
+                            {customerDocs.map((doc, index) => (
+                              <li key={index}><button type="button" onClick={() => openViewer(doc.url, doc.name)}>{doc.name}</button></li>
+                            ))}
+                          </ul>
+                        </details>
+                      ) : 'No documents'}</td>
+                      <td><span className="app-status-badge" style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}` }}>
+                        <StatusIcon size={14} /> {badge.label}
+                      </span></td>
+                      <td><button type="button" aria-expanded={expanded} onClick={() => setExpandedApplication(expanded ? null : rowId)}>
+                        {expanded ? 'Hide Details' : 'View Details'}
+                      </button></td>
+                    </tr>
+                    {expanded && <tr className="customer-application-detail-row"><td colSpan={6}>
+                      <div className={`app-card ${isCompleted ? 'app-card-completed' : ''}`}>
                     {/* Progress Step Indicator (As updated by Admin) */}
                     <div className="app-stepper-row">
                       <div className={`step-item ${badge.step >= 1 ? 'step-active' : ''}`}>
@@ -759,38 +795,6 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
 
                     {/* Submission Details: Fee, Payment Proof & Customer Documents */}
                     {(() => {
-                      const customerDocs = [];
-                      if (Array.isArray(app.userDocuments) && app.userDocuments.length > 0) {
-                        app.userDocuments.forEach((doc, dIdx) => {
-                          if (typeof doc === 'string') {
-                            customerDocs.push({ name: `Document ${dIdx + 1}`, url: doc });
-                          } else if (doc && doc.url) {
-                            customerDocs.push({ name: doc.name || `Document ${dIdx + 1}`, url: doc.url });
-                          }
-                        });
-                      } else if (app.userDocumentUrl) {
-                        customerDocs.push({ name: 'Uploaded Document', url: app.userDocumentUrl });
-                      }
-
-                      const formatLabel = (key) => key.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, c => c.toUpperCase());
-                      const formData = app.formData || {};
-                      const documentFields = new Set();
-
-                      for (const [key, value] of Object.entries(formData)) {
-                        if (typeof value !== 'string' || !/^(https?:|blob:)/i.test(value)) continue;
-                        if (value === app.paymentScreenshotUrl || customerDocs.some(doc => doc.url === value)) {
-                          documentFields.add(key);
-                        } else if (formData[`${key}_name`] || /cloudinary|\.(pdf|png|jpe?g|webp)(\?|$)/i.test(value)) {
-                          customerDocs.push({ name: formData[`${key}_name`] || formatLabel(key), url: value });
-                          documentFields.add(key);
-                        }
-                      }
-
-                      const formEntries = Object.entries(formData).filter(([key, value]) =>
-                        value !== undefined && value !== null && value !== '' &&
-                        !documentFields.has(key) && !documentFields.has(key.replace(/_name$/, ''))
-                      );
-
                       return (
                         <div style={{
                           background: '#f8fafc',
@@ -1237,9 +1241,13 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                         <span>Inquire on WhatsApp</span>
                       </a>
                     </div>
-                  </details>
+                      </div>
+                    </td></tr>}
+                  </React.Fragment>
                 );
               })}
+                </tbody>
+              </table>
             </div>
           )}
 

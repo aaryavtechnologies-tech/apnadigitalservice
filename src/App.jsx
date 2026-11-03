@@ -201,14 +201,14 @@ function AppContent() {
       <SiteLoader />
 
       {/* Navigation Header (Strictly user-facing) */}
-      <Header 
+      {!currentUser && <Header
         currentUser={currentUser}
         onOpenAuth={() => handleOpenLogin()}
         onOpenLogin={handleOpenLogin}
         onOpenRegister={handleOpenRegister}
         onOpenTrack={() => setIsTrackModalOpen(true)}
         onSignOut={handleSignOut}
-      />
+      />}
 
       {/* Dynamic Route Pages */}
       <main>

@@ -405,7 +405,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
       <div className="customer-workspace">
         <aside className="customer-sidebar">
           <Link to="/dashboard" className="customer-sidebar-brand" onClick={() => setActivePanel('services')}>
-            <img src="/logo.png" alt="Apna Digital Service" width="60" height="60" />
+            <img src="/customer-logo.png" alt="Apna Digital Service" width="60" height="60" />
             <span>APNA <em>DIGITAL SERVICE</em><small>Online documentation assistance</small></span>
           </Link>
           <div className="customer-sidebar-profile">
@@ -415,7 +415,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
           <nav aria-label="Customer dashboard">
             <button type="button" aria-current={activePanel === 'services' ? 'page' : undefined} className={activePanel === 'services' ? 'active' : ''} onClick={() => setActivePanel('services')}><FolderOpen size={18} /> Dashboard</button>
             <button type="button" aria-current={activePanel === 'applications' ? 'page' : undefined} className={activePanel === 'applications' ? 'active' : ''} onClick={() => setActivePanel('applications')}><FileText size={18} /> My Applications</button>
-            <Link to="/contact"><HelpCircle size={18} /> Support</Link>
+            <a href="https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20help%20with%20your%20services" target="_blank" rel="noopener noreferrer"><HelpCircle size={18} /> WhatsApp Help</a>
             <button type="button" className="customer-sidebar-logout" onClick={onSignOut}><LogOut size={18} /> Logout</button>
           </nav>
         </aside>
@@ -429,7 +429,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
           <div className="customer-services-grid">
             {services.map((service, index) => <ServiceCard key={service.id} service={service} index={index} onInitiateService={onInitiateService} />)}
           </div>
-          {services.length === 0 && <div className="customer-services-empty"><FolderOpen size={28} /><h2>Services are being updated</h2><p>Please check back shortly or <Link to="/contact">contact support</Link>.</p></div>}
+          {services.length === 0 && <div className="customer-services-empty"><FolderOpen size={28} /><h2>Services are being updated</h2><p>Please check back shortly or <a href="https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20help%20with%20your%20services" target="_blank" rel="noopener noreferrer">open WhatsApp Help</a>.</p></div>}
           <div className="customer-service-help"><ShieldCheck size={18} /><span>Your applications and documents are available in <button type="button" onClick={() => setActivePanel('applications')}>My Applications</button>.</span></div>
         </section>}
       <div className="dashboard-container" hidden={activePanel !== 'applications'}>
@@ -672,12 +672,12 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                 const hasUploadedDoc = Boolean(app.documentUrl);
 
                 return (
-                  <div 
+                  <details
                     key={app.appId || idx}
                     className={`app-card ${isCompleted ? 'app-card-completed' : ''}`}
                   >
                     {/* Header Row: ID, Service Name, and Admin Status Badge */}
-                    <div className="app-card-top-row">
+                    <summary className="app-card-top-row customer-application-summary">
                       <div className="app-service-info">
                         <div className="app-icon-badge">
                           <FileText size={20} />
@@ -704,7 +704,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                         <StatusIcon size={14} />
                         <span>{badge.label}</span>
                       </span>
-                    </div>
+                    </summary>
 
                     {/* Progress Step Indicator (As updated by Admin) */}
                     <div className="app-stepper-row">
@@ -1234,7 +1234,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                         <span>Inquire on WhatsApp</span>
                       </a>
                     </div>
-                  </div>
+                  </details>
                 );
               })}
             </div>

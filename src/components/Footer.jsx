@@ -94,7 +94,7 @@ export default function Footer({ onOpenRequestModal }) {
             <li><Link to="/about">About Us</Link></li>
             <li><Link to="/how-it-works">How It Works</Link></li>
             <li><Link to="/faq">Frequently Asked Questions</Link></li>
-            <li><Link to="/contact">Contact Support</Link></li>
+            <li><a href="https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20help%20with%20your%20services" target="_blank" rel="noopener noreferrer">WhatsApp Help</a></li>
             <li><Link to="/privacy-policy">Privacy Policy</Link></li>
             <li><Link to="/terms">Terms & Conditions</Link></li>
             <li><Link to="/refund-policy">Refund & Cancellation</Link></li>
@@ -104,19 +104,15 @@ export default function Footer({ onOpenRequestModal }) {
 
         {/* Col 4: Contact & Operations */}
         <div className="footer-col">
-          <h5>Helpline & Support</h5>
+          <h5>Helpline</h5>
           <ul className="footer-links-list">
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Phone size={15} style={{ color: 'var(--saffron-400)' }} />
               <span>+91 9124494239 (PAN/Voter)</span>
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Phone size={15} style={{ color: 'var(--green-400)' }} />
-              <span>+91 8018246567 (DL/RC)</span>
-            </li>
-            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Phone size={15} style={{ color: 'var(--slate-400)' }} />
-              <span>+91 8018246567 (Support)</span>
+              <a href="https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20help%20with%20your%20services" target="_blank" rel="noopener noreferrer">+91 8018246567 (WhatsApp Help)</a>
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Mail size={15} style={{ color: 'var(--slate-400)' }} />

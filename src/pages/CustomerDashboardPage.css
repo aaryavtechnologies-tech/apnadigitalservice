@@ -82,10 +82,18 @@
 .customer-application-table th, .customer-application-table td { padding: 14px 12px; text-align: left; border-bottom: 1px solid #e9eef5; }
 .customer-application-table th { background: #f5f7fa; color: var(--slate-600); font-size: .73rem; text-transform: uppercase; }
 .customer-application-table small { display: block; margin-top: 4px; color: var(--slate-600); }
-.customer-application-table button, .customer-document-list summary { font: inherit; cursor: pointer; }
-.customer-application-table td > button, .customer-document-list summary { padding: 6px 9px; border: 1px solid #dce4ef; border-radius: 7px; background: #f8fafc; color: var(--navy-900); white-space: nowrap; }
-.customer-document-list summary { display: inline-flex; align-items: center; gap: 5px; background: #eff9ff; color: #075985; }
-.customer-document-list summary::-webkit-details-marker { display: none; }
-.customer-document-list ul { max-width: 220px; list-style: none; margin: 6px 0 0; padding: 0; }
-.customer-document-list li button { padding: 4px 0; text-align: left; border: 0; background: transparent; color: #075985; text-decoration: underline; overflow-wrap: anywhere; }
+.customer-application-table button { font: inherit; cursor: pointer; }
+.customer-application-table td > button { padding: 6px 9px; border: 1px solid #dce4ef; border-radius: 7px; background: #f8fafc; color: var(--navy-900); white-space: nowrap; }
 .customer-application-detail-row > td { background: #f8fafc; }
+
+.customer-compact-cards { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px !important; max-width: 1096px !important; padding: 0 !important; margin: 0 !important; }
+.customer-compact-cards .creative-service-card { min-width: 0 !important; max-width: none !important; min-height: 194px !important; padding: 14px 16px !important; border-radius: 16px !important; }
+.customer-compact-cards .creative-service-card h3 { font-size: 1rem !important; }
+.customer-compact-cards .creative-service-card p { font-size: .76rem !important; min-height: 0 !important; margin-bottom: 6px !important; }
+.customer-compact-cards .card-action-btn { padding: 4px 10px !important; }
+.customer-application-table td > .customer-row-download { display: inline-flex; align-items: center; gap: 6px; background: #e9f9ef; color: #166534; font-weight: 700; }
+.customer-application-table td > .customer-row-download:disabled { background: #f1f5f9; color: #64748b; cursor: default; }
+.customer-download-error { margin: 10px 12px; color: #b91c1c; }
+@media (max-width: 1199px) { .customer-compact-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 959px) { .customer-compact-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .customer-compact-cards { grid-template-columns: minmax(0, 1fr); } }

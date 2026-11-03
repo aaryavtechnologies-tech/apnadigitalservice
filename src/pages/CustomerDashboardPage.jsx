@@ -426,7 +426,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
             <p>Select a service to start your application.</p></div>
             <span className="customer-secure-label"><ShieldCheck size={16} /> Secure submissions</span>
           </header>
-          <ServiceCardGrid services={services} onInitiateService={onInitiateService} />
+          <ServiceCardGrid compact services={services} onInitiateService={onInitiateService} />
           {services.length === 0 && <div className="customer-services-empty"><FolderOpen size={28} /><h2>Services are being updated</h2><p>Please check back shortly or <a href="https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20help%20with%20your%20services" target="_blank" rel="noopener noreferrer">open WhatsApp Help</a>.</p></div>}
           <div className="customer-service-help"><ShieldCheck size={18} /><span>Your applications and documents are available in <button type="button" onClick={() => setActivePanel('applications')}>My Applications</button>.</span></div>
         </section>}
@@ -568,7 +568,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                 My Service Requests & Document Delivery
               </h2>
               <p className="panel-subtitle">
-                Live status updates as reviewed by our verification team. Verified PDF files will unlock for download below as soon as uploaded.
+                Live status updates as reviewed by our verification team. Download PDF becomes available when your request is completed and the verified file is uploaded.
               </p>
             </div>
 
@@ -663,14 +663,15 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
           ) : (
             /* Cards for Real Customer Applications */
             <div className="customer-application-table-wrap">
+              {downloadError && <p className="customer-download-error" role="alert">{downloadError}</p>}
               <table className="customer-application-table" aria-label="My applications">
                 <thead><tr>
                   <th scope="col">Tracking ID &amp; Date</th>
                   <th scope="col">Service</th>
                   <th scope="col">Payment Proof</th>
-                  <th scope="col">Uploaded Documents</th>
                   <th scope="col">Live Status</th>
                   <th scope="col">Actions</th>
+                  <th scope="col">Download PDF</th>
                 </tr></thead>
                 <tbody>
               {applications.map((app, idx) => {
@@ -722,22 +723,24 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                       <td>{app.paymentScreenshotUrl ? (
                         <button type="button" onClick={() => openViewer(app.paymentScreenshotUrl, 'Payment Proof')}>View Proof</button>
                       ) : 'Not attached'}</td>
-                      <td>{customerDocs.length > 0 ? (
-                        <details className="customer-document-list">
-                          <summary><FileText size={14} /> View Documents ({customerDocs.length})</summary>
-                          <ul>
-                            {customerDocs.map((doc, index) => (
-                              <li key={index}><button type="button" onClick={() => openViewer(doc.url, doc.name)}>{doc.name}</button></li>
-                            ))}
-                          </ul>
-                        </details>
-                      ) : 'No documents'}</td>
                       <td><span className="app-status-badge" style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}` }}>
                         <StatusIcon size={14} /> {badge.label}
                       </span></td>
                       <td><button type="button" aria-expanded={expanded} onClick={() => setExpandedApplication(expanded ? null : rowId)}>
                         {expanded ? 'Hide Details' : 'View Details'}
                       </button></td>
+                      <td>
+                        <button
+                          type="button"
+                          className="customer-row-download"
+                          disabled={!isCompleted || !hasUploadedDoc || downloadingAppId === app.appId}
+                          title={isCompleted && hasUploadedDoc ? 'Download verified PDF' : 'Available after verification and upload'}
+                          onClick={() => handleDownloadDocument(app)}
+                        >
+                          {isCompleted && hasUploadedDoc ? <Download size={14} /> : <Lock size={14} />}
+                          {downloadingAppId === app.appId ? 'Downloading…' : 'Download PDF'}
+                        </button>
+                      </td>
                     </tr>
                     {expanded && <tr className="customer-application-detail-row"><td colSpan={6}>
                       <div className={`app-card ${isCompleted ? 'app-card-completed' : ''}`}>
@@ -1081,7 +1084,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                               <span>✓ Application Verified & Official Document Delivered:</span>
                             </div>
                             <p className="admin-update-note" style={{ color: '#14532D', marginTop: '6px', fontSize: '0.88rem', lineHeight: 1.45 }}>
-                              {app.operatorNote || (hasUploadedDoc ? 'Application verified and payment approved. Verified official document PDF is attached and ready for instant download below.' : 'Application verified and completed successfully by the authorized department.')}
+                              {app.operatorNote || (hasUploadedDoc ? 'Application verified and payment approved. Verified official document PDF is attached and ready for download from the application row.' : 'Application verified and completed successfully by the authorized department.')}
                             </p>
                           </div>
                         );
@@ -1182,53 +1185,8 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                       );
                     })()}
 
-                    {/* Download PDF & Actions Footer */}
+                    {/* Application help */}
                     <div className="app-card-footer">
-                      <div className="download-container">
-                        {/* 
-                          RULE: Download PDF button is ALWAYS rendered.
-                          - Disabled if team hasn't uploaded PDF / not completed
-                          - Enabled if completed and ready
-                        */}
-                        {isCompleted && hasUploadedDoc ? (
-                          <div>
-                            <button 
-                              type="button" 
-                              className="btn-download-active"
-                              onClick={() => handleDownloadDocument(app)}
-                              disabled={downloadingAppId === app.appId}
-                              title="Download verified official document PDF"
-                            >
-                              <Download size={16} />
-                              <span>{downloadingAppId === app.appId ? 'Downloading…' : 'Download Verified Document'}</span>
-                            </button>
-                            <span className="download-hint-active">
-                              ✅ Verified PDF uploaded • Ready to save
-                            </span>
-                          </div>
-                        ) : (
-                          <div>
-                            <button 
-                              type="button" 
-                              disabled
-                              className="btn-download-disabled"
-                              title="Awaiting document verification & upload"
-                            >
-                              <Lock size={15} />
-                              <span>Download PDF (Verification in Progress)</span>
-                            </button>
-                            <span className="download-hint-disabled">
-                              🔒 Download unlocks automatically once we verify & upload your file.
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      {downloadError && (
-                        <div role="alert" style={{ marginTop: '8px', color: '#B91C1C', fontSize: '0.84rem' }}>
-                          {downloadError}
-                        </div>
-                      )}
-
                       {/* Helpline contact directly for this specific application */}
                       <a 
                         href={`https://wa.me/91${app.supportPhone || '9124494239'}?text=Hello%20Apna%20Digital%20Service,%20checking%20status%20for%20Application%20ID%20${app.appId}%20(${encodeURIComponent(app.serviceName)})`}

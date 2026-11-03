@@ -304,7 +304,7 @@ export function ServiceCard({ service, index = 0, onInitiateService }) {
           );
 }
 
-export function ServiceCardGrid({ services, onInitiateService }) {
+export function ServiceCardGrid({ services, onInitiateService, compact = false }) {
   return (
       <div
         style={{
@@ -318,6 +318,7 @@ export function ServiceCardGrid({ services, onInitiateService }) {
           position: 'relative',
           zIndex: 2
         }}
+        className={compact ? 'customer-compact-cards' : undefined}
       >
         {services.map((service, index) => {
           return <ServiceCard key={service.id || service.slug} service={service} index={index} onInitiateService={onInitiateService} />;

@@ -18,7 +18,6 @@ import {
   RefreshCw,
   Lock,
   FileQuestion,
-  HelpCircle,
   FolderOpen,
   ArrowRight,
   Crown,
@@ -415,7 +414,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
           <nav aria-label="Customer dashboard">
             <button type="button" aria-current={activePanel === 'services' ? 'page' : undefined} className={activePanel === 'services' ? 'active' : ''} onClick={() => setActivePanel('services')}><FolderOpen size={18} /> Dashboard</button>
             <button type="button" aria-current={activePanel === 'applications' ? 'page' : undefined} className={activePanel === 'applications' ? 'active' : ''} onClick={() => setActivePanel('applications')}><FileText size={18} /> My Applications</button>
-            <a href="https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20help%20with%20your%20services" target="_blank" rel="noopener noreferrer"><HelpCircle size={18} /> WhatsApp Help</a>
+            <a href="https://wa.me/918018246567?text=Hello%20Apna%20Digital%20Service,%20I%20need%20help%20with%20your%20services" className="customer-whatsapp-help" target="_blank" rel="noopener noreferrer"><img src="/whatsapp.svg" width="18" height="18" alt="" /> WhatsApp Help</a>
             <button type="button" className="customer-sidebar-logout" onClick={onSignOut}><LogOut size={18} /> Logout</button>
           </nav>
         </aside>
@@ -773,11 +772,24 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                         customerDocs.push({ name: 'Uploaded Document', url: app.userDocumentUrl });
                       }
 
-                      const formEntries = app.formData && typeof app.formData === 'object'
-                        ? Object.entries(app.formData).filter(([_, val]) => val !== undefined && val !== null && val !== '')
-                        : [];
-
                       const formatLabel = (key) => key.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\b\w/g, c => c.toUpperCase());
+                      const formData = app.formData || {};
+                      const documentFields = new Set();
+
+                      for (const [key, value] of Object.entries(formData)) {
+                        if (typeof value !== 'string' || !/^(https?:|blob:)/i.test(value)) continue;
+                        if (value === app.paymentScreenshotUrl || customerDocs.some(doc => doc.url === value)) {
+                          documentFields.add(key);
+                        } else if (formData[`${key}_name`] || /cloudinary|\.(pdf|png|jpe?g|webp)(\?|$)/i.test(value)) {
+                          customerDocs.push({ name: formData[`${key}_name`] || formatLabel(key), url: value });
+                          documentFields.add(key);
+                        }
+                      }
+
+                      const formEntries = Object.entries(formData).filter(([key, value]) =>
+                        value !== undefined && value !== null && value !== '' &&
+                        !documentFields.has(key) && !documentFields.has(key.replace(/_name$/, ''))
+                      );
 
                       return (
                         <div style={{
@@ -790,7 +802,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                           flexDirection: 'column',
                           gap: '10px'
                         }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                          <div className="customer-payment-grid">
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--slate-600)' }}>Service Fee:</span>
                               <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#16a34a', background: '#dcfce7', padding: '2px 8px', borderRadius: '4px' }}>
@@ -929,23 +941,14 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
 
                           {/* Form Fields Summary If Any */}
                           {formEntries.length > 0 && (
-                            <div style={{ borderTop: '1px dashed #e2e8f0', paddingTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                              {formEntries.map(([fKey, fVal]) => (
-                                <span 
-                                  key={fKey}
-                                  style={{
-                                    fontSize: '0.76rem',
-                                    background: '#ffffff',
-                                    border: '1px solid #e2e8f0',
-                                    padding: '2px 8px',
-                                    borderRadius: '4px',
-                                    color: '#334155'
-                                  }}
-                                >
-                                  <strong style={{ color: '#0f172a' }}>{formatLabel(fKey)}:</strong> {String(fVal)}
-                                </span>
+                            <dl className="customer-form-fields">
+                              {formEntries.map(([key, value]) => (
+                                <div key={key}>
+                                  <dt>{formatLabel(key)}</dt>
+                                  <dd>{typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}</dd>
+                                </div>
                               ))}
-                            </div>
+                            </dl>
                           )}
                         </div>
                       );

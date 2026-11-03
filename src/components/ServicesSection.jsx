@@ -70,7 +70,7 @@ export function ServiceCard({ service, index = 0, onInitiateService }) {
           const theme = THEME_CONFIG[themeKey] || THEME_CONFIG.saffron;
           const title = service.cardTitle || service.shortName || service.title;
           const subtitle = service.cardSubtitle || service.description?.slice(0, 72) || 'Assistance for customers who need official digital copy';
-          const buttonText = service.cardButtonText || 'DOWNLOAD →';
+          const buttonText = (service.cardButtonText || 'Download').replace(/\s*→\s*$/, '');
           const fee = service.serviceCharge || '100';
           const highlightTag = SERVICE_HIGHLIGHTS[service.id] || SERVICE_HIGHLIGHTS[service.slug] || '⚡ FAST ASSISTANCE';
 
@@ -267,6 +267,8 @@ export function ServiceCard({ service, index = 0, onInitiateService }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '8px',
                   paddingTop: '6px'
                 }}
               >
@@ -281,7 +283,8 @@ export function ServiceCard({ service, index = 0, onInitiateService }) {
                     fontWeight: 800,
                     letterSpacing: '0.06em',
                     textTransform: 'uppercase',
-                    padding: '8px 18px',
+                    whiteSpace: 'nowrap',
+                    padding: '8px 14px',
                     borderRadius: '9999px',
                     display: 'inline-flex',
                     alignItems: 'center',

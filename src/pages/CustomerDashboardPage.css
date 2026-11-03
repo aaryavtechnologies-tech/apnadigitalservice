@@ -74,3 +74,17 @@
 .customer-application-summary .app-service-info { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .customer-application-summary:focus-visible { outline: 3px solid var(--saffron-400); outline-offset: 3px; }
 .customer-workspace .app-card:not([open]) .customer-application-summary { margin-bottom: 0; }
+
+.customer-sidebar nav .customer-whatsapp-help {
+  background: #25d366;
+  color: #102e1d;
+  font-weight: 700;
+}
+.customer-sidebar nav .customer-whatsapp-help:hover { background: #1fb859; color: #102e1d; }
+.customer-payment-grid,
+.customer-form-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 10px; }
+.customer-payment-grid > div { flex-wrap: wrap; }
+.customer-form-fields { margin: 0; padding-top: 10px; border-top: 1px solid #e2e8f0; }
+.customer-form-fields > div { min-width: 0; padding: 10px 12px; background: white; border: 1px solid #e2e8f0; border-radius: 8px; }
+.customer-form-fields dt { font-size: .72rem; font-weight: 700; color: var(--slate-600); }
+.customer-form-fields dd { margin: 4px 0 0; font-size: .82rem; color: var(--navy-900); overflow-wrap: anywhere; }

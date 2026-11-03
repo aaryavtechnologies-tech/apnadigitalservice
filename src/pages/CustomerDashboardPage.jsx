@@ -670,8 +670,8 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                   <th scope="col">Service</th>
                   <th scope="col">Payment Proof</th>
                   <th scope="col">Live Status</th>
-                  <th scope="col">Actions</th>
                   <th scope="col">Download PDF</th>
+                  <th scope="col">Actions</th>
                 </tr></thead>
                 <tbody>
               {applications.map((app, idx) => {
@@ -726,9 +726,6 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                       <td><span className="app-status-badge" style={{ background: badge.bg, color: badge.color, border: `1px solid ${badge.border}` }}>
                         <StatusIcon size={14} /> {badge.label}
                       </span></td>
-                      <td><button type="button" aria-expanded={expanded} onClick={() => setExpandedApplication(expanded ? null : rowId)}>
-                        {expanded ? 'Hide Details' : 'View Details'}
-                      </button></td>
                       <td>
                         <button
                           type="button"
@@ -741,6 +738,9 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
                           {downloadingAppId === app.appId ? 'Downloading…' : 'Download PDF'}
                         </button>
                       </td>
+                      <td><button type="button" aria-expanded={expanded} onClick={() => setExpandedApplication(expanded ? null : rowId)}>
+                        {expanded ? 'Hide Details' : 'View Details'}
+                      </button></td>
                     </tr>
                     {expanded && <tr className="customer-application-detail-row"><td colSpan={6}>
                       <div className={`app-card ${isCompleted ? 'app-card-completed' : ''}`}>

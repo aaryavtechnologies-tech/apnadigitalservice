@@ -163,17 +163,28 @@ export async function createAdminCredentials({ email, password, fullName, phone,
 
   try {
     // 1. Check if email already exists in profiles
-    const { data: existingProfile } = await supabase
+    const { data: existingProfile, error: profileError } = await supabase
       .from('profiles')
       .select('id, role')
       .eq('email', normalizedEmail)
       .maybeSingle();
+
+    if (profileError) {
+      return { success: false, error: `Could not check existing staff accounts: ${profileError.message}` };
+    }
 
     if (existingProfile) {
       return { 
         success: false, 
         error: `An account with email "${normalizedEmail}" already exists with role: ${existingProfile.role}.` 
       };
+    }
+
+    // Use an isolated auth client
+    // so Super Admin's active session is never disrupted.
+    const authClient = createIsolatedAuthClient('apna-admin-signup');
+    if (!authClient) {
+      return { success: false, error: 'Supabase Auth client could not be initialized.' };
     }
 
     // 2. Insert into admin_invitations with status 'pending'
@@ -194,13 +205,6 @@ export async function createAdminCredentials({ email, password, fullName, phone,
       return { success: false, error: `Failed to record admin authorization: ${inviteError.message}` };
     }
 
-    // 3. Register auth credentials using an isolated auth client
-    // so Super Admin's active session is never disrupted.
-    const authClient = createIsolatedAuthClient('apna-admin-signup');
-    if (!authClient) {
-      return { success: false, error: 'Supabase Auth client could not be initialized.' };
-    }
-
     const { data: authData, error: authError } = await authClient.auth.signUp({
       email: normalizedEmail,
       password: password,
@@ -215,8 +219,15 @@ export async function createAdminCredentials({ email, password, fullName, phone,
 
     if (authError) {
       // Clean up the invitation if the auth creation failed
-      await supabase.from('admin_invitations').delete().eq('email', normalizedEmail).catch(() => {});
-      return { success: false, error: authError.message };
+      let cleanupMessage = '';
+      try {
+        const { error } = await supabase.from('admin_invitations')
+          .delete().eq('id', invitation.id).eq('status', 'pending').eq('created_at', invitation.created_at);
+        if (error) throw error;
+      } catch {
+        cleanupMessage = ' The pending invitation could not be cleared. Check Active Staff & Pending before retrying.';
+      }
+      return { success: false, error: `Admin signup failed: ${authError.message}${cleanupMessage}` };
     }
 
     return { 

@@ -148,7 +148,7 @@ export async function deleteInquiry(inquiryId, role) {
  * Super Admin: Create New Admin Credentials & Manage Staff
  * -----------------------------------------------------------------------------
  */
-export async function createAdminCredentials({ email, password, fullName, phone, legacyInvitationId, role }) {
+export async function createAdminCredentials({ email, password, fullName, phone, role }) {
   const denied = requireSuperAdmin(role);
   if (denied) return { success: false, error: denied };
   if (databaseUnavailable()) return { success: false, error: 'Database is not configured.' };
@@ -163,7 +163,7 @@ export async function createAdminCredentials({ email, password, fullName, phone,
 
   try {
     const { data, error } = await supabase.functions.invoke('create-admin', {
-      body: { email: normalizedEmail, password, fullName, phone, legacyInvitationId }
+      body: { email: normalizedEmail, password, fullName, phone }
     });
 
     if (error) {
@@ -187,41 +187,20 @@ export async function fetchAdminTeam(role) {
   if (databaseUnavailable()) return { success: false, error: 'Database is not configured.' };
 
   try {
-    const [profilesRes, invitesRes] = await Promise.all([
-      supabase.from('profiles').select('*').in('role', ['admin', 'super_admin']).order('role', { ascending: false }),
-      supabase.from('admin_invitations').select('*').eq('status', 'pending').order('created_at', { ascending: false })
-    ]);
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, full_name, phone, role')
+      .in('role', ['admin', 'super_admin'])
+      .order('role', { ascending: false })
+      .order('full_name');
 
-    if (profilesRes.error) throw profilesRes.error;
-    if (invitesRes.error) throw invitesRes.error;
-    const activeStaff = profilesRes.data || [];
-    const staffEmails = new Set(activeStaff.map(staff => staff.email?.trim().toLowerCase()));
-    return {
-      success: true,
-      activeStaff,
-      invitations: (invitesRes.data || []).filter(invitation => !staffEmails.has(invitation.email?.trim().toLowerCase()))
-    };
+    if (error) throw error;
+    return { success: true, activeStaff: data || [] };
   } catch (err) {
     return { success: false, error: err.message || 'Failed to load admin team.' };
   }
 }
 
-export async function revokeAdminInvitation(invitationId, role) {
-  const denied = requireSuperAdmin(role);
-  if (denied) return { success: false, error: denied };
-  if (databaseUnavailable()) return { success: false, error: 'Database is not configured.' };
-
-  try {
-    const { error } = await supabase
-      .from('admin_invitations')
-      .delete()
-      .eq('id', invitationId);
-    if (error) return { success: false, error: error.message };
-    return { success: true };
-  } catch (err) {
-    return { success: false, error: err.message || 'Failed to revoke invitation.' };
-  }
-}
 export async function deleteAdminAccess(staffId, role) {
   const denied = requireSuperAdmin(role);
   if (denied) return { success: false, error: denied };

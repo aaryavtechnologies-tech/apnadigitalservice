@@ -17,13 +17,13 @@ Save the Reset password template before enabling this website version: the code-
 
 # Direct staff creation
 
-Before releasing the website, apply [the direct staff migration](../../supabase/migrations/20261104_direct_staff_creation.sql) and [the legacy staff activation migration](../../supabase/migrations/20261104000100_legacy_staff_activation.sql) in that order in the target project's SQL Editor after the staff access migration below. Then deploy the Edge Function from the repository root.
+Before releasing the website, apply [the direct staff migration](../../supabase/migrations/20261104_direct_staff_creation.sql) in the target project's SQL Editor after the staff access migration below. Then deploy the Edge Function from the repository root.
 
 ```powershell
 supabase functions deploy create-admin --project-ref jeetzosmzrdamuxqpsfy
 ```
 
-The function verifies the caller's current super admin role before creating a confirmed staff account. In the **Staff** tab, choose **Activate** beside a legacy authorization and set a fresh password. An eligible unconfirmed legacy account is activated without sending email. Test both new staff creation and legacy activation with password sign-in before releasing the website.
+The function verifies the caller’s super admin role before creating an account with immediate staff access. The Staff tab lists active accounts. Test creating an admin and signing in with the initial password before releasing the website.
 
 # Required database access controls
 

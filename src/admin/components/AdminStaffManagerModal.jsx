@@ -26,6 +26,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
+  const [legacyInvitationId, setLegacyInvitationId] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null); // { type: 'success' | 'error', text: '' }
@@ -98,6 +99,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
       password,
       fullName,
       phone,
+      legacyInvitationId,
       role
     });
 
@@ -112,10 +114,23 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
       setEmail('');
       setPassword('');
       setPhone('');
+      setLegacyInvitationId(null);
+      setActiveTab('team');
       loadTeam();
     } else {
       setStatusMessage({ type: 'error', text: res.error || 'Failed to create admin credentials.' });
     }
+  };
+
+  const handlePrepareActivation = invitation => {
+    if (loading) return;
+    setLegacyInvitationId(invitation.id);
+    setFullName(invitation.full_name || '');
+    setEmail(invitation.email);
+    setPhone(invitation.phone || '');
+    setPassword('');
+    setStatusMessage(null);
+    setActiveTab('create');
   };
 
   const handleRevoke = async (invitationId, inviteEmail) => {
@@ -181,7 +196,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
             }}
           >
             <UserPlus size={16} />
-            <span>Create New Admin</span>
+            <span>{legacyInvitationId ? 'Activate Admin' : 'Create New Admin'}</span>
           </button>
 
           <button
@@ -202,7 +217,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
             }}
           >
             <Users size={16} />
-            <span>Active Staff &amp; Pending ({activeStaff.length + invitations.filter(i => i.status === 'pending').length})</span>
+            <span>Staff ({activeStaff.length})</span>
           </button>
         </div>
 
@@ -229,6 +244,20 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
 
           {activeTab === 'create' ? (
             <form onSubmit={handleCreateAdmin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {legacyInvitationId && (
+                <button type="button" className="admin-btn admin-btn-secondary" disabled={loading}
+                  onClick={() => {
+                    setLegacyInvitationId(null);
+                    setFullName('');
+                    setEmail('');
+                    setPhone('');
+                    setPassword('');
+                    setStatusMessage(null);
+                  }}>
+                  Create a different admin
+                </button>
+              )}
+
               
               {/* Security Guidance Box */}
               <div style={{
@@ -242,7 +271,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
               }}>
                 <strong>Immediate Admin Access</strong>
                 <div style={{ marginTop: '4px' }}>
-                  The new admin can sign in immediately with the email and initial password you enter.
+                  {legacyInvitationId ? 'Set a new password to activate this legacy staff account.' : 'The new admin can sign in immediately with the email and initial password you enter.'}
                 </div>
               </div>
 
@@ -278,6 +307,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
                     placeholder="admin@apnadigitalservice.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    readOnly={Boolean(legacyInvitationId)}
                     required
                     style={{ paddingLeft: '38px', height: '42px', fontSize: '0.9rem' }}
                   />
@@ -346,14 +376,14 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
                 }}
               >
                 {loading ? <Loader2 size={18} className="spinner" /> : <UserPlus size={18} />}
-                <span>{loading ? 'Creating Admin...' : 'Create Admin'}</span>
+                <span>{loading ? 'Saving Admin...' : legacyInvitationId ? 'Activate Admin' : 'Create Admin'}</span>
               </button>
             </form>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.84rem', color: '#64748B' }}>
-                  Active platform staff and pending email authorizations
+                  Admins and super admins with access
                 </span>
                 <button
                   type="button"
@@ -366,60 +396,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
                 </button>
               </div>
 
-              {/* 1. Pending Invitations */}
-              <div>
-                <h4 style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Clock size={15} style={{ color: '#EA580C' }} />
-                  <span>Pending Email Verifications ({invitations.filter(i => i.status === 'pending').length})</span>
-                </h4>
-
-                {invitations.filter(i => i.status === 'pending').length === 0 ? (
-                  <div style={{ padding: '16px', background: '#F8FAFC', borderRadius: '8px', fontSize: '0.82rem', color: '#64748B', textAlign: 'center' }}>
-                    No pending admin invitations.
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {invitations.filter(i => i.status === 'pending').map(inv => (
-                      <div 
-                        key={inv.id} 
-                        style={{
-                          padding: '12px 14px',
-                          borderRadius: '8px',
-                          border: '1px solid #FED7AA',
-                          background: '#FFF7ED',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '10px'
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#9A3412' }}>{inv.email}</div>
-                          <div style={{ fontSize: '0.74rem', color: '#7C2D12' }}>
-                            {inv.full_name ? `${inv.full_name} • ` : ''}Sent on {new Date(inv.created_at).toLocaleDateString('en-IN')}
-                          </div>
-                        </div>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '0.72rem', padding: '3px 8px', borderRadius: '6px', background: '#FEF3C7', color: '#B45309', fontWeight: 700 }}>
-                            Awaiting Email Click
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleRevoke(inv.id, inv.email)}
-                            title="Revoke invitation"
-                            style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '4px' }}
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* 2. Active Staff */}
+              {/* Active staff */}
               <div>
                 <h4 style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <ShieldCheck size={15} style={{ color: '#16A34A' }} />
@@ -479,6 +456,55 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
                 </div>
               </div>
 
+              {invitations.length > 0 && (
+                <div>
+                  <h4 style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Clock size={15} style={{ color: '#EA580C' }} />
+                    <span>Legacy Authorizations ({invitations.length})</span>
+                  </h4>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {invitations.map(inv => (
+                      <div
+                        key={inv.id}
+                        style={{
+                          padding: '12px 14px',
+                          borderRadius: '8px',
+                          border: '1px solid #FED7AA',
+                          background: '#FFF7ED',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '10px'
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#9A3412' }}>{inv.email}</div>
+                          <div style={{ fontSize: '0.74rem', color: '#7C2D12' }}>
+                            {inv.full_name ? `${inv.full_name} • ` : ''}Recorded on {new Date(inv.created_at).toLocaleDateString('en-IN')}
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <button type="button" className="admin-btn admin-btn-secondary"
+                            disabled={loading} onClick={() => handlePrepareActivation(inv)}>
+                            Activate
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRevoke(inv.id, inv.email)}
+                            title="Revoke invitation"
+                            style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '4px' }}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+              </div>
+
+              )}
             </div>
           )}
         </div>

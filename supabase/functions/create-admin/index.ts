@@ -42,13 +42,37 @@ Deno.serve(async (request) => {
     return respond(400, { error: "Enter a name, valid email address, and a password of at least 8 characters." });
   }
 
-  const { data, error } = await supabase.auth.admin.createUser({
+  let legacyUserId: string | null = null;
+  if (body?.legacyInvitationId) {
+    const { data, error } = await supabase.rpc("find_legacy_staff_account", {
+      invitation_id: body.legacyInvitationId,
+      staff_email: email,
+    });
+    if (error) {
+      if (error.code === "P0001") return respond(409, { error: error.message });
+      console.error("Legacy staff lookup failed", error.code);
+      return respond(500, { error: "Could not check this authorization. Verify the legacy staff migration in Supabase." });
+    }
+    legacyUserId = data;
+  }
+
+  const credentials = {
     email,
     password,
     email_confirm: true,
     user_metadata: { full_name: fullName, phone },
-    app_metadata: { apna_direct_staff: true },
-  });
+  };
+  // Existing unconfirmed staff use the legacy confirmation trigger. Auth Admin confirms without email.
+  const { data, error } = legacyUserId
+    ? await supabase.auth.admin.updateUserById(legacyUserId, {
+      password,
+      email_confirm: true,
+      user_metadata: credentials.user_metadata,
+    })
+    : await supabase.auth.admin.createUser({
+      ...credentials,
+      app_metadata: { apna_direct_staff: true },
+    });
   if (error) {
     if (error.code === "email_exists" || error.code === "user_already_exists") {
       return respond(409, { error: "An account already exists with that email address." });

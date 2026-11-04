@@ -148,7 +148,7 @@ export async function deleteInquiry(inquiryId, role) {
  * Super Admin: Create New Admin Credentials & Manage Staff
  * -----------------------------------------------------------------------------
  */
-export async function createAdminCredentials({ email, password, fullName, phone, role }) {
+export async function createAdminCredentials({ email, password, fullName, phone, legacyInvitationId, role }) {
   const denied = requireSuperAdmin(role);
   if (denied) return { success: false, error: denied };
   if (databaseUnavailable()) return { success: false, error: 'Database is not configured.' };
@@ -163,7 +163,7 @@ export async function createAdminCredentials({ email, password, fullName, phone,
 
   try {
     const { data, error } = await supabase.functions.invoke('create-admin', {
-      body: { email: normalizedEmail, password, fullName, phone }
+      body: { email: normalizedEmail, password, fullName, phone, legacyInvitationId }
     });
 
     if (error) {
@@ -174,7 +174,7 @@ export async function createAdminCredentials({ email, password, fullName, phone,
     if (!data?.id) return { success: false, error: 'Supabase did not confirm admin creation.' };
     return {
       success: true,
-      message: `Admin created for ${normalizedEmail}. They can sign in now with their email and initial password.`
+      message: `Admin access is active for ${normalizedEmail}. They can sign in with their email and the password you set.`
     };
   } catch (err) {
     return { success: false, error: err.message || 'Failed to create admin credentials.' };
@@ -189,15 +189,17 @@ export async function fetchAdminTeam(role) {
   try {
     const [profilesRes, invitesRes] = await Promise.all([
       supabase.from('profiles').select('*').in('role', ['admin', 'super_admin']).order('role', { ascending: false }),
-      supabase.from('admin_invitations').select('*').order('created_at', { ascending: false })
+      supabase.from('admin_invitations').select('*').eq('status', 'pending').order('created_at', { ascending: false })
     ]);
 
     if (profilesRes.error) throw profilesRes.error;
     if (invitesRes.error) throw invitesRes.error;
+    const activeStaff = profilesRes.data || [];
+    const staffEmails = new Set(activeStaff.map(staff => staff.email?.trim().toLowerCase()));
     return {
       success: true,
-      activeStaff: profilesRes.data || [],
-      invitations: invitesRes.data || []
+      activeStaff,
+      invitations: (invitesRes.data || []).filter(invitation => !staffEmails.has(invitation.email?.trim().toLowerCase()))
     };
   } catch (err) {
     return { success: false, error: err.message || 'Failed to load admin team.' };

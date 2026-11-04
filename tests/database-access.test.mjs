@@ -11,7 +11,7 @@ test('database policies enforce customer isolation, view-only admin and super-ad
   const superAdmin = '44444444-4444-4444-8444-444444444444';
   try {
     await db.exec(`
-      CREATE ROLE anon; CREATE ROLE authenticated;
+      CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;
       CREATE SCHEMA auth;
       CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
       GRANT USAGE ON SCHEMA public, auth TO anon, authenticated;
@@ -34,6 +34,7 @@ test('database policies enforce customer isolation, view-only admin and super-ad
     // The migration must be safe to apply more than once.
     await db.exec(migration);
     await db.exec(await readFile(new URL('../supabase/migrations/20261104_direct_staff_creation.sql', import.meta.url), 'utf8'));
+    await db.exec(await readFile(new URL('../supabase/migrations/20261104000100_legacy_staff_activation.sql', import.meta.url), 'utf8'));
     const asUser = async (id, role = 'authenticated') => {
       await db.exec('RESET ROLE');
       await db.query("SELECT set_config('request.jwt.claim.sub', $1, false)", [id]);
@@ -91,14 +92,26 @@ test('database policies enforce customer isolation, view-only admin and super-ad
     // Create auth user: unconfirmed email -> NO admin profile created
     await db.exec('RESET ROLE');
     const newAdminId = '77777777-7777-4777-8777-777777777777';
-    await db.exec(`INSERT INTO auth.users (id, email, email_confirmed_at) VALUES ('${newAdminId}', '${newAdminEmail}', NULL)`);
+    await db.exec(`INSERT INTO auth.users (id, email, raw_user_meta_data, raw_app_meta_data)
+      VALUES ('${newAdminId}', '${newAdminEmail}', '{"invited_role":"admin"}', '{"provider":"email"}')`);
     assert.equal((await db.query(`SELECT * FROM profiles WHERE id='${newAdminId}'`)).rows.length, 0);
+    const { rows: [invitation] } = await db.query('SELECT id FROM admin_invitations WHERE email=$1', [newAdminEmail]);
+    const lookup = 'SELECT find_legacy_staff_account($1, $2) AS id';
+    await asUser(superAdmin);
+    await assert.rejects(db.query(lookup, [invitation.id, newAdminEmail]), /permission denied/);
+    await asUser('', 'service_role');
+    assert.deepEqual((await db.query(lookup, [invitation.id, newAdminEmail])).rows, [{ id: newAdminId }]);
+    await assert.rejects(db.query(lookup, [invitation.id, 'other@example.com']), /no longer pending/);
+    await db.exec('RESET ROLE');
 
     // Confirm email -> trigger grants role 'admin'
     await db.exec(`UPDATE auth.users SET email_confirmed_at = now() WHERE id='${newAdminId}'`);
     const profile = (await db.query(`SELECT role, full_name FROM profiles WHERE id='${newAdminId}'`)).rows[0];
     assert.equal(profile.role, 'admin');
     assert.equal(profile.full_name, 'New Admin');
+    await asUser('', 'service_role');
+    await assert.rejects(db.query(lookup, [invitation.id, newAdminEmail]), /no longer pending/);
+    await db.exec('RESET ROLE');
 
     // Removing admin access is authorized in the database, including existing sessions.
     await db.exec(await readFile(new URL('../supabase/migrations/20261102_remove_admin_access.sql', import.meta.url), 'utf8'));

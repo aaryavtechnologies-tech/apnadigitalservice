@@ -9,33 +9,53 @@ export function AdminAuthProvider({ children }) {
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const generation = useRef(0);
+  const verifiedUserId = useRef(null);
 
   useEffect(() => {
-    let active = true;
-    const timers = new Set();
-    const refresh = async () => {
-      const ticket = ++generation.current;
-      setLoading(true);
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
+    let timer;
+    const refresh = async (session, ticket) => {
       try {
-        const { data, error } = supabase ? await supabase.auth.getUser() : { data: null };
-        const user = !error ? data?.user : null;
+        const { data, error } = await supabase.auth.getUser(session.access_token);
+        const user = !error && data?.user?.id === session.user.id ? data.user : null;
         const nextRole = user ? await resolveAccountRole(supabase, user.id) : null;
-        if (!active || ticket !== generation.current) return;
+        if (ticket !== generation.current) return;
+        verifiedUserId.current = isStaffRole(nextRole) ? user.id : null;
         setRole(nextRole);
-        setAdminUser(isStaffRole(nextRole) ? { ...user, fullName: user.user_metadata?.full_name || user.email, role: nextRole } : null);
+        setAdminUser(verifiedUserId.current ? { ...user, fullName: user.user_metadata?.full_name || user.email, role: nextRole } : null);
       } catch {
-        if (active && ticket === generation.current) { setRole(null); setAdminUser(null); }
-      } finally { if (active && ticket === generation.current) setLoading(false); }
+        if (ticket === generation.current) {
+          verifiedUserId.current = null;
+          setRole(null);
+          setAdminUser(null);
+        }
+      } finally {
+        if (ticket === generation.current) setLoading(false);
+      }
     };
-    void refresh();
-    const subscription = supabase?.auth.onAuthStateChange(() => {
-      // Run Supabase calls outside the auth event's internal lock.
-      generation.current++;
-      setLoading(true); setRole(null); setAdminUser(null);
-      const timer = setTimeout(() => { timers.delete(timer); void refresh(); }, 0);
-      timers.add(timer);
+
+    const subscription = supabase.auth.onAuthStateChange((_event, session) => {
+      const ticket = ++generation.current;
+      clearTimeout(timer);
+      const userId = session?.user?.id;
+      if (!userId || userId !== verifiedUserId.current) {
+        verifiedUserId.current = null;
+        setRole(null);
+        setAdminUser(null);
+        setLoading(Boolean(userId));
+      }
+      // Recheck the same account in the background so token refresh keeps the workspace mounted.
+      if (userId) timer = setTimeout(() => void refresh(session, ticket), 0);
     }).data.subscription;
-    return () => { active = false; generation.current++; subscription?.unsubscribe(); timers.forEach(clearTimeout); };
+    return () => {
+      generation.current++;
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   async function adminSignIn(email, password) {
@@ -54,7 +74,9 @@ export function AdminAuthProvider({ children }) {
 
   async function adminSignOut() {
     generation.current++;
+    verifiedUserId.current = null;
     setAdminUser(null); setRole(null);
+    setLoading(false);
     if (supabase) await supabase.auth.signOut({ scope: 'local' });
   }
 

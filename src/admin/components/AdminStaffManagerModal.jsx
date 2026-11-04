@@ -98,7 +98,6 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
       password,
       fullName,
       phone,
-      creatorId: adminUser?.id,
       role
     });
 
@@ -107,7 +106,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
     if (res.success) {
       setStatusMessage({ 
         type: 'success', 
-        text: res.message || `Admin credentials created for ${email}. A verification email has been sent. The admin role will be activated when the user confirms their email.` 
+        text: res.message
       });
       setFullName('');
       setEmail('');
@@ -241,9 +240,9 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
                 color: '#9A3412',
                 lineHeight: '1.55'
               }}>
-                <strong>Verification Security Protocol:</strong>
+                <strong>Immediate Admin Access</strong>
                 <div style={{ marginTop: '4px' }}>
-                  When you submit this form, credentials are created and an official email confirmation is sent to the new admin. The account will <strong>only receive the "admin" role in the database profile once the user verifies their email</strong> by clicking the confirmation link.
+                  The new admin can sign in immediately with the email and initial password you enter.
                 </div>
               </div>
 
@@ -284,7 +283,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
                   />
                 </div>
                 <span style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '4px', display: 'block' }}>
-                  The confirmation link will be delivered directly to this inbox.
+                  The new admin will use this address to sign in.
                 </span>
               </div>
 
@@ -347,7 +346,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
                 }}
               >
                 {loading ? <Loader2 size={18} className="spinner" /> : <UserPlus size={18} />}
-                <span>{loading ? 'Creating Credentials & Sending Email...' : 'Create Admin Credentials & Send Verification'}</span>
+                <span>{loading ? 'Creating Admin...' : 'Create Admin'}</span>
               </button>
             </form>
           ) : (
@@ -376,7 +375,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
 
                 {invitations.filter(i => i.status === 'pending').length === 0 ? (
                   <div style={{ padding: '16px', background: '#F8FAFC', borderRadius: '8px', fontSize: '0.82rem', color: '#64748B', textAlign: 'center' }}>
-                    No pending admin invitations. All invited staff are verified.
+                    No pending admin invitations.
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -424,7 +423,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
               <div>
                 <h4 style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <ShieldCheck size={15} style={{ color: '#16A34A' }} />
-                  <span>Verified Platform Staff ({activeStaff.length})</span>
+                  <span>Active Platform Staff ({activeStaff.length})</span>
                 </h4>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

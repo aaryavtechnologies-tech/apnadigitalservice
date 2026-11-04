@@ -1,5 +1,5 @@
 /** Database-backed admin operations. Supabase is the sole source of truth. */
-import { supabase, isSupabaseConfigured, createIsolatedAuthClient } from '../../lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 
 function databaseUnavailable() {
   return !isSupabaseConfigured || !supabase;
@@ -148,7 +148,7 @@ export async function deleteInquiry(inquiryId, role) {
  * Super Admin: Create New Admin Credentials & Manage Staff
  * -----------------------------------------------------------------------------
  */
-export async function createAdminCredentials({ email, password, fullName, phone, creatorId, role }) {
+export async function createAdminCredentials({ email, password, fullName, phone, role }) {
   const denied = requireSuperAdmin(role);
   if (denied) return { success: false, error: denied };
   if (databaseUnavailable()) return { success: false, error: 'Database is not configured.' };
@@ -162,79 +162,19 @@ export async function createAdminCredentials({ email, password, fullName, phone,
   }
 
   try {
-    // 1. Check if email already exists in profiles
-    const { data: existingProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, role')
-      .eq('email', normalizedEmail)
-      .maybeSingle();
-
-    if (profileError) {
-      return { success: false, error: `Could not check existing staff accounts: ${profileError.message}` };
-    }
-
-    if (existingProfile) {
-      return { 
-        success: false, 
-        error: `An account with email "${normalizedEmail}" already exists with role: ${existingProfile.role}.` 
-      };
-    }
-
-    // Use an isolated auth client
-    // so Super Admin's active session is never disrupted.
-    const authClient = createIsolatedAuthClient('apna-admin-signup');
-    if (!authClient) {
-      return { success: false, error: 'Supabase Auth client could not be initialized.' };
-    }
-
-    // 2. Insert into admin_invitations with status 'pending'
-    const { data: invitation, error: inviteError } = await supabase
-      .from('admin_invitations')
-      .upsert({
-        email: normalizedEmail,
-        full_name: (fullName || '').trim(),
-        phone: (phone || '').trim(),
-        created_by: creatorId || null,
-        status: 'pending',
-        created_at: new Date().toISOString()
-      }, { onConflict: 'email' })
-      .select()
-      .single();
-
-    if (inviteError) {
-      return { success: false, error: `Failed to record admin authorization: ${inviteError.message}` };
-    }
-
-    const { data: authData, error: authError } = await authClient.auth.signUp({
-      email: normalizedEmail,
-      password: password,
-      options: {
-        data: {
-          full_name: (fullName || '').trim(),
-          phone: (phone || '').trim(),
-          invited_role: 'admin'
-        }
-      }
+    const { data, error } = await supabase.functions.invoke('create-admin', {
+      body: { email: normalizedEmail, password, fullName, phone }
     });
 
-    if (authError) {
-      // Clean up the invitation if the auth creation failed
-      let cleanupMessage = '';
-      try {
-        const { error } = await supabase.from('admin_invitations')
-          .delete().eq('id', invitation.id).eq('status', 'pending').eq('created_at', invitation.created_at);
-        if (error) throw error;
-      } catch {
-        cleanupMessage = ' The pending invitation could not be cleared. Check Active Staff & Pending before retrying.';
-      }
-      return { success: false, error: `Admin signup failed: ${authError.message}${cleanupMessage}` };
+    if (error) {
+      const response = await error.context?.json?.().catch(() => null);
+      return { success: false, error: response?.error || error.message };
     }
 
-    return { 
-      success: true, 
-      user: authData.user, 
-      invitation,
-      message: `Admin credentials created for ${normalizedEmail}. A confirmation email has been sent. The admin role will be activated once the user confirms their email.`
+    if (!data?.id) return { success: false, error: 'Supabase did not confirm admin creation.' };
+    return {
+      success: true,
+      message: `Admin created for ${normalizedEmail}. They can sign in now with their email and initial password.`
     };
   } catch (err) {
     return { success: false, error: err.message || 'Failed to create admin credentials.' };

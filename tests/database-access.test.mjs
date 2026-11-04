@@ -11,11 +11,11 @@ test('database policies enforce customer isolation, view-only admin and super-ad
   const superAdmin = '44444444-4444-4444-8444-444444444444';
   try {
     await db.exec(`
-      CREATE ROLE anon; CREATE ROLE authenticated;
+      CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;
       CREATE SCHEMA auth;
       CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
       GRANT USAGE ON SCHEMA public, auth TO anon, authenticated;
-      CREATE TABLE auth.users (id uuid PRIMARY KEY, email text, raw_user_meta_data jsonb, email_confirmed_at timestamp with time zone);
+      CREATE TABLE auth.users (id uuid PRIMARY KEY, email text, raw_user_meta_data jsonb, raw_app_meta_data jsonb, email_confirmed_at timestamp with time zone);
       CREATE TABLE public.profiles (id uuid PRIMARY KEY, email text, full_name text, phone text, role text);
       CREATE TABLE public.service_requests (application_id text PRIMARY KEY, user_id uuid, status text DEFAULT 'Request Received', payment_status text DEFAULT 'pending', document_url text);
       CREATE TABLE public.services (id text PRIMARY KEY);
@@ -33,6 +33,8 @@ test('database policies enforce customer isolation, view-only admin and super-ad
     await db.exec(migration);
     // The migration must be safe to apply more than once.
     await db.exec(migration);
+    await db.exec(await readFile(new URL('../supabase/migrations/20261104_direct_staff_creation.sql', import.meta.url), 'utf8'));
+    await db.exec(await readFile(new URL('../supabase/migrations/20261104000100_legacy_staff_activation.sql', import.meta.url), 'utf8'));
     const asUser = async (id, role = 'authenticated') => {
       await db.exec('RESET ROLE');
       await db.query("SELECT set_config('request.jwt.claim.sub', $1, false)", [id]);
@@ -90,14 +92,26 @@ test('database policies enforce customer isolation, view-only admin and super-ad
     // Create auth user: unconfirmed email -> NO admin profile created
     await db.exec('RESET ROLE');
     const newAdminId = '77777777-7777-4777-8777-777777777777';
-    await db.exec(`INSERT INTO auth.users (id, email, email_confirmed_at) VALUES ('${newAdminId}', '${newAdminEmail}', NULL)`);
+    await db.exec(`INSERT INTO auth.users (id, email, raw_user_meta_data, raw_app_meta_data)
+      VALUES ('${newAdminId}', '${newAdminEmail}', '{"invited_role":"admin"}', '{"provider":"email"}')`);
     assert.equal((await db.query(`SELECT * FROM profiles WHERE id='${newAdminId}'`)).rows.length, 0);
+    const { rows: [invitation] } = await db.query('SELECT id FROM admin_invitations WHERE email=$1', [newAdminEmail]);
+    const lookup = 'SELECT find_legacy_staff_account($1, $2) AS id';
+    await asUser(superAdmin);
+    await assert.rejects(db.query(lookup, [invitation.id, newAdminEmail]), /permission denied/);
+    await asUser('', 'service_role');
+    assert.deepEqual((await db.query(lookup, [invitation.id, newAdminEmail])).rows, [{ id: newAdminId }]);
+    await assert.rejects(db.query(lookup, [invitation.id, 'other@example.com']), /no longer pending/);
+    await db.exec('RESET ROLE');
 
     // Confirm email -> trigger grants role 'admin'
     await db.exec(`UPDATE auth.users SET email_confirmed_at = now() WHERE id='${newAdminId}'`);
     const profile = (await db.query(`SELECT role, full_name FROM profiles WHERE id='${newAdminId}'`)).rows[0];
     assert.equal(profile.role, 'admin');
     assert.equal(profile.full_name, 'New Admin');
+    await asUser('', 'service_role');
+    await assert.rejects(db.query(lookup, [invitation.id, newAdminEmail]), /no longer pending/);
+    await db.exec('RESET ROLE');
 
     // Removing admin access is authorized in the database, including existing sessions.
     await db.exec(await readFile(new URL('../supabase/migrations/20261102_remove_admin_access.sql', import.meta.url), 'utf8'));
@@ -122,8 +136,28 @@ test('database policies enforce customer isolation, view-only admin and super-ad
 
     // Normal customer signup -> only gets 'customer'
     const regCustomerId = '88888888-8888-4888-8888-888888888888';
-    await db.exec(`INSERT INTO auth.users (id, email, email_confirmed_at) VALUES ('${regCustomerId}', 'random@example.com', now())`);
+    await db.exec(`INSERT INTO auth.users (id, email, raw_user_meta_data, email_confirmed_at)
+      VALUES ('${regCustomerId}', 'random@example.com', '{"apna_direct_staff":true}', now())`);
     assert.equal((await db.query(`SELECT role FROM profiles WHERE id='${regCustomerId}'`)).rows[0].role, 'customer');
+
+    // Auth Admin may set the trusted marker and confirm the account in its creation transaction.
+    const directAdminId = '99999999-9999-4999-8999-999999999999';
+    await db.exec(`
+      INSERT INTO admin_invitations (email) VALUES ('direct@example.com');
+      INSERT INTO auth.users (id, email, raw_user_meta_data, raw_app_meta_data)
+      VALUES ('${directAdminId}', 'direct@example.com', '{"full_name":"Direct Admin"}', '{"apna_direct_staff":true}');
+      UPDATE auth.users SET email_confirmed_at = now() WHERE id='${directAdminId}';
+    `);
+    assert.deepEqual((await db.query('SELECT role, full_name FROM profiles WHERE id=$1', [directAdminId])).rows,
+      [{ role: 'admin', full_name: 'Direct Admin' }]);
+    assert.deepEqual((await db.query("SELECT status FROM admin_invitations WHERE email='direct@example.com'")).rows,
+      [{ status: 'verified' }]);
+
+    const confirmedAdminId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    await db.exec(`INSERT INTO auth.users (id, email, raw_app_meta_data, email_confirmed_at)
+      VALUES ('${confirmedAdminId}', 'confirmed@example.com', '{"apna_direct_staff":true}', now())`);
+    assert.deepEqual((await db.query('SELECT role FROM profiles WHERE id=$1', [confirmedAdminId])).rows,
+      [{ role: 'admin' }]);
 
   } finally { await db.close(); }
 });

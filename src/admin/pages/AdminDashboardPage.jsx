@@ -43,8 +43,13 @@ export default function AdminDashboardPage() {
   const { adminUser, role, isSuperAdmin, isViewOnly, loading } = useAdminAuth();
   const navigate = useNavigate();
 
-  // Active Tab: 'queue' | 'services' | 'homepage'
   const [activeTab, setActiveTab] = useState('queue');
+  const [visitedTabs, setVisitedTabs] = useState({});
+
+  function openTab(tab) {
+    setActiveTab(tab);
+    setVisitedTabs(previous => previous[tab] ? previous : { ...previous, [tab]: true });
+  }
 
   // Homepage & Site Content Management State
   const [homepageConfig, setHomepageConfig] = useState(() => getHomepageSettings());
@@ -192,7 +197,7 @@ export default function AdminDashboardPage() {
           <button 
             type="button" 
             className={`admin-tab-btn ${activeTab === 'queue' ? 'active' : ''}`}
-            onClick={() => setActiveTab('queue')}
+            onClick={() => openTab('queue')}
           >
             <Inbox size={18} />
             <span>Verification Queue</span>
@@ -202,7 +207,7 @@ export default function AdminDashboardPage() {
           <button 
             type="button" 
             className={`admin-tab-btn ${activeTab === 'inquiries' ? 'active' : ''}`}
-            onClick={() => setActiveTab('inquiries')}
+            onClick={() => openTab('inquiries')}
           >
             <MessageSquare size={18} />
             <span>Website Inquiries</span>
@@ -216,7 +221,7 @@ export default function AdminDashboardPage() {
           <button 
             type="button" 
             className={`admin-tab-btn ${activeTab === 'services' ? 'active' : ''}`}
-            onClick={() => setActiveTab('services')}
+            onClick={() => openTab('services')}
           >
             <Layers size={18} />
             <span>Services Catalog & Settings</span>
@@ -226,7 +231,7 @@ export default function AdminDashboardPage() {
           <button 
             type="button" 
             className={`admin-tab-btn ${activeTab === 'homepage' ? 'active' : ''}`}
-            onClick={() => setActiveTab('homepage')}
+            onClick={() => openTab('homepage')}
           >
             <Globe size={18} />
             <span>Website CMS & Content</span>
@@ -296,15 +301,14 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* 2. TAB CONTENT */}
-      {activeTab === 'inquiries' ? (
-        /* Website Contact Inquiries Manager */
-        <AdminInquiriesManager />
-      ) : activeTab === 'services' ? (
-        /* Services Catalog Manager Component */
-        <AdminServicesManager />
-      ) : activeTab === 'homepage' ? (
-        /* Homepage & Sections Management Component */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      {visitedTabs.inquiries && (
+        <div hidden={activeTab !== 'inquiries'}><AdminInquiriesManager /></div>
+      )}
+      {visitedTabs.services && (
+        <div hidden={activeTab !== 'services'}><AdminServicesManager /></div>
+      )}
+      {visitedTabs.homepage && (
+        <div hidden={activeTab !== 'homepage'} style={{ display: activeTab === 'homepage' ? 'flex' : 'none', flexDirection: 'column', gap: '24px' }}>
           {/* Header Action Bar */}
           <div style={{
             background: '#FFFFFF',
@@ -464,7 +468,8 @@ export default function AdminDashboardPage() {
           {/* Section 2: Full Website Content CMS (Super Admin Live Text Editor) */}
           <AdminWebsiteCMS />
         </div>
-      ) : (
+      )}
+      {activeTab === 'queue' && (
         /* Verification Queue & Dashboard Overview */
         <>
           {/* Stat Summary Cards with Tricolour Top Accent */}

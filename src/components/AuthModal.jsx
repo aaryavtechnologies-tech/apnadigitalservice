@@ -1,10 +1,13 @@
+import { createRegistration } from '../lib/registration';
+import RegistrationOtp from '../components/RegistrationOtp';
 import React, { useState, useEffect } from 'react';
 import { X, Mail, Lock, User, Phone, CheckCircle, AlertCircle, ShieldCheck } from 'lucide-react';
 import PasswordRecoveryForm from '../components/PasswordRecoveryForm';
 import { resolveAccountRole } from '../lib/accountRole';
-import { supabase, isSupabaseConfigured, signInWithGoogle } from '../lib/supabaseClient';
+import { supabase, registrationSupabase, isSupabaseConfigured, signInWithGoogle } from '../lib/supabaseClient';
 
 export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActionNotice, initialMode = 'login' }) {
+  const [verificationEmail, setVerificationEmail] = useState('');
   const [mode, setMode] = useState(initialMode || 'login'); // 'login', 'signup', or 'forgot'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -48,28 +51,19 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
 
     if (isSupabaseConfigured) {
       if (mode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-              phone: phone
-            }
-          }
-        });
-        setLoading(false);
-        if (error) {
-          setErrorMessage(error.message);
-        } else {
-          setInfoMessage('Account created successfully! Please sign in with your credentials.');
-          setMode('login');
-        }
+        try {
+          await createRegistration(registrationSupabase).start(email, password, fullName, phone);
+          setPassword('');
+          setVerificationEmail(email.trim().toLowerCase());
+        } catch (error) { setErrorMessage(error.message); }
+        finally { setLoading(false); }
+
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
         });
+        setLoading(false);
         if (error) {
           setErrorMessage(error.message);
         } else if (data?.user) {
@@ -89,6 +83,10 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess, pendingActio
       setErrorMessage('Sign in is temporarily unavailable. Please contact support.'); setLoading(false);
     }
   };
+
+  if (verificationEmail) return <div className="modal-overlay"><div className="modal-dialog" style={{ maxWidth: 460 }}><RegistrationOtp email={verificationEmail}
+    onVerified={() => { setVerificationEmail(''); setMode('login'); setInfoMessage('Email verified successfully. Please sign in.'); }}
+    onBack={() => { setVerificationEmail(''); setMode('login'); }} /></div></div>;
 
   if (mode === 'forgot') return <div className="modal-overlay"><div className="modal-dialog" style={{ maxWidth: 460 }}><PasswordRecoveryForm initialEmail={email} onBack={() => setMode('login')} /></div></div>;
 

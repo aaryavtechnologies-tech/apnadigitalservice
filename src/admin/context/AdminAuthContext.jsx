@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { adminSupabase as supabase } from '../../lib/supabaseClient';
 import { isStaffRole, resolveAccountRole } from '../../lib/accountRole';
 
 const AdminAuthContext = createContext(null);
@@ -8,8 +8,7 @@ export function AdminAuthProvider({ children }) {
   const [adminUser, setAdminUser] = useState(null);
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
-  const generation = useRef(0);
-  const verifiedUserId = useRef(null);
+  const expiresAt = useRef(0);
 
   useEffect(() => {
     if (!supabase) {
@@ -17,44 +16,24 @@ export function AdminAuthProvider({ children }) {
       return;
     }
 
-    let timer;
-    const refresh = async (session, ticket) => {
-      try {
-        const { data, error } = await supabase.auth.getUser(session.access_token);
-        const user = !error && data?.user?.id === session.user.id ? data.user : null;
-        const nextRole = user ? await resolveAccountRole(supabase, user.id) : null;
-        if (ticket !== generation.current) return;
-        verifiedUserId.current = isStaffRole(nextRole) ? user.id : null;
-        setRole(nextRole);
-        setAdminUser(verifiedUserId.current ? { ...user, fullName: user.user_metadata?.full_name || user.email, role: nextRole } : null);
-      } catch {
-        if (ticket === generation.current) {
-          verifiedUserId.current = null;
-          setRole(null);
-          setAdminUser(null);
-        }
-      } finally {
-        if (ticket === generation.current) setLoading(false);
-      }
+    const checkExpiry = () => {
+      if (expiresAt.current && Date.now() >= expiresAt.current) void adminSignOut();
     };
-
+    const expiryTimer = setInterval(checkExpiry, 30000);
+    window.addEventListener('focus', checkExpiry);
+    // Only an explicit password submission can populate staff state. Focus and
+    // token refresh events must not reinitialize or unmount the workspace.
     const subscription = supabase.auth.onAuthStateChange((_event, session) => {
-      const ticket = ++generation.current;
-      clearTimeout(timer);
-      const userId = session?.user?.id;
-      if (!userId || userId !== verifiedUserId.current) {
-        verifiedUserId.current = null;
-        setRole(null);
+      if (!session) {
         setAdminUser(null);
-        setLoading(Boolean(userId));
+        setRole(null);
       }
-      // Recheck the same account in the background so token refresh keeps the workspace mounted.
-      if (userId) timer = setTimeout(() => void refresh(session, ticket), 0);
+      setLoading(false);
     }).data.subscription;
     return () => {
-      generation.current++;
+      clearInterval(expiryTimer);
+      window.removeEventListener('focus', checkExpiry);
       subscription.unsubscribe();
-      clearTimeout(timer);
     };
   }, []);
 
@@ -63,21 +42,34 @@ export function AdminAuthProvider({ children }) {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw error;
+      const { error: activationError } = await supabase.rpc('activate_staff_session');
+      if (activationError) { await supabase.auth.signOut({ scope: 'local' }); throw activationError; }
       const userRole = await resolveAccountRole(supabase, data?.user?.id);
       if (!isStaffRole(userRole)) {
         await supabase.auth.signOut({ scope: 'local' });
         return { success: false, error: 'Access denied. This account does not have staff access.' };
       }
+      expiresAt.current = Date.now() + 8 * 60 * 60 * 1000;
+      setRole(userRole);
+      setAdminUser({ ...data.user, role: userRole, fullName: data.user.user_metadata?.full_name || data.user.email });
+      setLoading(false);
       return { success: true };
     } catch (error) { return { success: false, error: error.message }; }
   }
 
   async function adminSignOut() {
-    generation.current++;
-    verifiedUserId.current = null;
+    expiresAt.current = 0;
     setAdminUser(null); setRole(null);
     setLoading(false);
-    if (supabase) await supabase.auth.signOut({ scope: 'local' });
+    if (supabase) {
+      try {
+        const { error } = await supabase.rpc('end_staff_session');
+        if (error) console.error('[admin-auth] Server logout failed:', error.message);
+      } finally {
+        const { error } = await supabase.auth.signOut({ scope: 'local' });
+        if (error) console.error('[admin-auth] Token logout failed:', error.message);
+      }
+    }
   }
 
   return <AdminAuthContext.Provider value={{ adminUser, role, loading,

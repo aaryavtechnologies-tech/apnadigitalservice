@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { resolveAccountRole } from './lib/accountRole';
 import RequireAdmin from './admin/components/RequireAdmin';
@@ -68,11 +68,12 @@ function AppContent() {
       setServices(getActiveServices());
     };
     window.addEventListener('apna_services_changed', handleServicesChanged);
-    window.addEventListener('focus', refreshServices);
+    const onFocus = () => { if (!window.location.pathname.startsWith('/admin')) void refreshServices(); };
+    window.addEventListener('focus', onFocus);
     const timer = window.setInterval(refreshServices, 60_000);
     return () => {
       window.removeEventListener('apna_services_changed', handleServicesChanged);
-      window.removeEventListener('focus', refreshServices);
+      window.removeEventListener('focus', onFocus);
       window.clearInterval(timer);
     };
   }, []);
@@ -101,6 +102,9 @@ function AppContent() {
   const [selectedServiceForRequest, setSelectedServiceForRequest] = useState(null);
   const [pendingServiceAction, setPendingServiceAction] = useState(null);
 
+  const routeRef = useRef(location.pathname);
+  useEffect(() => { routeRef.current = location.pathname; }, [location.pathname]);
+
   // Sync Supabase Auth state if configured & auto-route Super Admin to /admin
   useEffect(() => {
     if (isSupabaseConfigured) {
@@ -110,7 +114,8 @@ function AppContent() {
                              window.location.hash.includes('type=recovery');
 
       const processSession = async (session) => {
-        if (session?.user) {
+        if (routeRef.current.startsWith('/admin')) return;
+        if (session?.user?.email_confirmed_at) {
           const userRole = await resolveAccountRole(supabase, session.user.id);
 
           const userObj = {
@@ -125,10 +130,10 @@ function AppContent() {
 
           // If user is super_admin or admin, automatically route to the admin portal!
           if (userRole === 'super_admin' || userRole === 'admin') {
-            if (isAuthCallback || location.pathname === '/' || location.pathname === '/dashboard') {
+            if (isAuthCallback || routeRef.current === '/' || routeRef.current === '/dashboard') {
               navigate('/admin');
             }
-          } else if (isAuthCallback || location.pathname === '/') {
+          } else if (isAuthCallback || routeRef.current === '/') {
             navigate('/dashboard', { replace: true });
           }
         } else {
@@ -147,7 +152,7 @@ function AppContent() {
 
       return () => subscription.unsubscribe();
     }
-  }, [location.pathname, navigate]);
+  }, [navigate]);
 
   const handleSignOut = async () => {
     if (isSupabaseConfigured) {

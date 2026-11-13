@@ -11,12 +11,11 @@ import {
   AlertCircle, 
   Loader2, 
   Users, 
-  Clock, 
   Trash2,
   RefreshCw
 } from 'lucide-react';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { createAdminCredentials, fetchAdminTeam, revokeAdminInvitation, deleteAdminAccess } from '../services/adminDataService';
+import { createAdminCredentials, fetchAdminTeam, deleteAdminAccess } from '../services/adminDataService';
 
 export default function AdminStaffManagerModal({ isOpen, onClose }) {
   const { adminUser, role, isSuperAdmin } = useAdminAuth();
@@ -26,7 +25,6 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
-  const [legacyInvitationId, setLegacyInvitationId] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null); // { type: 'success' | 'error', text: '' }
@@ -35,7 +33,6 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
   const [teamLoading, setTeamLoading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [activeStaff, setActiveStaff] = useState([]);
-  const [invitations, setInvitations] = useState([]);
 
   const loadTeam = async () => {
     if (!isSuperAdmin) return;
@@ -44,7 +41,6 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
     setTeamLoading(false);
     if (res.success) {
       setActiveStaff(res.activeStaff || []);
-      setInvitations(res.invitations || []);
     } else {
       setStatusMessage({ type: 'error', text: res.error || 'Failed to load the admin team.' });
     }
@@ -66,7 +62,6 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
     setDeletingId(null);
     if (res.success) {
       setActiveStaff(prev => prev.filter(item => item.id !== staff.id));
-      setInvitations(prev => prev.filter(item => item.email?.toLowerCase() !== staff.email?.toLowerCase()));
       setStatusMessage({ type: 'success', text: `Admin access for ${staff.email} was deleted.` });
     } else {
       setStatusMessage({ type: 'error', text: res.error || 'Failed to delete admin access.' });
@@ -99,7 +94,6 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
       password,
       fullName,
       phone,
-      legacyInvitationId,
       role
     });
 
@@ -114,33 +108,10 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
       setEmail('');
       setPassword('');
       setPhone('');
-      setLegacyInvitationId(null);
       setActiveTab('team');
       loadTeam();
     } else {
       setStatusMessage({ type: 'error', text: res.error || 'Failed to create admin credentials.' });
-    }
-  };
-
-  const handlePrepareActivation = invitation => {
-    if (loading) return;
-    setLegacyInvitationId(invitation.id);
-    setFullName(invitation.full_name || '');
-    setEmail(invitation.email);
-    setPhone(invitation.phone || '');
-    setPassword('');
-    setStatusMessage(null);
-    setActiveTab('create');
-  };
-
-  const handleRevoke = async (invitationId, inviteEmail) => {
-    if (!window.confirm(`Revoke pending admin authorization for ${inviteEmail}?`)) return;
-    const res = await revokeAdminInvitation(invitationId, role);
-    if (res.success) {
-      setInvitations(prev => prev.filter(i => i.id !== invitationId));
-      setStatusMessage({ type: 'success', text: `Authorization for ${inviteEmail} was revoked.` });
-    } else {
-      setStatusMessage({ type: 'error', text: res.error || 'Failed to revoke invitation.' });
     }
   };
 
@@ -196,7 +167,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
             }}
           >
             <UserPlus size={16} />
-            <span>{legacyInvitationId ? 'Activate Admin' : 'Create New Admin'}</span>
+            <span>Create New Admin</span>
           </button>
 
           <button
@@ -244,19 +215,6 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
 
           {activeTab === 'create' ? (
             <form onSubmit={handleCreateAdmin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {legacyInvitationId && (
-                <button type="button" className="admin-btn admin-btn-secondary" disabled={loading}
-                  onClick={() => {
-                    setLegacyInvitationId(null);
-                    setFullName('');
-                    setEmail('');
-                    setPhone('');
-                    setPassword('');
-                    setStatusMessage(null);
-                  }}>
-                  Create a different admin
-                </button>
-              )}
 
               
               {/* Security Guidance Box */}
@@ -271,7 +229,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
               }}>
                 <strong>Immediate Admin Access</strong>
                 <div style={{ marginTop: '4px' }}>
-                  {legacyInvitationId ? 'Set a new password to activate this legacy staff account.' : 'The new admin can sign in immediately with the email and initial password you enter.'}
+                  The new admin can sign in immediately with the email and initial password you enter.
                 </div>
               </div>
 
@@ -307,7 +265,6 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
                     placeholder="admin@apnadigitalservice.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    readOnly={Boolean(legacyInvitationId)}
                     required
                     style={{ paddingLeft: '38px', height: '42px', fontSize: '0.9rem' }}
                   />
@@ -376,7 +333,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
                 }}
               >
                 {loading ? <Loader2 size={18} className="spinner" /> : <UserPlus size={18} />}
-                <span>{loading ? 'Saving Admin...' : legacyInvitationId ? 'Activate Admin' : 'Create Admin'}</span>
+                <span>{loading ? 'Saving Admin...' : 'Create Admin'}</span>
               </button>
             </form>
           ) : (
@@ -456,55 +413,7 @@ export default function AdminStaffManagerModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {invitations.length > 0 && (
-                <div>
-                  <h4 style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0F172A', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Clock size={15} style={{ color: '#EA580C' }} />
-                    <span>Legacy Authorizations ({invitations.length})</span>
-                  </h4>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {invitations.map(inv => (
-                      <div
-                        key={inv.id}
-                        style={{
-                          padding: '12px 14px',
-                          borderRadius: '8px',
-                          border: '1px solid #FED7AA',
-                          background: '#FFF7ED',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '10px'
-                        }}
-                      >
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#9A3412' }}>{inv.email}</div>
-                          <div style={{ fontSize: '0.74rem', color: '#7C2D12' }}>
-                            {inv.full_name ? `${inv.full_name} • ` : ''}Recorded on {new Date(inv.created_at).toLocaleDateString('en-IN')}
-                          </div>
-                        </div>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <button type="button" className="admin-btn admin-btn-secondary"
-                            disabled={loading} onClick={() => handlePrepareActivation(inv)}>
-                            Activate
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRevoke(inv.id, inv.email)}
-                            title="Revoke invitation"
-                            style={{ background: 'none', border: 'none', color: '#DC2626', cursor: 'pointer', padding: '4px' }}
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-              </div>
-
-              )}
             </div>
           )}
         </div>

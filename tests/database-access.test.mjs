@@ -11,7 +11,7 @@ test('database policies enforce customer isolation, view-only admin and super-ad
   const superAdmin = '44444444-4444-4444-8444-444444444444';
   try {
     await db.exec(`
-      CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;
+      CREATE ROLE anon; CREATE ROLE authenticated;
       CREATE SCHEMA auth;
       CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
       GRANT USAGE ON SCHEMA public, auth TO anon, authenticated;
@@ -34,7 +34,6 @@ test('database policies enforce customer isolation, view-only admin and super-ad
     // The migration must be safe to apply more than once.
     await db.exec(migration);
     await db.exec(await readFile(new URL('../supabase/migrations/20261104_direct_staff_creation.sql', import.meta.url), 'utf8'));
-    await db.exec(await readFile(new URL('../supabase/migrations/20261104000100_legacy_staff_activation.sql', import.meta.url), 'utf8'));
     const asUser = async (id, role = 'authenticated') => {
       await db.exec('RESET ROLE');
       await db.query("SELECT set_config('request.jwt.claim.sub', $1, false)", [id]);
@@ -92,26 +91,14 @@ test('database policies enforce customer isolation, view-only admin and super-ad
     // Create auth user: unconfirmed email -> NO admin profile created
     await db.exec('RESET ROLE');
     const newAdminId = '77777777-7777-4777-8777-777777777777';
-    await db.exec(`INSERT INTO auth.users (id, email, raw_user_meta_data, raw_app_meta_data)
-      VALUES ('${newAdminId}', '${newAdminEmail}', '{"invited_role":"admin"}', '{"provider":"email"}')`);
+    await db.exec(`INSERT INTO auth.users (id, email, email_confirmed_at) VALUES ('${newAdminId}', '${newAdminEmail}', NULL)`);
     assert.equal((await db.query(`SELECT * FROM profiles WHERE id='${newAdminId}'`)).rows.length, 0);
-    const { rows: [invitation] } = await db.query('SELECT id FROM admin_invitations WHERE email=$1', [newAdminEmail]);
-    const lookup = 'SELECT find_legacy_staff_account($1, $2) AS id';
-    await asUser(superAdmin);
-    await assert.rejects(db.query(lookup, [invitation.id, newAdminEmail]), /permission denied/);
-    await asUser('', 'service_role');
-    assert.deepEqual((await db.query(lookup, [invitation.id, newAdminEmail])).rows, [{ id: newAdminId }]);
-    await assert.rejects(db.query(lookup, [invitation.id, 'other@example.com']), /no longer pending/);
-    await db.exec('RESET ROLE');
 
     // Confirm email -> trigger grants role 'admin'
     await db.exec(`UPDATE auth.users SET email_confirmed_at = now() WHERE id='${newAdminId}'`);
     const profile = (await db.query(`SELECT role, full_name FROM profiles WHERE id='${newAdminId}'`)).rows[0];
     assert.equal(profile.role, 'admin');
     assert.equal(profile.full_name, 'New Admin');
-    await asUser('', 'service_role');
-    await assert.rejects(db.query(lookup, [invitation.id, newAdminEmail]), /no longer pending/);
-    await db.exec('RESET ROLE');
 
     // Removing admin access is authorized in the database, including existing sessions.
     await db.exec(await readFile(new URL('../supabase/migrations/20261102_remove_admin_access.sql', import.meta.url), 'utf8'));
@@ -158,6 +145,56 @@ test('database policies enforce customer isolation, view-only admin and super-ad
       VALUES ('${confirmedAdminId}', 'confirmed@example.com', '{"apna_direct_staff":true}', now())`);
     assert.deepEqual((await db.query('SELECT role FROM profiles WHERE id=$1', [confirmedAdminId])).rows,
       [{ role: 'admin' }]);
+
+    // Model the managed Storage schema and JWT claims, then execute the actual new migration.
+    await db.exec(`
+      CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT COALESCE(NULLIF(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
+      CREATE SCHEMA storage;
+      CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+      CREATE TABLE storage.objects(id uuid DEFAULT gen_random_uuid(),bucket_id text,name text);
+      CREATE FUNCTION storage.foldername(text) RETURNS text[] LANGUAGE sql AS $$ SELECT string_to_array($1,'/') $$;
+      ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+      GRANT USAGE ON SCHEMA storage TO authenticated;
+      GRANT SELECT,INSERT,DELETE ON storage.objects TO authenticated;
+      UPDATE auth.users SET email_confirmed_at=now();
+      INSERT INTO auth.users(id,email,email_confirmed_at) VALUES ('${customer}','customer@example.com',now()) ON CONFLICT(id) DO NOTHING;
+      INSERT INTO auth.users(id,email,email_confirmed_at) VALUES ('${other}','other@example.com',now()) ON CONFLICT(id) DO NOTHING;
+      UPDATE service_requests SET document_url='storage://final-documents/own/test.pdf' WHERE application_id='own';
+    `);
+    await db.exec(await readFile(new URL('../supabase/migrations/20261113_auth_and_final_documents.sql', import.meta.url), 'utf8'));
+    // Even a legacy permissive Storage policy cannot expose the private bucket.
+    await db.exec("CREATE POLICY legacy_storage_read ON storage.objects FOR SELECT TO authenticated USING (true)");
+    const sessionId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+    await db.query("SELECT set_config('request.jwt.claims',$1,false)", [JSON.stringify({ session_id: sessionId, amr: [{ method: 'password', timestamp: Math.floor(Date.now()/1000) }] })]);
+    await asUser(superAdmin);
+    assert.equal((await db.query('SELECT apna_current_role() role')).rows[0].role,'customer');
+    await db.exec('SELECT activate_staff_session()');
+    assert.equal((await db.query('SELECT apna_current_role() role')).rows[0].role,'super_admin');
+    await db.exec("INSERT INTO storage.objects(bucket_id,name) VALUES ('final-documents','own/test.pdf')");
+    await assert.rejects(db.exec("INSERT INTO storage.objects(bucket_id,name) VALUES ('final-documents','missing/test.pdf')"), /row-level security/);
+    await asUser(customer);
+    assert.equal((await db.query('SELECT * FROM storage.objects')).rows.length,1);
+    await assert.rejects(db.exec('SELECT activate_staff_session()'), /fresh staff/);
+    await assert.rejects(db.exec("INSERT INTO storage.objects(bucket_id,name) VALUES ('final-documents','own/hack.pdf')"), /row-level security/);
+    await asUser(other);
+    assert.equal((await db.query('SELECT * FROM storage.objects')).rows.length,0);
+    await db.exec('RESET ROLE');
+    await db.exec(`UPDATE auth.users SET email_confirmed_at=NULL WHERE id='${customer}'`);
+    await asUser(customer);
+    assert.equal((await db.query('SELECT * FROM service_requests')).rows.length,0);
+    assert.equal((await db.query('SELECT * FROM storage.objects')).rows.length,0);
+    await asUser(superAdmin);
+    await db.exec('SELECT end_staff_session()');
+    assert.equal((await db.query('SELECT apna_current_role() role')).rows[0].role,'customer');
+    await db.exec('SELECT activate_staff_session()');
+    await db.exec('RESET ROLE');
+    await db.exec("UPDATE staff_sessions SET expires_at=now()-interval '1 second'");
+    await asUser(superAdmin);
+    assert.equal((await db.query('SELECT apna_current_role() role')).rows[0].role,'customer');
+    assert.equal((await db.query("UPDATE service_requests SET status='Completed' RETURNING *")).rows.length,0);
+    await db.query("SELECT set_config('request.jwt.claims',$1,false)", [JSON.stringify({ session_id: sessionId, amr: [{ method: 'password', timestamp: Math.floor(Date.now()/1000)-3600 }] })]);
+    await assert.rejects(db.exec('SELECT activate_staff_session()'), /fresh staff/);
+
 
   } finally { await db.close(); }
 });

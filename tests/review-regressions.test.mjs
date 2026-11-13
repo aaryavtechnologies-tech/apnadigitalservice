@@ -19,6 +19,7 @@ async function settingsHarness({ failure = false, remote = null } = {}) {
       select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: remote, error: null }) }) })
     }) }
   });
+  context.adminSupabase = context.supabase;
   vm.runInContext(source, context);
   return { context, cache, writes, events };
 }

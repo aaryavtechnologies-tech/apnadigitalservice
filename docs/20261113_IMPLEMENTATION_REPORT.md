@@ -33,7 +33,7 @@ No dependencies or layout styles were added. Existing uncommitted changes to `.e
 
 ## Required release and acceptance steps
 
-Follow `docs/email-templates/SETUP.md`. Apply existing migrations in order followed by the new migration; redeploy `create-admin`; enable Confirm email, custom SMTP, signup `.Token` template, 600-second OTP expiry, 60-second resend interval and production Auth rate limits. Provide correctly spelled `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the deployment environment. There is no local `.env`; the example currently has `ANON_YKE` misspelled. Never expose a service-role key in Vite.
+Follow `docs/email-templates/SETUP.md`. Apply existing migrations in order followed by the new migration; redeploy `create-admin`; enable Confirm email, custom SMTP, signup `.Token` template, 600-second OTP expiry, 60-second resend interval and production Auth rate limits. Provide correctly spelled `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the deployment environment. There is no local `.env`; the example uses the correctly spelled key with a placeholder value. Never expose a service-role key in Vite.
 
 Use a controlled inbox, a super admin and two customers to complete the requested nine-step PDF test and verify ownership denial via direct Storage requests. Verify invalid/expired/reused OTPs and backend rate limiting; test focus/suspension on Applications, Services, Inquiries and CMS; close/reopen the browser and restart the PC to verify manual staff sign-in. Inspect Auth, Storage, function and browser logs. These acceptance steps are still pending because live credentials/configuration were unavailable.
 

@@ -28,7 +28,8 @@ import {
   deleteApplicationRecord,
   updatePaymentStatus
 } from '../services/adminDataService';
-import { uploadDocumentToCloudinary } from '../services/cloudinaryService';
+import { adminSupabase } from '../../lib/supabaseClient';
+import { uploadFinalPdf, downloadFinalPdf } from '../../lib/finalDocuments';
 import { getServiceBySlug } from '../../data/servicesData';
 
 const STATUS_OPTIONS = [
@@ -270,7 +271,7 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
     }
   };
 
-  // Upload Verified Document via Cloudinary Handler
+  // Upload private final PDF
   const handleUploadDocument = async () => {
     if (isViewOnly || !selectedFile) return;
 
@@ -285,40 +286,22 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
     setActionNotice(null);
 
     try {
-      const uploadRes = await uploadDocumentToCloudinary(selectedFile, (progress) => {
-        setUploadProgress(progress);
-      });
-
-      if (!uploadRes.success) {
-        setIsUploading(false);
-        setUploadError(uploadRes.error || 'Document upload failed.');
-        return;
-      }
-
-      // Attach document to application record
-      const attachRes = await attachDocumentRecord(
-        app.appId, 
-        uploadRes.secureUrl, 
-        uploadRes.originalName, 
-        role
-      );
+      const uploadRes = await uploadFinalPdf(adminSupabase, app.appId, selectedFile,
+        (id, url, name) => attachDocumentRecord(id, url, name, role));
+      setUploadProgress(100);
 
       setIsUploading(false);
 
-      if (attachRes.success) {
-        setDocumentUrl(uploadRes.secureUrl);
-        setDocumentName(uploadRes.originalName);
-        setStatus('Completed');
-        setOperatorNote('Document verified and issued. Ready for instant download.');
-        setSelectedFile(null);
-        setActionNotice({ 
-          type: 'success', 
-          text: `Verified document "${uploadRes.originalName}" uploaded & delivered to customer!` 
-        });
-        if (onUpdated) onUpdated({ status: 'Completed', documentUrl: uploadRes.secureUrl, documentName: uploadRes.originalName });
-      } else {
-        setUploadError(attachRes.error || 'Failed to attach document record.');
-      }
+      setDocumentUrl(uploadRes.secureUrl);
+      setDocumentName(uploadRes.originalName);
+      setStatus('Completed');
+      setOperatorNote('Document verified and issued. Ready for instant download.');
+      setSelectedFile(null);
+      setActionNotice({
+        type: 'success',
+        text: `Verified document "${uploadRes.originalName}" uploaded & delivered to customer!`
+      });
+      if (onUpdated) onUpdated({ status: 'Completed', documentUrl: uploadRes.secureUrl, documentName: uploadRes.originalName });
     } catch (err) {
       setIsUploading(false);
       setUploadError(err.message || 'Upload exception.');
@@ -899,7 +882,7 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
               {/* 4. Verified Document Delivery (Admin Upload to Customer) */}
               <div className="admin-detail-box">
                 <div className="admin-detail-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>Verified Document Delivery (PDF / Image)</span>
+                  <span>Verified Document Delivery (PDF)</span>
                   {isViewOnly && <Lock size={13} style={{ color: '#F59E0B' }} />}
                 </div>
 
@@ -931,7 +914,15 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
 
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                       <a 
-                        href={documentUrl} 
+                        href="#" onClick={async (event) => {
+                          event.preventDefault();
+                          try {
+                            const file = await downloadFinalPdf(adminSupabase, documentUrl);
+                            const url = URL.createObjectURL(file);
+                            const link = document.createElement('a'); link.href = url; link.download = documentName || 'document.pdf'; link.click();
+                            setTimeout(() => URL.revokeObjectURL(url), 1000);
+                          } catch (error) { setActionNotice({ type: 'error', text: error.message }); }
+                        }}
                         target="_blank" 
                         rel="noreferrer"
                         className="admin-btn admin-btn-success"
@@ -982,17 +973,17 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
                     <Lock size={20} style={{ margin: '0 auto 8px', color: '#F59E0B' }} />
                     <div>No verified document attached yet.</div>
                     <div style={{ fontSize: '0.74rem', color: 'var(--admin-text-dim)', marginTop: '4px' }}>
-                      (Document upload to Cloudinary is restricted to Super Admin)
+                      (Document upload is restricted to Super Admin)
                     </div>
                   </div>
                 ) : (
-                  /* Super Admin: File Dropzone & Cloudinary Uploader */
+                  /* Super Admin: Final PDF uploader */
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '8px' }}>
                     <div className="admin-dropzone">
                       <input 
                         type="file" 
                         id="cloudinary-doc-file" 
-                        accept=".pdf,image/jpeg,image/png,image/webp"
+                        accept=".pdf,application/pdf"
                         style={{ display: 'none' }}
                         onChange={(e) => {
                           if (e.target.files && e.target.files[0]) {
@@ -1003,10 +994,10 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
                       <label htmlFor="cloudinary-doc-file" style={{ cursor: 'pointer', display: 'block' }}>
                         <UploadCloud size={28} style={{ color: '#EA580C', margin: '0 auto 6px' }} />
                         <div style={{ fontWeight: 600, fontSize: '0.86rem', color: '#0F172A' }}>
-                          {selectedFile ? selectedFile.name : 'Click to select Verified PDF or File'}
+                          {selectedFile ? selectedFile.name : 'Click to select Verified PDF'}
                         </div>
                         <div style={{ fontSize: '0.74rem', color: 'var(--admin-text-muted)', marginTop: '2px' }}>
-                          Accepts PDF, JPG, PNG, WEBP (Max 5MB)
+                          Accepts PDF (Max 5MB)
                         </div>
                       </label>
                     </div>
@@ -1020,7 +1011,7 @@ export default function AdminApplicationModal({ app, onClose, onUpdated }) {
                     {isUploading && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#EA580C' }}>
-                          <span>Uploading to Cloudinary...</span>
+                          <span>Uploading PDF...</span>
                           <span>{uploadProgress}%</span>
                         </div>
                         <div style={{ height: '6px', background: '#E2E8F0', borderRadius: '3px', overflow: 'hidden' }}>

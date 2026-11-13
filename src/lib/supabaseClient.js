@@ -14,6 +14,15 @@ export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
+// Staff credentials live only in this JavaScript runtime, never browser storage.
+export const adminSupabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey, {
+  auth: { persistSession: false, detectSessionInUrl: false, storageKey: 'apna-admin-memory' }
+}) : null;
+
+export const registrationSupabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey, {
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'apna-registration' }
+}) : null;
+
 export function createRecoveryClient() {
   return isSupabaseConfigured ? createClient(supabaseUrl, supabaseAnonKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'apna-password-recovery' }
@@ -48,7 +57,7 @@ export async function signUpWithEmail(email, password, fullName, phone) {
     return { error: { message: 'Supabase is not configured' } };
   }
 
-  return await supabase.auth.signUp({
+  return await registrationSupabase.auth.signUp({
     email,
     password,
     options: {
@@ -164,7 +173,7 @@ export async function fetchCustomerApplications(user) {
     const { data, error } = await supabase
       .from('service_requests')
       .select('*')
-      .or(`user_id.eq.${user.id},customer_email.eq.${user.email}`)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (error) {

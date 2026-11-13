@@ -1,9 +1,11 @@
+import { createRegistration } from '../lib/registration';
+import RegistrationOtp from '../components/RegistrationOtp';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Mail, Lock, User, Phone, CheckCircle, AlertCircle, ArrowLeft, ShieldCheck, Sparkles, UserPlus } from 'lucide-react';
 import PasswordRecoveryForm from '../components/PasswordRecoveryForm';
 import { isStaffRole, resolveAccountRole } from '../lib/accountRole';
-import { supabase, isSupabaseConfigured, signInWithGoogle } from '../lib/supabaseClient';
+import { supabase, registrationSupabase, isSupabaseConfigured, signInWithGoogle } from '../lib/supabaseClient';
 
 export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, currentUser }) {
   const location = useLocation();
@@ -14,6 +16,7 @@ export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, curr
     ? 'signup' 
     : (propMode || 'login');
 
+  const [verificationEmail, setVerificationEmail] = useState('');
   const [mode, setMode] = useState(initialMode); // 'login', 'signup', or 'forgot'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -63,37 +66,13 @@ export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, curr
 
     if (isSupabaseConfigured) {
       if (mode === 'signup') {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: fullName,
-              phone: phone
-            }
-          }
-        });
-        setLoading(false);
-        if (error) {
-          setErrorMessage(error.message);
-        } else {
-          setInfoMessage('Account registered successfully! Signing you in...');
-          if (data?.session?.user) {
-            const userObj = {
-              id: data.user.id,
-              email: data.user.email,
-              fullName: fullName || email.split('@')[0],
-              phone: phone,
-              role: 'customer'
-            };
-            localStorage.setItem('apna_user', JSON.stringify(userObj));
-            if (onAuthSuccess) onAuthSuccess(userObj);
-            navigate('/dashboard');
-          } else {
-            setInfoMessage('Check your email to confirm your account, then sign in.');
-            setMode('login');
-          }
-        }
+        try {
+          await createRegistration(registrationSupabase).start(email, password, fullName, phone);
+          setPassword('');
+          setVerificationEmail(email.trim().toLowerCase());
+        } catch (error) { setErrorMessage(error.message); }
+        finally { setLoading(false); }
+
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
@@ -120,6 +99,10 @@ export default function AuthPage({ mode: propMode = 'login', onAuthSuccess, curr
       setErrorMessage('Sign in is temporarily unavailable. Please contact support.'); setLoading(false);
     }
   };
+
+  if (verificationEmail) return <div className="modal-overlay"><div className="modal-dialog" style={{ maxWidth: 460 }}><RegistrationOtp email={verificationEmail}
+    onVerified={() => { setVerificationEmail(''); setMode('login'); setInfoMessage('Email verified successfully. Please sign in.'); }}
+    onBack={() => { setVerificationEmail(''); setMode('login'); }} /></div></div>;
 
   if (mode === 'forgot') return <div className="recovery-page"><PasswordRecoveryForm initialEmail={email} onBack={() => setMode('login')} /></div>;
 

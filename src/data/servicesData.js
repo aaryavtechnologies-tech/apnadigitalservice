@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
+import { supabase, adminSupabase, isSupabaseConfigured } from '../lib/supabaseClient';
 
 // Master Services Configuration
 // Dynamic Data Store: Any service added here or via Super Admin dynamically generates:
@@ -295,7 +295,7 @@ export async function saveHomepageSettings(newSettings, role) {
     };
 
     if (!supabase) throw new Error('Publishing is unavailable. Please configure the database.');
-    const { error } = await supabase.from('site_settings').upsert({
+    const { error } = await adminSupabase.from('site_settings').upsert({
       key: 'homepage_config', value: JSON.stringify(merged), updated_at: new Date().toISOString()
     }, { onConflict: 'key' });
     if (error) throw error;
@@ -330,7 +330,7 @@ export async function updateMasterQrCodeUrl(newUrl, role) {
   if (role !== 'super_admin') return { success: false, error: 'Only Super Admin can update the payment QR.' };
   try {
     if (!supabase) throw new Error('Publishing is unavailable. Please configure the database.');
-    const { error } = await supabase.from('site_settings').upsert({
+    const { error } = await adminSupabase.from('site_settings').upsert({
       key: 'master_qr_code_url', value: newUrl, updated_at: new Date().toISOString()
     });
     if (error) throw error;
@@ -462,7 +462,7 @@ export async function saveServiceByAdmin(serviceData, role) {
       disclaimer: serviceData.disclaimer || 'Apna Digital Service is a privately operated assistance platform and is not a government portal.'
     };
 
-    const { error } = await supabase.from('services').upsert([{
+    const { error } = await adminSupabase.from('services').upsert([{
       id: normalizedService.id,
       slug: normalizedService.slug,
       title: normalizedService.title,
@@ -516,7 +516,7 @@ export async function deleteServiceByAdmin(serviceId, role) {
     if (DEFAULT_SERVICES.some(item => item.id === serviceId || item.slug === service.slug)) {
       return await saveServiceByAdmin({ ...service, status: 'inactive' }, role);
     }
-    const { error } = await supabase.from('services').delete().eq('id', serviceId).select('id').single();
+    const { error } = await adminSupabase.from('services').delete().eq('id', serviceId).select('id').single();
     if (error) throw error;
     await refreshServices();
     return { success: true };

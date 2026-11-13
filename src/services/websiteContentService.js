@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
+import { supabase, adminSupabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { DEFAULT_WEBSITE_CONTENT } from '../data/defaultWebsiteContent';
 
 const STORAGE_KEY = 'apna_website_content';
@@ -114,7 +114,7 @@ export async function saveWebsiteSectionContent(sectionKey, sectionData, role) {
     // Sync to Supabase FIRST — it is the source of truth
     if (isSupabaseConfigured && supabase) {
       const now = new Date().toISOString();
-      const { error } = await supabase
+      const { error } = await adminSupabase
         .from('website_content')
         .upsert(
           [{ section_key: sectionKey, content_data: updated[sectionKey], updated_at: now }],
@@ -175,7 +175,7 @@ export async function saveWebsiteSectionsBatch(sectionsMap, role) {
 
     // Sync to Supabase FIRST
     if (isSupabaseConfigured && supabase && upsertRows.length > 0) {
-      const { error } = await supabase
+      const { error } = await adminSupabase
         .from('website_content')
         .upsert(upsertRows, { onConflict: 'section_key' });
 

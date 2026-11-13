@@ -28,10 +28,13 @@ Deno.serve(async (request) => {
   const { data: { user }, error: authError } = await supabase.auth.getUser(token);
   if (authError || !user) return respond(401, { error: "Sign in again before creating an admin." });
 
-  const { data: caller, error: callerError } = await supabase
-    .from("profiles").select("role").eq("id", user.id).maybeSingle();
+  const callerClient = createClient(url, serviceKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data: callerRole, error: callerError } = await callerClient.rpc('apna_current_role');
   if (callerError) return respond(500, { error: "Could not verify your staff permissions." });
-  if (caller?.role !== "super_admin") return respond(403, { error: "Only a Super Admin can create staff accounts." });
+  if (callerRole !== "super_admin") return respond(403, { error: "A current Super Admin session is required." });
 
   const body = await request.json().catch(() => null);
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";

@@ -1,5 +1,5 @@
 /** Database-backed admin operations. Supabase is the sole source of truth. */
-import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
+import { adminSupabase as supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 
 function databaseUnavailable() {
   return !isSupabaseConfigured || !supabase;

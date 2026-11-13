@@ -1,3 +1,4 @@
+import { downloadFinalPdf } from '../lib/finalDocuments';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
@@ -327,10 +328,7 @@ export default function CustomerDashboardPage({ currentUser, onSignOut, onOpenAu
     setDownloadingAppId(app.appId);
     setDownloadError('');
     try {
-      const response = await fetch(app.documentUrl);
-      if (!response.ok) throw new Error(`Download failed (HTTP ${response.status}).`);
-      const file = await response.blob();
-      if (!file.size) throw new Error('The downloaded file is empty. Please contact support.');
+      const file = await downloadFinalPdf(supabase, app.documentUrl);
       const url = URL.createObjectURL(file);
       const fallbackName = `${app.serviceSlug || 'document'}_${app.appId}.pdf`;
       const filename = (app.documentName || fallbackName).replace(/[\\/:*?"<>|]+/g, '_');

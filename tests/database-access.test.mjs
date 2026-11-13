@@ -146,5 +146,55 @@ test('database policies enforce customer isolation, view-only admin and super-ad
     assert.deepEqual((await db.query('SELECT role FROM profiles WHERE id=$1', [confirmedAdminId])).rows,
       [{ role: 'admin' }]);
 
+    // Model the managed Storage schema and JWT claims, then execute the actual new migration.
+    await db.exec(`
+      CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$ SELECT COALESCE(NULLIF(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
+      CREATE SCHEMA storage;
+      CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+      CREATE TABLE storage.objects(id uuid DEFAULT gen_random_uuid(),bucket_id text,name text);
+      CREATE FUNCTION storage.foldername(text) RETURNS text[] LANGUAGE sql AS $$ SELECT string_to_array($1,'/') $$;
+      ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+      GRANT USAGE ON SCHEMA storage TO authenticated;
+      GRANT SELECT,INSERT,DELETE ON storage.objects TO authenticated;
+      UPDATE auth.users SET email_confirmed_at=now();
+      INSERT INTO auth.users(id,email,email_confirmed_at) VALUES ('${customer}','customer@example.com',now()) ON CONFLICT(id) DO NOTHING;
+      INSERT INTO auth.users(id,email,email_confirmed_at) VALUES ('${other}','other@example.com',now()) ON CONFLICT(id) DO NOTHING;
+      UPDATE service_requests SET document_url='storage://final-documents/own/test.pdf' WHERE application_id='own';
+    `);
+    await db.exec(await readFile(new URL('../supabase/migrations/20261113_auth_and_final_documents.sql', import.meta.url), 'utf8'));
+    // Even a legacy permissive Storage policy cannot expose the private bucket.
+    await db.exec("CREATE POLICY legacy_storage_read ON storage.objects FOR SELECT TO authenticated USING (true)");
+    const sessionId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+    await db.query("SELECT set_config('request.jwt.claims',$1,false)", [JSON.stringify({ session_id: sessionId, amr: [{ method: 'password', timestamp: Math.floor(Date.now()/1000) }] })]);
+    await asUser(superAdmin);
+    assert.equal((await db.query('SELECT apna_current_role() role')).rows[0].role,'customer');
+    await db.exec('SELECT activate_staff_session()');
+    assert.equal((await db.query('SELECT apna_current_role() role')).rows[0].role,'super_admin');
+    await db.exec("INSERT INTO storage.objects(bucket_id,name) VALUES ('final-documents','own/test.pdf')");
+    await assert.rejects(db.exec("INSERT INTO storage.objects(bucket_id,name) VALUES ('final-documents','missing/test.pdf')"), /row-level security/);
+    await asUser(customer);
+    assert.equal((await db.query('SELECT * FROM storage.objects')).rows.length,1);
+    await assert.rejects(db.exec('SELECT activate_staff_session()'), /fresh staff/);
+    await assert.rejects(db.exec("INSERT INTO storage.objects(bucket_id,name) VALUES ('final-documents','own/hack.pdf')"), /row-level security/);
+    await asUser(other);
+    assert.equal((await db.query('SELECT * FROM storage.objects')).rows.length,0);
+    await db.exec('RESET ROLE');
+    await db.exec(`UPDATE auth.users SET email_confirmed_at=NULL WHERE id='${customer}'`);
+    await asUser(customer);
+    assert.equal((await db.query('SELECT * FROM service_requests')).rows.length,0);
+    assert.equal((await db.query('SELECT * FROM storage.objects')).rows.length,0);
+    await asUser(superAdmin);
+    await db.exec('SELECT end_staff_session()');
+    assert.equal((await db.query('SELECT apna_current_role() role')).rows[0].role,'customer');
+    await db.exec('SELECT activate_staff_session()');
+    await db.exec('RESET ROLE');
+    await db.exec("UPDATE staff_sessions SET expires_at=now()-interval '1 second'");
+    await asUser(superAdmin);
+    assert.equal((await db.query('SELECT apna_current_role() role')).rows[0].role,'customer');
+    assert.equal((await db.query("UPDATE service_requests SET status='Completed' RETURNING *")).rows.length,0);
+    await db.query("SELECT set_config('request.jwt.claims',$1,false)", [JSON.stringify({ session_id: sessionId, amr: [{ method: 'password', timestamp: Math.floor(Date.now()/1000)-3600 }] })]);
+    await assert.rejects(db.exec('SELECT activate_staff_session()'), /fresh staff/);
+
+
   } finally { await db.close(); }
 });

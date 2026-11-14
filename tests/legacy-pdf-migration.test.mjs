@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { stripTypeScriptTypes } from 'node:module';
 import vm from 'node:vm';
+import { createHash } from 'node:crypto';
 import { PGlite } from '@electric-sql/pglite';
 
 const source = stripTypeScriptTypes((await readFile(new URL('../supabase/functions/migrate-legacy-pdfs/index.ts', import.meta.url), 'utf8'))
   .replace(/^import .*;\n/, ''));
 const pdf = new TextEncoder().encode('%PDF-1.4\ncontrolled migration test\n%%EOF');
 
-function harness({ allowed = true, url = 'https://res.cloudinary.com/m1gqubzu/raw/upload/example.pdf', status = 200, bytes = pdf, corrupt = false, conflict = false } = {}) {
+function harness({ allowed = true, url = 'https://res.cloudinary.com/m1gqubzu/raw/upload/example.pdf', status = 200, bytes = pdf, corrupt = false, conflict = false, credentials = false, inspectFetch } = {}) {
   let handler;
   const calls = { fetch: 0, backup: 0, upload: 0, update: 0 };
   const query = {
@@ -28,12 +29,12 @@ function harness({ allowed = true, url = 'https://res.cloudinary.com/m1gqubzu/ra
   };
   vm.runInNewContext(source, {
     createClient: () => client,
-    Deno: { env: { get: key => key === 'SUPABASE_URL' ? 'https://example.supabase.co' : 'runtime-key' }, serve: fn => { handler = fn; } },
-    URL, Response, TextDecoder, Uint8Array, crypto, AbortSignal,
-    fetch: async (_url, options) => { calls.fetch++; assert.equal(options.redirect, 'error'); return new Response(bytes, { status }); },
+    Deno: { env: { get: key => key.startsWith('LEGACY_') ? (credentials ? 'test-only-key' : undefined) : key === 'SUPABASE_URL' ? 'https://example.supabase.co' : 'runtime-key' }, serve: fn => { handler = fn; } },
+    URL, URLSearchParams, Response, TextDecoder, TextEncoder, Uint8Array, crypto, AbortSignal,
+    fetch: async (_url, options) => { calls.fetch++; assert.equal(options.redirect, 'error'); inspectFetch?.(_url); return new Response(bytes, { status }); },
   });
-  return { calls, run: async (commit = false, auth = 'Bearer operator-token') => handler(new Request('https://example.test', {
-    method: 'POST', headers: { Authorization: auth }, body: JSON.stringify({ commit }),
+  return { calls, run: async (commit = false, auth = 'Bearer operator-token', authenticatedSource = false) => handler(new Request('https://example.test', {
+    method: 'POST', headers: { Authorization: auth }, body: JSON.stringify({ commit, authenticatedSource }),
   })) };
 }
 
@@ -41,6 +42,28 @@ test('legacy recovery denies non-operators before reading or fetching documents'
   const h = harness({ allowed: false });
   assert.equal((await h.run()).status, 403);
   assert.equal(h.calls.fetch, 0);
+});
+
+test('owner recovery signs only versioned original PDFs and never returns credentials', async () => {
+  const url = 'https://res.cloudinary.com/m1gqubzu/image/upload/v123/folder/example.pdf';
+  const h = harness({ url, credentials: true, inspectFetch: target => {
+    assert.equal(target.origin, 'https://api.cloudinary.com');
+    assert.equal(target.pathname, '/v1_1/m1gqubzu/image/download');
+    const p = target.searchParams;
+    assert.equal(p.get('public_id'), 'folder/example');
+    assert.equal(p.get('type'), 'upload');
+    assert.equal(Number(p.get('expires_at')) - Number(p.get('timestamp')), 300);
+    const signed = ['expires_at', 'format', 'public_id', 'timestamp', 'type'].map(k => `${k}=${p.get(k)}`).join('&');
+    assert.equal(p.get('signature'), createHash('sha1').update(signed + 'test-only-key').digest('hex'));
+  } });
+  const result = await (await h.run(false, 'Bearer operator-token', true)).text();
+  assert.match(result, /ready/);
+  assert.ok(!result.includes('test-only-key'));
+  for (const options of [{ url }, { url: url.replace('.pdf', '.jpg'), credentials: true }, { url: url + '?x=1', credentials: true }]) {
+    const blocked = harness(options);
+    assert.equal((await (await blocked.run(true, 'Bearer operator-token', true)).json()).results[0].status, 'blocked');
+    assert.equal(blocked.calls.fetch, 0);
+  }
 });
 
 test('legacy recovery dry-run validates PDFs without writes', async () => {

@@ -83,6 +83,32 @@ an old public Cloudinary URL; retirement of originals remains a separate decisio
 
 ## Automated validation
 
+### Authenticated recovery follow-up
+
+The user signed in to the correct Cloudinary cloud. The media library and API
+settings eventually loaded after module timeouts. Database metadata confirms the
+two non-PDF legacy references are `.jpg` files, not PDFs.
+
+Added and deployed an opt-in `authenticatedSource: true` recovery mode. It signs
+five-minute Cloudinary download requests only for versioned original PDFs in the
+existing cloud. It does not change Cloudinary delivery permissions. Credentials
+must be supplied using temporary `LEGACY_CLOUDINARY_API_KEY` and
+`LEGACY_CLOUDINARY_API_SECRET` server secrets; remove both after recovery.
+The user explicitly approved that temporary transfer and cleanup after automatic
+approval review initially blocked it.
+
+Cloudinary requires an email verification code before releasing its API secret.
+An initial clipboard copy did not supply credentials; the resulting read-only
+attempt returned 401 and changed no records. This is not evidence that a valid
+authenticated download fails. Verification and a new authenticated dry-run are
+still pending. No authenticated migration has been committed.
+Both unsuccessful temporary secret entries were deleted while waiting for email
+verification. A valid credential must be copied and shape-checked after approval
+before configuring and testing again.
+
+An additional automated test verifies the signed endpoint, signature, expiry,
+source restrictions, missing-credential handling and non-disclosure in responses.
+
 Four new tests execute the recovery handler with modeled provider/database/storage
 clients: unauthorized access, dry-run without writes, invalid sources/provider
 failures/non-PDF responses, and byte verification/concurrent-update protection.
@@ -92,7 +118,7 @@ anonymous/customer roles cannot invoke the authorization RPC or read the ledger,
 while service_role can authenticate. The new test harness uses Node's built-in
 TypeScript stripping (Node 22.13+).
 
-The original 14 tests and all five added recovery tests passed. Production build
+The original 14 tests and all six added recovery tests passed (20 total). Production build
 passed with the existing bundle-size warning; lint passed with existing warnings.
 Git commit status is reported in the task after the repository operation.
 The existing workspace's 77 line-ending-only modifications are preserved.

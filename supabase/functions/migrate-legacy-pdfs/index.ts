@@ -10,14 +10,38 @@ const hash = async (bytes: Uint8Array) => Array.from(new Uint8Array(
   await crypto.subtle.digest("SHA-256", bytes),
 )).map(b => b.toString(16).padStart(2, "0")).join("");
 
-async function fetchPdf(source: string) {
+async function fetchPdf(source: string, authenticatedSource = false) {
   const url = new URL(source);
   if (url.protocol !== "https:" || url.hostname !== "res.cloudinary.com" ||
       url.username || url.password || url.port ||
       !/^\/m1gqubzu\/(image|raw)\/upload\//.test(url.pathname)) {
     throw new Error("Unsupported legacy source; record preserved.");
   }
-  const response = await fetch(url, { redirect: "error", signal: AbortSignal.timeout(15000) });
+  let downloadUrl = url;
+  if (authenticatedSource) {
+    // Only original, versioned PDFs may use the temporary owner credential.
+    // Never transform an image into a PDF or accept an arbitrary download target.
+    const asset = url.pathname.match(/^\/m1gqubzu\/(image|raw)\/upload\/v\d+\/(.+)\.pdf$/i);
+    if (!asset || url.search || url.hash) throw new Error("Unsupported authenticated source; record preserved.");
+    const apiKey = Deno.env.get("LEGACY_CLOUDINARY_API_KEY");
+    const apiSecret = Deno.env.get("LEGACY_CLOUDINARY_API_SECRET");
+    if (!apiKey || !apiSecret) throw new Error("Legacy recovery credentials are not configured; record preserved.");
+    const publicId = decodeURIComponent(asset[2]) + (asset[1] === "raw" ? ".pdf" : "");
+    const timestamp = Math.floor(Date.now() / 1000);
+    const parameters = new URLSearchParams({
+      expires_at: String(timestamp + 300), format: "pdf", public_id: publicId,
+      timestamp: String(timestamp), type: "upload",
+    });
+    const toSign = Array.from(parameters.entries()).map(([key, value]) => `${key}=${value}`).join("&");
+    const signature = Array.from(new Uint8Array(await crypto.subtle.digest(
+      "SHA-1", new TextEncoder().encode(toSign + apiSecret),
+    ))).map(b => b.toString(16).padStart(2, "0")).join("");
+    parameters.set("api_key", apiKey);
+    parameters.set("signature", signature);
+    downloadUrl = new URL(`https://api.cloudinary.com/v1_1/m1gqubzu/${asset[1]}/download`);
+    downloadUrl.search = parameters.toString();
+  }
+  const response = await fetch(downloadUrl, { redirect: "error", signal: AbortSignal.timeout(15000) });
   if (!response.ok) {
     await response.body?.cancel();
     throw new Error(`Legacy provider returned HTTP ${response.status}; record preserved.`);
@@ -77,7 +101,7 @@ Deno.serve(async request => {
   const results = [];
   for (const record of records || []) {
     try {
-      const bytes = await fetchPdf(record.document_url);
+      const bytes = await fetchPdf(record.document_url, body.authenticatedSource === true);
       const digest = await hash(bytes);
       if (!body.commit) {
         results.push({ applicationId: record.application_id, status: "ready", bytes: bytes.length });

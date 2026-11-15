@@ -2,10 +2,42 @@
 
 ## Current status
 
-PDF recovery is **not complete**. The existing frontend rejects legacy Cloudinary
-references. A live server-side dry-run also proved that the original provider is
-not currently returning valid PDFs for any of the six legacy records. No final
-document references or original files have been changed or deleted.
+Updated 15 November 2026: **all four original PDFs have been recovered** into
+private Supabase Storage and their application references updated. Every uploaded
+copy was downloaded again and its SHA-256 hash matched the original PDF. Original
+Cloudinary files were not deleted; old references are preserved in the private
+backup ledger. Two other legacy attachments are JPEG images and remain unchanged
+pending the user's conversion/replacement decision. Actual customer browser
+download verification is still pending manual customer sign-in.
+
+## Recovery completed on 15 November
+
+| Application | Recovered PDF bytes | Storage readback verified |
+| --- | ---: | --- |
+| ADS-2026-146193 | 773155 | Yes |
+| ADS-2026-391501 | 760688 | Yes |
+| ADS-2026-659642 | 775446 | Yes |
+| ADS-2026-985465 | 821491 | Yes |
+
+Authenticated Cloudinary dry-run reported all four PDFs ready. The subsequent
+commit reported all four migrated and verified. A separate live SQL audit
+confirmed that each record resolves to an existing object in the private bucket
+and has its original reference backed up.
+
+Live authorization tests used transaction-local authenticated roles and JWT claims
+and rolled back afterward: the owner of ADS-2026-146193 could see its application
+and storage object (1/1); another existing verified customer could see neither
+(0/0); anonymous access returned zero final-document objects. These verify live
+database RLS, not a substitute for customer browser or direct Storage HTTP tests.
+
+The approved temporary Cloudinary key and secret were deleted after recovery.
+The Supabase secrets page confirmed no custom secrets remain. No Cloudinary
+delivery permissions were changed.
+
+Credential incident: an earlier browser inspection accidentally emitted revealed
+Cloudinary secrets into a tool result. The user was informed. The affected keys
+should be rotated, coordinating updates to services that depend on them. Secret
+values are not recorded in this report or committed to Git.
 
 ## Live findings and applied configuration
 
@@ -53,7 +85,7 @@ source URLs from the existing Cloudinary cloud. It rejects foreign URLs,
 redirects, oversized responses and responses without a PDF signature. It returns
 statuses and byte counts, never document contents or original URLs.
 
-Live dry-run results:
+Initial unauthenticated dry-run results (before successful authenticated recovery):
 
 | Application | Result |
 | --- | --- |
@@ -64,7 +96,7 @@ Live dry-run results:
 | ADS-2026-844908 | Response is not a PDF |
 | ADS-2026-985465 | Cloudinary HTTP 401 |
 
-Owner access to Cloudinary or the original files is needed next. Inspect the two
+Owner access subsequently enabled recovery of the four PDFs. Inspect the two
 non-PDF sources before deciding whether they are images requiring conversion or
 incorrect attachments. Do not enable public delivery or change original records
 merely to silence the error.
@@ -97,14 +129,13 @@ must be supplied using temporary `LEGACY_CLOUDINARY_API_KEY` and
 The user explicitly approved that temporary transfer and cleanup after automatic
 approval review initially blocked it.
 
-Cloudinary requires an email verification code before releasing its API secret.
+Cloudinary required an email verification code before releasing its API secret.
 An initial clipboard copy did not supply credentials; the resulting read-only
 attempt returned 401 and changed no records. This is not evidence that a valid
-authenticated download fails. Verification and a new authenticated dry-run are
-still pending. No authenticated migration has been committed.
-Both unsuccessful temporary secret entries were deleted while waiting for email
-verification. A valid credential must be copied and shape-checked after approval
-before configuring and testing again.
+authenticated download fails. After fresh verification, credentials were read
+from the verified interface and shape-checked; authenticated dry-run and migration
+then succeeded as recorded above. Both unsuccessful initial entries and the later
+valid temporary credentials were cleaned up.
 
 An additional automated test verifies the signed endpoint, signature, expiry,
 source restrictions, missing-credential handling and non-disclosure in responses.

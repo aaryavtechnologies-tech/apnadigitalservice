@@ -2,13 +2,39 @@
 
 ## Current status
 
-Updated 15 November 2026: **all four original PDFs have been recovered** into
-private Supabase Storage and their application references updated. Every uploaded
-copy was downloaded again and its SHA-256 hash matched the original PDF. Original
-Cloudinary files were not deleted; old references are preserved in the private
-backup ledger. Two other legacy attachments are JPEG images and remain unchanged
-pending the user's conversion/replacement decision. Actual customer browser
-download verification is still pending manual customer sign-in.
+**All six historical final attachments now use private PDFs.** Four original PDFs
+were recovered unchanged; the user explicitly approved converting the two JPEGs
+into PDFs. Every uploaded copy was downloaded again and its SHA-256 hash checked.
+Original Cloudinary files were not deleted; old references are preserved in the
+private backup ledger. The final live audit returned zero remaining legacy final
+attachment references and confirmed all six private objects and backups exist.
+
+The controlled customer signed in manually. Both real dashboard Download PDF
+buttons (ADS-2026-146193 and ADS-2026-659642) downloaded successfully. The files
+matched the original hashes in the backup ledger, parsed as valid unencrypted
+one-page PDFs, and had the expected byte counts. The two converted attachments
+belong to other applications; their private storage downloads and final database
+attachments were verified, but their owners' dashboard sessions were not tested.
+
+## Approved JPEG conversions
+
+| Application | Original pixels | PDF bytes | Stored SHA-256 |
+| --- | --- | ---: | --- |
+| ADS-2026-476800 | 498 × 269 | 47704 | 6c1b3983ca305525ca7242e36317b1667f286c85ca4097991da08b4c41b17091 |
+| ADS-2026-844908 | 732 × 207 | 128862 | 3bfe905fb25836e8115362dba027e761100e732826170105ddcc8a4bf37d9423 |
+
+Used EXIF-aware orientation, lossless RGB embedding and proportional one-page
+ReportLab PDFs. Extracted embedded pixels matched the source pixels exactly.
+Poppler rendered both files at the original pixel dimensions; automated raster
+comparison confirmed no cropping or missing image. Customer document imagery was
+not displayed in chat. A guarded SQL transaction locked both application rows,
+checked the expected original image identifiers and stored PDF metadata, backed
+up original references, and updated only document_url/document_name. Existing
+statuses, ownership, payment information and unrelated records were preserved.
+
+The PDF download incident is resolved for all six legacy references. Broader
+authentication/SMTP/staff-session checks listed below remain separate pending
+work; this report does not claim the whole project is error-free.
 
 ## Recovery completed on 15 November
 
